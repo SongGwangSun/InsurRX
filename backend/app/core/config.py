@@ -22,7 +22,13 @@ class Settings(BaseSettings):
     LLM_PROVIDER: str = "anthropic"
     LLM_MODEL: str = "claude-sonnet-4-6"
 
-    ALLOWED_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8080"]
+    ALLOWED_ORIGINS: List[str] = [
+        "http://localhost:3000",
+        "http://localhost:8080",
+        "http://localhost:5500",   # VS Code Live Server
+        "http://127.0.0.1:5500",
+        "null",                    # file:// 로 열었을 때
+    ]
     IMAGE_RETENTION_SECONDS: int = 30
 
     class Config:

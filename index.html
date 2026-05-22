@@ -1121,9 +1121,16 @@
 </footer>
 
 <!-- TOAST -->
-<div class="toast" id="toast">✅ 대기열 등록 완료! 출시 알림을 드릴게요.</div>
+<div class="toast" id="toast"></div>
 
 <script>
+  // 로컬 개발: FastAPI 백엔드 직접 호출
+  // GitHub Pages: Formspree 경유 (CI에서 __FORMSPREE_ID__ → 실제 ID로 치환)
+  const IS_LOCAL = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+  const API_BASE = 'http://localhost:8000/api/v1';
+  const FORMSPREE_ID = '__FORMSPREE_ID__';
+  const FORMSPREE_URL = `https://formspree.io/f/${FORMSPREE_ID}`;
+
   function scrollToWaitlist() {
     document.getElementById('waitlist').scrollIntoView({ behavior: 'smooth' });
   }
@@ -1138,12 +1145,61 @@
       el.classList.toggle('active', i === idx);
     });
   }
-  function handleWaitlist(e) {
-    e.preventDefault();
+
+  function showToast(msg, isError = false) {
     const toast = document.getElementById('toast');
+    toast.textContent = (isError ? '⚠️ ' : '✅ ') + msg;
+    toast.style.background = isError ? '#DC2626' : 'var(--teal)';
     toast.classList.add('show');
     setTimeout(() => toast.classList.remove('show'), 3500);
-    e.target.reset();
+  }
+
+  async function submitLocal(email) {
+    const res = await fetch(`${API_BASE}/waitlist/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, source: 'landing' }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || '서버 오류가 발생했습니다.');
+    return data.message;
+  }
+
+  async function submitFormspree(email) {
+    if (FORMSPREE_ID === '__FORMSPREE_ID__' || FORMSPREE_ID === '__NOT_SET__') {
+      throw new Error('이메일 수집 설정이 완료되지 않았습니다.');
+    }
+    const res = await fetch(FORMSPREE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    if (!res.ok) throw new Error('제출 중 오류가 발생했습니다.');
+    return '대기열 등록 완료! 출시 알림을 드릴게요.';
+  }
+
+  async function handleWaitlist(e) {
+    e.preventDefault();
+    const form = e.target;
+    const email = form.querySelector('input[type="email"]').value.trim();
+    const btn = form.querySelector('button[type="submit"]');
+
+    btn.disabled = true;
+    btn.textContent = '등록 중...';
+
+    try {
+      const message = IS_LOCAL ? await submitLocal(email) : await submitFormspree(email);
+      showToast(message);
+      form.reset();
+    } catch (err) {
+      const msg = err.message === 'Failed to fetch'
+        ? '서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.'
+        : err.message;
+      showToast(msg, true);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '대기열 등록하기 →';
+    }
   }
 </script>
 </body>

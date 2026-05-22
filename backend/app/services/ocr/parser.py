@@ -21,7 +21,7 @@ def _extract_drugs(text: str) -> list[ParsedDrug]:
     """약품명 패턴을 추출합니다. 실제 구현 시 식약처 DB와 매핑 필요."""
     drugs = []
     for line in text.split('\n'):
-        if any(kw in line for kw in ('mg', 'mL', '정', '시럽', '캡슐')):
+        if any(kw in line for kw in ('mg', 'mL', '정', '시럽', '캡슐', '크림', '연고', '액', '패치', '주사', '점안')):
             drugs.append(ParsedDrug(
                 name=line.strip(),
                 is_nonbenefit='비급여' in line,

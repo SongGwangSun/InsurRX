@@ -1,12 +1,23 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 from app.api.v1.router import api_router
 from app.core.config import settings
+from app.database import create_tables
+import app.models.waitlist  # noqa: F401 — register model for table creation
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await create_tables()
+    yield
+
 
 app = FastAPI(
     title="InsurRX API",
     description="처방전/영수증 기반 AI 보험 보상 확인 서비스",
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
