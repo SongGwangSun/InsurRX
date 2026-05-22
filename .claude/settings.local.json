@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -m py_compile backend/app/main.py backend/app/database.py backend/app/api/v1/router.py backend/app/api/v1/endpoints_analyze.py backend/app/api/v1/endpoints_result.py backend/app/api/v1/endpoints_upload.py)",
+      "Bash(python3 -m py_compile backend/app/services/insurance/clause_matcher.py backend/app/services/insurance/policy_loader.py backend/app/services/ocr/clova_ocr.py backend/app/services/ocr/parser.py backend/app/services/rag/embedder.py backend/app/services/rag/pipeline.py backend/app/services/rag/retriever.py)"
+    ]
+  }
+}
