@@ -1,7 +1,7 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from app.schemas.upload import UploadResponse
 from app.services.ocr.clova_ocr import run_ocr
-from app.services.ocr.parser import parse_medical_document
+from app.services.ocr.parser import parse_medical_document_async
 
 router = APIRouter()
 
@@ -15,6 +15,6 @@ async def upload_document(file: UploadFile = File(...)):
 
     image_bytes = await file.read()
     raw_text = await run_ocr(image_bytes)
-    parsed = parse_medical_document(raw_text)
+    parsed = await parse_medical_document_async(raw_text)
 
     return UploadResponse(filename=file.filename, ocr_raw=raw_text, parsed=parsed)

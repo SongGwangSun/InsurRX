@@ -4,7 +4,8 @@ from contextlib import asynccontextmanager
 from app.api.v1.router import api_router
 from app.core.config import settings
 from app.database import create_tables
-import app.models.waitlist  # noqa: F401 — register model for table creation
+import app.models.waitlist          # noqa: F401 — register model for table creation
+import app.models.analysis_result   # noqa: F401 — register model for table creation
 
 
 @asynccontextmanager

@@ -1,13 +1,9 @@
 import uuid
-import sys
-import os
 from app.schemas.upload import ParsedDocument
 from app.schemas.analysis import AnalyzeResponse, CoverageItem
 from app.services.rag.retriever import retrieve_relevant_clauses
 from app.services.rag.embedder import get_query_embedding
 
-# ai/ 모듈 경로 추가 (backend/ 밖에 위치)
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../../../'))
 from ai.rag.chain import run_coverage_chain
 
 
