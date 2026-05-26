@@ -58,4 +58,10 @@ jobs:
       - name: Deploy to Railway
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: railway up --service insurrx-api --detach
+        # RAILWAY_TOKEN 시크릿이 없으면 스킵 (프론트엔드 배포에 영향 없음)
+        run: |
+          if [ -z "$RAILWAY_TOKEN" ]; then
+            echo "⚠ RAILWAY_TOKEN not set — skipping Railway deploy."
+            exit 0
+          fi
+          railway up --service insurrx-api --detach
