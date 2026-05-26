@@ -7,9 +7,9 @@ python-multipart==0.0.9
 asyncpg==0.29.0
 aiosqlite==0.20.0
 sqlalchemy[asyncio]==2.0.30
-langchain==0.2.0
-langchain-anthropic==0.1.15
-langchain-openai==0.1.14
+langchain==0.3.25
+langchain-anthropic==0.3.15
+langchain-openai==0.3.16
 pinecone-client==3.2.2
 pymilvus==2.4.3
 python-dotenv==1.0.1
