@@ -1,0 +1,15 @@
+# Railway 배포에서 프론트엔드/불필요 파일 제외
+index.html
+*.md
+scripts/
+data/
+infra/
+.github/
+frontend/
+
+# 개발 파일
+.venv/
+__pycache__/
+*.pyc
+.env
+.env.local
