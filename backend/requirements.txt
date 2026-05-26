@@ -11,7 +11,7 @@ langchain==0.3.25
 langchain-anthropic==0.3.15
 langchain-openai==0.3.16
 pinecone-client==3.2.2
-pymilvus==2.4.3
+# pymilvus==2.4.3  # Milvus 미사용 — grpcio 컴파일 부담으로 주석 처리
 python-dotenv==1.0.1
 email-validator==2.1.1
 pdfplumber==0.11.0
