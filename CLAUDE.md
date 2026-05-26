@@ -20,6 +20,12 @@ OCR + RAG로 **3초 이내** 실손/정액 보상 여부 및 예상 지급액 �
 - [x] Kubernetes 설정 (`infra/k8s/deployment.yaml`, `service.yaml`)
 - [x] CI 파이프라인 (`.github/workflows/ci.yml`) — pytest on push/PR
 - [x] CD 파이프라인 (`.github/workflows/deploy.yml`) — GitHub Pages 자동 배포
+- [x] **Railway 백엔드 배포 완료** ✅ (2026-05-26)
+  - URL: https://magnificent-celebration-production-2dd9.up.railway.app
+  - `GET /health` → `{"status":"ok","service":"InsurRX"}` 확인
+  - `POST /api/v1/waitlist/` → PostgreSQL 저장 확인
+  - 핵심 수정: langchain 0.2→0.3.25, pydantic 2.7.0→2.11.6 (Python 3.12 호환)
+  - GitHub Pages → Railway API 직접 연결 (CORS 설정 완료)
 
 ### 백엔드 API (4개 엔드포인트)
 - [x] `POST /api/v1/upload/` — 이미지 업로드 → Clova OCR → 파싱 결과 반환
