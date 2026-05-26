@@ -1124,9 +1124,11 @@
 
 <script>
   // 로컬 개발: FastAPI 백엔드 직접 호출
-  // GitHub Pages: Formspree 경유 (CI에서 __FORMSPREE_ID__ → 실제 ID로 치환)
+  // GitHub Pages: Railway 백엔드 호출
   const IS_LOCAL = ['localhost', '127.0.0.1'].includes(window.location.hostname);
-  const API_BASE = 'http://localhost:8000/api/v1';
+  const API_BASE = IS_LOCAL
+    ? 'http://localhost:8000/api/v1'
+    : 'https://magnificent-celebration-production-2dd9.up.railway.app/api/v1';
   const FORMSPREE_ID = '__FORMSPREE_ID__';
   const FORMSPREE_URL = `https://formspree.io/f/${FORMSPREE_ID}`;
 
@@ -1187,7 +1189,14 @@
     btn.textContent = '등록 중...';
 
     try {
-      const message = IS_LOCAL ? await submitLocal(email) : await submitFormspree(email);
+      // Railway 백엔드 우선 시도 (로컬 + GitHub Pages 모두)
+      let message;
+      try {
+        message = await submitLocal(email);
+      } catch (apiErr) {
+        // Railway 오류 시 Formspree 폴백
+        message = await submitFormspree(email);
+      }
       showToast(message);
       form.reset();
     } catch (err) {
