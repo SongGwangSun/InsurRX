@@ -10,7 +10,12 @@ import app.models.analysis_result   # noqa: F401 — register model for table cr
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await create_tables()
+    try:
+        await create_tables()
+    except Exception as e:
+        # DB 연결 실패 시 앱을 종료하지 않고 경고만 출력
+        import logging
+        logging.getLogger(__name__).warning(f"DB 테이블 생성 실패 (나중에 재시도): {e}")
     yield
 
 

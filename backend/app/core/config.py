@@ -28,6 +28,9 @@ class Settings(BaseSettings):
         "http://localhost:5500",   # VS Code Live Server
         "http://127.0.0.1:5500",
         "null",                    # file:// 로 열었을 때
+        # 프로덕션 도메인
+        "https://songgwangsun.github.io",
+        "https://magnificent-celebration-production-2dd9.up.railway.app",
     ]
     IMAGE_RETENTION_SECONDS: int = 30
 
