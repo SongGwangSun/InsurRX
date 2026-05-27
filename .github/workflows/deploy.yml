@@ -58,11 +58,12 @@ jobs:
       - name: Deploy to Railway
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        # RAILWAY_TOKEN: Railway 대시보드 > 프로젝트 Settings > Tokens 에서 발급한 Project Token
+        # Railway GitHub 연동(자동 배포)이 이미 설정되어 있으므로 push 시 자동 배포됨
+        # 이 단계는 railway up을 백업으로 시도하되 실패해도 워크플로 중단하지 않음
+        continue-on-error: true
         run: |
           if [ -z "$RAILWAY_TOKEN" ]; then
-            echo "⚠ RAILWAY_TOKEN not set — skipping Railway deploy."
+            echo "⚠ RAILWAY_TOKEN not set — skipping Railway deploy (Railway GitHub 연동으로 자동 배포됨)."
             exit 0
           fi
-          # 서비스 이름: Railway 대시보드에 표시되는 실제 이름 사용
           railway up --service magnificent-celebration --detach
