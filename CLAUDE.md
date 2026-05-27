@@ -28,7 +28,7 @@ OCR + RAG로 **3초 이내** 실손/정액 보상 여부 및 예상 지급액 �
   - GitHub Pages → Railway API 직접 연결 (CORS 설정 완료)
 
 ### 백엔드 API (4개 엔드포인트)
-- [x] `POST /api/v1/upload/` — 이미지 업로드 → Clova OCR → 파싱 결과 반환
+- [x] `POST /api/v1/upload/` — 이미지 업로드 → GPT-4o Vision OCR → 파싱 결과 반환 ✅ 실서비스 동작 확인
 - [x] `POST /api/v1/analyze/` — 파싱 문서 + 보험 ID → RAG 파이프라인 → 보상 분석
 - [x] `POST /api/v1/waitlist/` — Waitlist 이메일 저장 (중복 방지 포함)
 - [x] `GET  /api/v1/result/{session_id}` — 분석 결과 조회 (라우터 등록됨, 구현 미완)
@@ -42,9 +42,13 @@ OCR + RAG로 **3초 이내** 실손/정액 보상 여부 및 예상 지급액 �
 - [x] 약관 임베딩 스크립트 (`ai/embeddings/embed_policies.py`) — CLI 실행 가능
 - [x] Vectorstore 클라이언트 (`ai/rag/vectorstore.py`) — Pinecone upsert 완성
 
-### OCR
-- [x] Clova OCR API 호출 (`app/services/ocr/clova_ocr.py`)
-- [x] OCR 텍스트 파서 (`app/services/ocr/parser.py`) — ICD코드, 날짜, 약품명 정규식 추출
+### OCR ✅ 실서비스 인식 확인 완료 (2026-05-27)
+- [x] **GPT-4o Vision OCR** (`app/services/ocr/clova_ocr.py`) — gpt-4o-mini, 한글·영문·숫자 인식 완료
+  - Clova OCR → GPT-4o Vision으로 교체 (Clova ConnectTimeout 문제 해결)
+  - base64 인코딩, 의료 문서 최적화 프롬프트, JPEG/PNG/WEBP 지원
+  - OPENAI_API_KEY 재사용, 추가 설정 불필요
+- [x] OCR 텍스트 파서 (`app/services/ocr/parser.py`) — ICD코드, 날짜, 약품명 정규식 + LLM 폴백
+- [x] 랜딩페이지 OCR 업로드 섹션 (`index.html #try`) — 카메라/갤러리 선택 → 4단계 플로우
 
 ### DB 모델 / 스키마
 - [x] `models/user.py`, `models/claim.py`, `models/session.py`, `models/waitlist.py`
