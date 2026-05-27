@@ -99,6 +99,7 @@
       padding: 16px 28px; font-size: 1rem; font-weight: 800;
       cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
       box-shadow: 0 4px 14px rgba(254,229,0,0.5);
+      text-decoration: none; /* <a> 태그 밑줄 제거 */
     }
     .btn-kakao:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(254,229,0,0.6); }
     .btn-kakao svg { width: 22px; height: 22px; }
@@ -642,12 +643,12 @@
   <h1>버려지는 영수증,<br><em>내 숨은 보험금</em>으로.</h1>
   <p>처방전 사진 한 장만 찍어 올리면<br>AI가 3초 만에 내 보험 혜택과 예상 수령액을 알려드립니다.</p>
   <div class="hero-btns">
-    <button class="btn-kakao" onclick="alert('카카오톡 채널 연동 준비 중입니다!')">
+    <a class="btn-kakao" href="https://pf.kakao.com/_xmxfjxjX" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24" fill="currentColor">
         <path d="M12 3C6.48 3 2 6.58 2 11c0 2.82 1.68 5.3 4.24 6.84L5.17 21l4.04-2.14c.91.2 1.84.3 2.79.3 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/>
       </svg>
       카카오톡 채널 추가 (무료)
-    </button>
+    </a>
     <button class="btn-secondary" onclick="scrollToDemo()">
       ▶ 데모 보기
     </button>
