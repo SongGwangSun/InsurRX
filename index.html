@@ -1412,22 +1412,57 @@
   }
 
   function ocrShowResult(data, isDemo) {
-    const drugs = data.drugs || [];
-    const cnt = (data.hospital ? 1 : 0) + (data.diagnosis ? 1 : 0)
-              + (data.total_amount ? 1 : 0) + drugs.length;
+    // 백엔드 응답: { filename, ocr_raw, parsed: { hospital, ... } }
+    // 데모 폴백:   { hospital, diagnosis, ... } (parsed 없음)
+    const p = data.parsed || data;
+    const drugs = p.drugs || [];
+
+    const cnt = (p.hospital ? 1 : 0)
+              + (p.icd_code || p.diagnosis ? 1 : 0)
+              + (p.department ? 1 : 0)
+              + (p.prescription_date ? 1 : 0)
+              + (p.total_amount ? 1 : 0)
+              + drugs.length;
 
     document.getElementById('ocr-cnt').textContent = cnt + '건 인식';
 
     let html = '<div class="ocr-fields">';
+
     if (isDemo) {
-      html += '<div class="ocr-demo-note">📌 데모 결과입니다 — 실제 Clova OCR 결과는 베타 신청 후 이용 가능합니다</div>';
+      html += '<div class="ocr-demo-note">📌 OCR 연결 오류 — 데모 결과를 표시합니다. 베타 신청 후 실제 분석을 이용하세요.</div>';
     }
-    if (data.hospital)      html += ocrRow('병원',     data.hospital);
-    if (data.diagnosis)     html += ocrRow('상병코드', data.diagnosis, 'conf-sure', '확실');
-    if (data.total_amount)  html += ocrRow('본인부담금', '₩' + data.total_amount.toLocaleString());
+
+    if (p.hospital)    html += ocrRow('병원',     p.hospital);
+    if (p.department)  html += ocrRow('진료과',   p.department);
+
+    // 상병코드 + 진단명 합쳐서 표시
+    if (p.icd_code || p.diagnosis) {
+      const diagText = [p.icd_code, p.diagnosis].filter(Boolean).join(' ');
+      html += ocrRow('상병코드', diagText, 'conf-sure', '확실');
+    }
+
+    if (p.prescription_date) html += ocrRow('처방일', p.prescription_date);
+    if (p.total_amount)      html += ocrRow('본인부담금', '₩' + p.total_amount.toLocaleString());
+
     drugs.forEach(d => {
-      html += ocrRow('약품', `💊 ${d.name}<small> · ${d.dosage} ${d.days}일</small>`, 'conf-sure', '확실');
+      const detail = [d.dosage, d.days != null ? d.days + '일' : null].filter(Boolean).join(' · ');
+      const tag    = d.is_nonbenefit ? '<span style="background:#FFF1F2;color:#E11D48;border-radius:4px;padding:1px 5px;font-size:0.65rem;font-weight:600;margin-left:4px">비급여</span>' : '';
+      html += ocrRow(
+        '약품',
+        `💊 ${d.name}${tag}${detail ? '<small> · ' + detail + '</small>' : ''}`,
+        d.is_nonbenefit ? 'conf-check' : 'conf-sure',
+        d.is_nonbenefit ? '확인' : '확실'
+      );
     });
+
+    // OCR 원문이 있으면 접어두기 (디버그용)
+    if (data.ocr_raw) {
+      html += `<details style="padding:10px 18px;font-size:0.72rem;color:var(--gray-500)">
+        <summary style="cursor:pointer;font-weight:600">OCR 원문 보기</summary>
+        <pre style="white-space:pre-wrap;margin-top:8px;line-height:1.6">${data.ocr_raw.replace(/</g,'&lt;')}</pre>
+      </details>`;
+    }
+
     html += '</div>';
     document.getElementById('ocr-fields').innerHTML = html;
     ocrShowStep(4);
