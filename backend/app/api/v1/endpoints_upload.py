@@ -1,7 +1,11 @@
+import httpx
+import logging
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from app.schemas.upload import UploadResponse
 from app.services.ocr.clova_ocr import run_ocr
 from app.services.ocr.parser import parse_medical_document_async
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -31,7 +35,28 @@ async def upload_document(file: UploadFile = File(...)):
         )
 
     image_bytes = await file.read()
-    raw_text = await run_ocr(image_bytes, content_type=content_type)
-    parsed = await parse_medical_document_async(raw_text)
 
+    try:
+        raw_text = await run_ocr(image_bytes, content_type=content_type)
+    except httpx.ConnectTimeout:
+        raise HTTPException(
+            status_code=503,
+            detail="CLOVA_OCR_CONNECT_TIMEOUT: Clova OCR 서버 연결 시간 초과. "
+                   "NCP 콘솔 → CLOVA OCR → API 설정에서 IP 허용 목록을 확인하세요."
+        )
+    except httpx.ConnectError as e:
+        raise HTTPException(
+            status_code=503,
+            detail=f"CLOVA_OCR_CONNECT_ERROR: {e}. API URL 또는 네트워크 설정을 확인하세요."
+        )
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(
+            status_code=502,
+            detail=f"CLOVA_OCR_HTTP_{e.response.status_code}: {e.response.text[:300]}"
+        )
+    except Exception as e:
+        logger.exception("OCR 처리 중 예외 발생")
+        raise HTTPException(status_code=502, detail=f"OCR_ERROR: {type(e).__name__}: {e}")
+
+    parsed = await parse_medical_document_async(raw_text)
     return UploadResponse(filename=file.filename or "upload", ocr_raw=raw_text, parsed=parsed)

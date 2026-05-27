@@ -1373,7 +1373,6 @@
     if (!_ocrFile) return;
     ocrShowStep(3);
 
-    // 프로그레스 바 애니메이션
     let pct = 0;
     const progEl = document.getElementById('ocr-prog');
     _progTimer = setInterval(() => {
@@ -1388,14 +1387,36 @@
       clearInterval(_progTimer); _progTimer = null;
       progEl.style.width = '100%';
       await new Promise(r => setTimeout(r, 400));
-      const data = res.ok ? await res.json() : null;
-      ocrShowResult(data || ocrDemoResult(), !res.ok);
-    } catch {
+
+      if (res.ok) {
+        const data = await res.json();
+        ocrShowResult(data, false);
+      } else {
+        // 백엔드 에러 메시지를 그대로 표시
+        const err = await res.json().catch(() => ({ detail: `HTTP ${res.status}` }));
+        ocrShowError(err.detail || `서버 오류 (${res.status})`);
+      }
+    } catch (e) {
       clearInterval(_progTimer); _progTimer = null;
       progEl.style.width = '100%';
       await new Promise(r => setTimeout(r, 400));
-      ocrShowResult(ocrDemoResult(), true);
+      // 네트워크 오류 (서버 자체에 닿지 못한 경우)
+      ocrShowError('백엔드 서버에 연결할 수 없습니다. (' + (e.message || 'fetch 실패') + ')');
     }
+  }
+
+  function ocrShowError(msg) {
+    document.getElementById('ocr-step-loading').style.display = 'none';
+    // 에러를 result 영역에 표시
+    document.getElementById('ocr-cnt').textContent = '오류';
+    document.getElementById('ocr-fields').innerHTML =
+      `<div class="ocr-demo-note" style="color:#DC2626;background:#FFF1F2;border-color:#FECACA">
+        ⚠️ OCR 오류<br><small style="font-family:monospace;word-break:break-all">${msg}</small>
+      </div>`;
+    document.getElementById('ocr-result-head').style.background = '#FFF1F2';
+    document.getElementById('ocr-result-head').style.borderColor = '#FECACA';
+    document.querySelector('#ocr-s4 .ocr-result-head span:first-child').textContent = '❌ 오류 발생';
+    ocrShowStep(4);
   }
 
   function ocrDemoResult() {
