@@ -699,6 +699,86 @@
       display: flex; gap: 10px; padding: 14px 18px; border-top: 1px solid var(--gray-100);
     }
 
+    /* ── POLICY SELECTOR (Step 5) ─────────────────────── */
+    .policy-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0 18px;
+    }
+    .policy-card {
+      display: flex; flex-direction: column; gap: 5px;
+      background: white; border: 2px solid var(--gray-100);
+      border-radius: 12px; padding: 14px 15px; cursor: pointer;
+      transition: border-color 0.15s, background 0.15s; user-select: none;
+    }
+    .policy-card.selected { border-color: var(--blue); background: #EFF6FF; }
+    .policy-card input[type="checkbox"] { display: none; }
+    .policy-name { font-size: 0.88rem; font-weight: 700; color: var(--gray-900); }
+    .policy-sub  { font-size: 0.72rem; color: var(--gray-500); }
+    .policy-check {
+      width: 18px; height: 18px; border-radius: 5px;
+      border: 2px solid var(--gray-300); display: flex; align-items: center; justify-content: center;
+      margin-bottom: 4px; flex-shrink: 0; font-size: 0.7rem; color: white; background: white;
+    }
+    .policy-card.selected .policy-check { background: var(--blue); border-color: var(--blue); }
+
+    /* ── ANALYSIS RESULT (Step 7) ──────────────────────── */
+    .ana-payout {
+      border-radius: 14px; padding: 24px 20px; margin-bottom: 12px; text-align: center;
+    }
+    .ana-payout.claimable {
+      background: linear-gradient(135deg, #1E3A5F 0%, #0F172A 100%); color: white;
+    }
+    .ana-payout.not-claimable { background: #F1F5F9; }
+    .ana-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      border-radius: 999px; padding: 4px 14px; font-size: 0.78rem; font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .claimable .ana-badge { background: rgba(52,211,153,0.18); color: #34D399; border: 1px solid rgba(52,211,153,0.35); }
+    .not-claimable .ana-badge { background: #FEE2E2; color: #DC2626; }
+    .ana-amount { font-size: 2.4rem; font-weight: 900; color: #60A5FA; line-height: 1; }
+    .not-claimable .ana-amount { color: var(--gray-500); font-size: 1.6rem; }
+    .ana-conf-row { margin-top: 10px; display: flex; align-items: center; gap: 8px; justify-content: center; }
+    .ana-conf-bar { width: 120px; height: 5px; background: rgba(255,255,255,0.15); border-radius: 999px; overflow: hidden; }
+    .not-claimable .ana-conf-bar { background: var(--gray-200); }
+    .ana-conf-fill { height: 100%; background: #60A5FA; border-radius: 999px; }
+    .ana-conf-pct { font-size: 0.78rem; color: #94A3B8; font-weight: 600; }
+    .not-claimable .ana-conf-pct { color: var(--gray-500); }
+
+    .ana-summary {
+      background: #F8FAFC; border-left: 3px solid var(--blue);
+      border-radius: 0 10px 10px 0; padding: 14px 16px;
+      font-size: 0.88rem; color: var(--gray-700); line-height: 1.75;
+      margin-bottom: 12px;
+    }
+    .ana-card {
+      background: white; border: 1px solid var(--gray-100);
+      border-radius: 12px; overflow: hidden; margin-bottom: 12px;
+    }
+    .ana-card-title {
+      padding: 9px 16px; font-size: 0.7rem; font-weight: 700;
+      color: var(--gray-500); letter-spacing: 0.6px; text-transform: uppercase;
+      background: #FAFAFA; border-bottom: 1px solid var(--gray-100);
+    }
+    .ana-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 9px 16px; border-bottom: 1px solid #F8F8F8; font-size: 0.83rem;
+    }
+    .ana-row:last-child { border-bottom: none; }
+    .ana-row .neg { color: #E11D48; font-weight: 600; }
+    .ana-row .pos { color: var(--teal); font-weight: 700; }
+    .ana-coverage {
+      padding: 12px 16px; border-bottom: 1px solid #F5F5F5;
+    }
+    .ana-coverage:last-child { border-bottom: none; }
+    .ana-cov-head { font-size: 0.83rem; font-weight: 700; color: var(--gray-900); margin-bottom: 4px; }
+    .ana-cov-reason { font-size: 0.78rem; color: var(--gray-500); margin-bottom: 6px; }
+    .ana-cov-cite {
+      font-size: 0.74rem; color: #5C4F3A; font-style: italic;
+      background: #F8F7F0; border-left: 3px solid var(--blue);
+      padding: 6px 10px; border-radius: 0 6px 6px 0;
+    }
+    .ana-actions { display: flex; gap: 10px; margin-top: 6px; }
+
     /* ── RESPONSIVE ────────────────────────────────────── */
     @media (max-width: 680px) {
       .before-after { grid-template-columns: 1fr; }
@@ -878,9 +958,66 @@
         <div id="ocr-fields"></div>
         <div class="ocr-result-btns">
           <button class="btn-ghost" onclick="ocrReset()">다시 촬영</button>
-          <button class="btn-primary" onclick="scrollToWaitlist()">💸 보상 분석 받기 →</button>
+          <button class="btn-primary" onclick="goToAnalyze()">💸 보상 분석 받기 →</button>
         </div>
       </div>
+    </div>
+
+    <!-- Step 5: 보험 선택 -->
+    <div id="ocr-s5" style="display:none">
+      <div class="ocr-result-box">
+        <div class="ocr-result-head" style="justify-content:flex-start;gap:10px">
+          <span>📋 가입 보험 선택</span>
+        </div>
+        <div style="padding:14px 18px 0">
+          <p style="font-size:0.83rem;color:var(--gray-500)">분석할 보험을 선택하세요 (복수 선택 가능)</p>
+          <div class="policy-grid" id="policy-grid">
+            <label class="policy-card selected" onclick="togglePolicy(this)">
+              <input type="checkbox" value="hyundai-silson-v4" checked>
+              <div class="policy-check">✓</div>
+              <span class="policy-name">🏥 현대해상 실손</span>
+              <span class="policy-sub">Hi2204 · 통원/입원</span>
+            </label>
+            <label class="policy-card" onclick="togglePolicy(this)">
+              <input type="checkbox" value="hyundai-cancer-2401">
+              <div class="policy-check"></div>
+              <span class="policy-name">🎗️ 현대해상 암보험</span>
+              <span class="policy-sub">Hi2401 · 정액형</span>
+            </label>
+            <label class="policy-card" onclick="togglePolicy(this)">
+              <input type="checkbox" value="samsung-child-mykids">
+              <div class="policy-check"></div>
+              <span class="policy-name">👶 삼성화재 어린이</span>
+              <span class="policy-sub">My아이플러스</span>
+            </label>
+            <label class="policy-card" onclick="togglePolicy(this)">
+              <input type="checkbox" value="axa-dental-2501">
+              <div class="policy-check"></div>
+              <span class="policy-name">🦷 AXA 치아보험</span>
+              <span class="policy-sub">갱신형 2501</span>
+            </label>
+          </div>
+        </div>
+        <div class="ocr-result-btns">
+          <button class="btn-ghost" onclick="ocrShowStep(4)">← 뒤로</button>
+          <button class="btn-primary" onclick="startAnalysis()">🔍 분석 시작</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 6: RAG 분석 중 -->
+    <div id="ocr-s6" style="display:none">
+      <div class="ocr-loading-box">
+        <div class="ocr-spinner"></div>
+        <p class="ocr-loading-msg">AI가 보험 약관을 분석 중...</p>
+        <p class="ocr-loading-sub">Pinecone 벡터 DB에서 관련 조항 검색 중</p>
+        <div class="ocr-prog-wrap"><div class="ocr-prog" id="ana-prog"></div></div>
+      </div>
+    </div>
+
+    <!-- Step 7: 분석 결과 -->
+    <div id="ocr-s7" style="display:none">
+      <div id="ana-result-wrap"></div>
     </div>
 
   </div>
@@ -1333,7 +1470,8 @@
   }
 
   /* ── OCR 업로드 플로우 ──────────────────────────── */
-  let _ocrFile = null;
+  let _ocrFile   = null;
+  let _parsedDoc = null;   // OCR 완료 후 저장되는 ParsedDocument
   let _progTimer = null;
 
   function ocrTrigger(mode) {
@@ -1354,7 +1492,7 @@
   }
 
   function ocrShowStep(n) {
-    [1, 2, 3, 4].forEach(i => {
+    [1, 2, 3, 4, 5, 6, 7].forEach(i => {
       const el = document.getElementById('ocr-s' + i);
       if (el) el.style.display = (i === n) ? 'block' : 'none';
     });
@@ -1362,11 +1500,24 @@
 
   function ocrReset() {
     _ocrFile = null;
+    _parsedDoc = null;
     if (_progTimer) { clearInterval(_progTimer); _progTimer = null; }
     document.getElementById('ocr-cam').value = '';
     document.getElementById('ocr-gal').value = '';
-    document.getElementById('ocr-prog').style.width = '0';
+    ['ocr-prog', 'ana-prog'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.width = '0';
+    });
     ocrShowStep(1);
+  }
+
+  /* 보험 카드 토글 */
+  function togglePolicy(card) {
+    const cb = card.querySelector('input[type="checkbox"]');
+    const chk = card.querySelector('.policy-check');
+    cb.checked = !cb.checked;
+    card.classList.toggle('selected', cb.checked);
+    chk.textContent = cb.checked ? '✓' : '';
   }
 
   async function ocrAnalyze() {
@@ -1432,10 +1583,132 @@
     };
   }
 
+  function goToAnalyze() {
+    if (!_parsedDoc) { ocrShowStep(1); return; }
+    ocrShowStep(5);
+    document.getElementById('try').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  /* ── RAG 분석 ──────────────────────────────────────── */
+  async function startAnalysis() {
+    const policyIds = Array.from(
+      document.querySelectorAll('#policy-grid input[type="checkbox"]:checked')
+    ).map(cb => cb.value);
+
+    if (policyIds.length === 0) {
+      showToast('보험을 하나 이상 선택해주세요.', true);
+      return;
+    }
+    if (!_parsedDoc) { ocrShowStep(1); return; }
+
+    ocrShowStep(6);
+
+    let pct = 0;
+    const progEl = document.getElementById('ana-prog');
+    _progTimer = setInterval(() => {
+      pct = Math.min(pct + Math.random() * 7, 88);
+      progEl.style.width = pct + '%';
+    }, 450);
+
+    try {
+      const res = await fetch(`${API_BASE}/analyze/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ parsed: _parsedDoc, policy_ids: policyIds }),
+      });
+      clearInterval(_progTimer); _progTimer = null;
+      progEl.style.width = '100%';
+      await new Promise(r => setTimeout(r, 500));
+
+      if (res.ok) {
+        renderAnalysisResult(await res.json());
+      } else {
+        const err = await res.json().catch(() => ({ detail: `HTTP ${res.status}` }));
+        renderAnalysisError(err.detail || `서버 오류 ${res.status}`);
+      }
+    } catch (e) {
+      clearInterval(_progTimer); _progTimer = null;
+      renderAnalysisError('분석 서버에 연결할 수 없습니다. (' + (e.message || 'fetch 실패') + ')');
+    }
+  }
+
+  function renderAnalysisResult(data) {
+    const claimable = data.is_claimable;
+    const payout    = data.estimated_payout || 0;
+    const conf      = Math.round((data.confidence || 0) * 100);
+
+    let html = `
+      <div class="ana-payout ${claimable ? 'claimable' : 'not-claimable'}">
+        <div class="ana-badge">${claimable ? '✅ 청구 가능' : '❌ 청구 어려움'}</div>
+        <div class="ana-amount">${claimable ? '₩ ' + payout.toLocaleString() : '—'}</div>
+        <div class="ana-conf-row">
+          <div class="ana-conf-bar"><div class="ana-conf-fill" style="width:${conf}%"></div></div>
+          <span class="ana-conf-pct">AI 신뢰도 ${conf}%</span>
+        </div>
+      </div>`;
+
+    if (data.llm_summary) {
+      html += `<div class="ana-summary">${data.llm_summary.replace(/\n/g,'<br>')}</div>`;
+    }
+
+    // 계산 내역
+    if (data.breakdown && Object.keys(data.breakdown).length) {
+      html += '<div class="ana-card"><div class="ana-card-title">💰 계산 내역</div>';
+      for (const [k, v] of Object.entries(data.breakdown)) {
+        const cls = v < 0 ? 'neg' : (k.includes('보상') || k.includes('지급') ? 'pos' : '');
+        html += `<div class="ana-row">
+          <span>${k}</span>
+          <span class="${cls}">${v < 0 ? '- ' : ''}₩${Math.abs(v).toLocaleString()}</span>
+        </div>`;
+      }
+      html += '</div>';
+    }
+
+    // 약관 근거
+    if (data.coverage_items && data.coverage_items.length) {
+      html += '<div class="ana-card"><div class="ana-card-title">📜 적용 약관 근거</div>';
+      data.coverage_items.forEach(item => {
+        html += `<div class="ana-coverage">
+          <div class="ana-cov-head">${item.is_covered ? '✓' : '✗'} ${item.policy_name} · ${item.article}</div>
+          <div class="ana-cov-reason">${item.reason}</div>
+          <div class="ana-cov-cite">"${item.citation}"</div>
+        </div>`;
+      });
+      html += '</div>';
+    }
+
+    html += `<div class="ana-actions">
+      <button class="btn-ghost" onclick="ocrReset()">처음부터</button>
+      <button class="btn-primary" onclick="scrollToWaitlist()">📩 정식 서비스 신청 →</button>
+    </div>`;
+
+    document.getElementById('ana-result-wrap').innerHTML = html;
+    ocrShowStep(7);
+    document.getElementById('try').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function renderAnalysisError(msg) {
+    document.getElementById('ana-result-wrap').innerHTML = `
+      <div class="ocr-result-box">
+        <div class="ocr-result-head" style="background:#FFF1F2;border-color:#FECACA;color:#DC2626">
+          ❌ 분석 오류
+        </div>
+        <div class="ocr-demo-note" style="color:#DC2626;background:#FFF1F2;border-color:#FECACA">
+          <small style="font-family:monospace;word-break:break-all">${msg}</small>
+        </div>
+        <div class="ocr-result-btns">
+          <button class="btn-ghost" onclick="ocrShowStep(5)">← 보험 재선택</button>
+          <button class="btn-primary" onclick="startAnalysis()">다시 시도</button>
+        </div>
+      </div>`;
+    ocrShowStep(7);
+  }
+
   function ocrShowResult(data, isDemo) {
     // 백엔드 응답: { filename, ocr_raw, parsed: { hospital, ... } }
     // 데모 폴백:   { hospital, diagnosis, ... } (parsed 없음)
     const p = data.parsed || data;
+    _parsedDoc = p;   // 분석 단계에서 재사용
     const drugs = p.drugs || [];
 
     const cnt = (p.hospital ? 1 : 0)
