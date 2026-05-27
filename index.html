@@ -621,11 +621,92 @@
     }
     .toast.show { transform: translateY(0); opacity: 1; }
 
+    /* ── OCR UPLOAD ────────────────────────────────────── */
+    .ocr-bg { background: linear-gradient(135deg, #F0FDF4 0%, #EFF6FF 100%); }
+    .ocr-wrap { max-width: 520px; margin: 0 auto; }
+
+    /* 모드 선택 */
+    .ocr-modes {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px;
+    }
+    .ocr-mode {
+      background: white; border: 2px solid var(--gray-100);
+      border-radius: 16px; padding: 36px 16px; text-align: center;
+      cursor: pointer; transition: all 0.2s; font-family: inherit;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+    }
+    .ocr-mode:hover {
+      border-color: var(--blue); transform: translateY(-3px);
+      box-shadow: 0 12px 28px rgba(37,99,235,0.14);
+    }
+    .ocr-mode-emoji { font-size: 3rem; line-height: 1; }
+    .ocr-mode strong { font-size: 1.05rem; font-weight: 700; color: var(--gray-900); }
+    .ocr-mode span  { font-size: 0.78rem; color: var(--gray-500); }
+    .ocr-hint { text-align: center; font-size: 0.8rem; color: var(--gray-500); margin-top: 4px; }
+
+    /* 미리보기 */
+    .ocr-preview-box {
+      border-radius: 12px; overflow: hidden; border: 1px solid var(--gray-300);
+      margin-bottom: 16px; background: var(--gray-50);
+      max-height: 300px; display: flex; align-items: center; justify-content: center;
+    }
+    .ocr-preview-box img { width: 100%; max-height: 300px; object-fit: contain; display: block; }
+    .ocr-preview-btns { display: flex; gap: 10px; }
+
+    /* 로딩 */
+    .ocr-loading-box {
+      background: white; border-radius: 16px; padding: 44px 24px;
+      text-align: center; border: 1px solid var(--gray-100);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+    .ocr-spinner {
+      width: 48px; height: 48px; border-radius: 50%;
+      border: 4px solid var(--gray-100); border-top-color: var(--blue);
+      animation: ocrSpin 0.8s linear infinite; margin: 0 auto 16px;
+    }
+    @keyframes ocrSpin { to { transform: rotate(360deg); } }
+    .ocr-loading-msg { font-size: 1rem; font-weight: 700; color: var(--gray-900); margin-bottom: 6px; }
+    .ocr-loading-sub { font-size: 0.82rem; color: var(--gray-500); margin-bottom: 20px; }
+    .ocr-prog-wrap { height: 6px; background: var(--gray-100); border-radius: 999px; overflow: hidden; }
+    .ocr-prog { height: 100%; background: linear-gradient(90deg, var(--blue), var(--teal)); border-radius: 999px; width: 0; transition: width 0.35s ease; }
+
+    /* 결과 */
+    .ocr-result-box {
+      background: white; border-radius: 16px; border: 1px solid var(--gray-100);
+      overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+    .ocr-result-head {
+      padding: 14px 18px; background: #F0FDF4; border-bottom: 1px solid #BBF7D0;
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 0.95rem; font-weight: 700; color: #15803D;
+    }
+    .ocr-fields { padding: 4px 0; }
+    .ocr-field {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 18px; border-bottom: 1px solid #F5F3EE; font-size: 0.85rem;
+    }
+    .ocr-field:last-child { border-bottom: none; }
+    .ocr-field-lbl { font-size: 0.7rem; font-weight: 700; color: var(--gray-500); min-width: 64px; }
+    .ocr-field-val { flex: 1; font-weight: 600; color: var(--gray-900); }
+    .ocr-field-val small { font-weight: 400; color: var(--gray-500); font-size: 0.75rem; }
+    .ocr-demo-note {
+      margin: 12px 18px 4px; padding: 10px 14px; border-radius: 8px;
+      background: #FFF9EE; border: 1px solid #F0D8A8;
+      font-size: 0.78rem; color: #7A5C20; line-height: 1.7;
+    }
+    .ocr-result-btns {
+      display: flex; gap: 10px; padding: 14px 18px; border-top: 1px solid var(--gray-100);
+    }
+
     /* ── RESPONSIVE ────────────────────────────────────── */
     @media (max-width: 680px) {
       .before-after { grid-template-columns: 1fr; }
       .arrow-divider { transform: rotate(90deg); }
       .hero h1 { font-size: 1.9rem; }
+      .ocr-modes { grid-template-columns: 1fr 1fr; gap: 12px; }
+      .ocr-mode { padding: 24px 12px; }
+      .ocr-mode-emoji { font-size: 2.2rem; }
     }
   </style>
 </head>
@@ -649,8 +730,8 @@
       </svg>
       카카오톡 채널 추가 (무료)
     </a>
-    <button class="btn-secondary" onclick="scrollToDemo()">
-      ▶ 데모 보기
+    <button class="btn-secondary" onclick="scrollToTry()">
+      📷 지금 체험하기
     </button>
   </div>
 
@@ -734,6 +815,74 @@
       <h3>원클릭 청구 대행</h3>
       <p>[바로 청구하기] 버튼 한 번으로 보험사에 자동 청구까지 완료합니다.</p>
     </div>
+  </div>
+</section>
+
+<!-- OCR INPUT -->
+<section class="section ocr-bg" id="try">
+  <div class="section-label">무료 체험</div>
+  <h2 class="section-title">지금 바로 처방전 올려보세요</h2>
+  <p class="section-sub">카메라로 촬영하거나 갤러리에서 선택하면 AI가 3초 만에 분석합니다.</p>
+
+  <div class="ocr-wrap">
+
+    <!-- Step 1: 촬영 방법 선택 -->
+    <div id="ocr-s1">
+      <div class="ocr-modes">
+        <button class="ocr-mode" onclick="ocrTrigger('camera')">
+          <span class="ocr-mode-emoji">📷</span>
+          <strong>카메라 촬영</strong>
+          <span>바로 찍어서 분석</span>
+        </button>
+        <button class="ocr-mode" onclick="ocrTrigger('gallery')">
+          <span class="ocr-mode-emoji">🖼️</span>
+          <strong>사진 선택</strong>
+          <span>갤러리에서 불러오기</span>
+        </button>
+      </div>
+      <p class="ocr-hint">📌 진료비 영수증 · 처방전 · 약품 봉투 모두 가능합니다</p>
+    </div>
+
+    <!-- Hidden file inputs -->
+    <input id="ocr-cam" type="file" accept="image/*" capture="environment" style="display:none" onchange="ocrFileReady(event)">
+    <input id="ocr-gal" type="file" accept="image/*" style="display:none" onchange="ocrFileReady(event)">
+
+    <!-- Step 2: 미리보기 + 분석 시작 -->
+    <div id="ocr-s2" style="display:none">
+      <div class="ocr-preview-box">
+        <img id="ocr-preview-img" src="" alt="선택한 사진" />
+      </div>
+      <div class="ocr-preview-btns">
+        <button class="btn-ghost" onclick="ocrReset()">← 다시 선택</button>
+        <button class="btn-primary" onclick="ocrAnalyze()">🔍 AI 분석 시작</button>
+      </div>
+    </div>
+
+    <!-- Step 3: 분석 중 -->
+    <div id="ocr-s3" style="display:none">
+      <div class="ocr-loading-box">
+        <div class="ocr-spinner"></div>
+        <p class="ocr-loading-msg">AI가 처방전을 읽는 중...</p>
+        <p class="ocr-loading-sub">상병코드 · 약품 · 금액을 자동으로 추출합니다</p>
+        <div class="ocr-prog-wrap"><div class="ocr-prog" id="ocr-prog"></div></div>
+      </div>
+    </div>
+
+    <!-- Step 4: 인식 결과 -->
+    <div id="ocr-s4" style="display:none">
+      <div class="ocr-result-box">
+        <div class="ocr-result-head">
+          <span>✅ 인식 완료</span>
+          <span class="badge-ok" id="ocr-cnt"></span>
+        </div>
+        <div id="ocr-fields"></div>
+        <div class="ocr-result-btns">
+          <button class="btn-ghost" onclick="ocrReset()">다시 촬영</button>
+          <button class="btn-primary" onclick="scrollToWaitlist()">💸 보상 분석 받기 →</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </section>
 
@@ -1139,6 +1288,9 @@
   function scrollToDemo() {
     document.getElementById('demo').scrollIntoView({ behavior: 'smooth' });
   }
+  function scrollToTry() {
+    document.getElementById('try').scrollIntoView({ behavior: 'smooth' });
+  }
   function switchDemo(idx) {
     document.querySelectorAll('.demo-screen').forEach((el, i) => {
       el.classList.toggle('active', i === idx);
@@ -1178,6 +1330,116 @@
     });
     if (!res.ok) throw new Error('제출 중 오류가 발생했습니다.');
     return '대기열 등록 완료! 출시 알림을 드릴게요.';
+  }
+
+  /* ── OCR 업로드 플로우 ──────────────────────────── */
+  let _ocrFile = null;
+  let _progTimer = null;
+
+  function ocrTrigger(mode) {
+    document.getElementById(mode === 'camera' ? 'ocr-cam' : 'ocr-gal').click();
+  }
+
+  function ocrFileReady(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    _ocrFile = file;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      document.getElementById('ocr-preview-img').src = ev.target.result;
+      ocrShowStep(2);
+      document.getElementById('try').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function ocrShowStep(n) {
+    [1, 2, 3, 4].forEach(i => {
+      const el = document.getElementById('ocr-s' + i);
+      if (el) el.style.display = (i === n) ? 'block' : 'none';
+    });
+  }
+
+  function ocrReset() {
+    _ocrFile = null;
+    if (_progTimer) { clearInterval(_progTimer); _progTimer = null; }
+    document.getElementById('ocr-cam').value = '';
+    document.getElementById('ocr-gal').value = '';
+    document.getElementById('ocr-prog').style.width = '0';
+    ocrShowStep(1);
+  }
+
+  async function ocrAnalyze() {
+    if (!_ocrFile) return;
+    ocrShowStep(3);
+
+    // 프로그레스 바 애니메이션
+    let pct = 0;
+    const progEl = document.getElementById('ocr-prog');
+    _progTimer = setInterval(() => {
+      pct = Math.min(pct + Math.random() * 12, 85);
+      progEl.style.width = pct + '%';
+    }, 280);
+
+    try {
+      const form = new FormData();
+      form.append('file', _ocrFile);
+      const res = await fetch(`${API_BASE}/upload/`, { method: 'POST', body: form });
+      clearInterval(_progTimer); _progTimer = null;
+      progEl.style.width = '100%';
+      await new Promise(r => setTimeout(r, 400));
+      const data = res.ok ? await res.json() : null;
+      ocrShowResult(data || ocrDemoResult(), !res.ok);
+    } catch {
+      clearInterval(_progTimer); _progTimer = null;
+      progEl.style.width = '100%';
+      await new Promise(r => setTimeout(r, 400));
+      ocrShowResult(ocrDemoResult(), true);
+    }
+  }
+
+  function ocrDemoResult() {
+    return {
+      hospital: '○○내과의원', department: '내과',
+      diagnosis: 'J06.9 급성상기도감염',
+      visit_date: new Date().toISOString().slice(0, 10),
+      total_amount: 28500,
+      drugs: [
+        { name: '아목시실린 500mg', dosage: '1일 3회', days: 3 },
+        { name: '타이레놀 650mg',   dosage: '1일 2회', days: 3 },
+      ],
+    };
+  }
+
+  function ocrShowResult(data, isDemo) {
+    const drugs = data.drugs || [];
+    const cnt = (data.hospital ? 1 : 0) + (data.diagnosis ? 1 : 0)
+              + (data.total_amount ? 1 : 0) + drugs.length;
+
+    document.getElementById('ocr-cnt').textContent = cnt + '건 인식';
+
+    let html = '<div class="ocr-fields">';
+    if (isDemo) {
+      html += '<div class="ocr-demo-note">📌 데모 결과입니다 — 실제 Clova OCR 결과는 베타 신청 후 이용 가능합니다</div>';
+    }
+    if (data.hospital)      html += ocrRow('병원',     data.hospital);
+    if (data.diagnosis)     html += ocrRow('상병코드', data.diagnosis, 'conf-sure', '확실');
+    if (data.total_amount)  html += ocrRow('본인부담금', '₩' + data.total_amount.toLocaleString());
+    drugs.forEach(d => {
+      html += ocrRow('약품', `💊 ${d.name}<small> · ${d.dosage} ${d.days}일</small>`, 'conf-sure', '확실');
+    });
+    html += '</div>';
+    document.getElementById('ocr-fields').innerHTML = html;
+    ocrShowStep(4);
+  }
+
+  function ocrRow(label, val, confClass, confLabel) {
+    const conf = confClass
+      ? `<span class="confidence ${confClass}">${confLabel}</span>` : '';
+    return `<div class="ocr-field">
+      <span class="ocr-field-lbl">${label}</span>
+      <span class="ocr-field-val">${val}</span>${conf}
+    </div>`;
   }
 
   async function handleWaitlist(e) {
