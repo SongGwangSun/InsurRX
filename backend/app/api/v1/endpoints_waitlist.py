@@ -14,7 +14,17 @@ router = APIRouter()
 async def register_waitlist(body: WaitlistCreate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Waitlist).where(Waitlist.email == body.email))
     existing = result.scalar_one_or_none()
+
     if existing:
+        # 설문 데이터가 새로 들어온 경우 업데이트
+        survey_fields = ("usage_intent", "paid_intent", "price_range", "feedback")
+        has_new_survey = any(getattr(body, f) for f in survey_fields)
+        if has_new_survey:
+            for f in survey_fields:
+                val = getattr(body, f)
+                if val is not None:
+                    setattr(existing, f, val)
+            await db.commit()
         return WaitlistResponse(message="이미 등록된 이메일입니다.", already_registered=True)
 
     db.add(Waitlist(
