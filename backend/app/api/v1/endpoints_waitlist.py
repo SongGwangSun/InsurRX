@@ -15,6 +15,13 @@ async def register_waitlist(body: WaitlistCreate, db: AsyncSession = Depends(get
     if existing:
         return WaitlistResponse(message="이미 등록된 이메일입니다.", already_registered=True)
 
-    db.add(Waitlist(email=body.email, source=body.source))
+    db.add(Waitlist(
+        email=body.email,
+        source=body.source,
+        usage_intent=body.usage_intent,
+        paid_intent=body.paid_intent,
+        price_range=body.price_range,
+        feedback=body.feedback,
+    ))
     await db.commit()
     return WaitlistResponse(message="대기열 등록 완료! 출시 알림을 드릴게요.")
