@@ -594,6 +594,136 @@
     .waitlist-form button:hover { background: var(--blue-dk); }
     .waitlist-note { font-size: 0.8rem; color: var(--gray-500); }
 
+    /* ── SURVEY ──────────────────────────────────────── */
+    .survey-wrap {
+      max-width: 560px; margin: 0 auto 32px;
+      background: white; border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+    .survey-progress {
+      height: 4px; background: var(--gray-200);
+    }
+    .survey-progress-bar {
+      height: 100%; background: var(--blue);
+      transition: width 0.4s ease;
+    }
+    .survey-step {
+      padding: 28px 28px 20px;
+      display: none;
+    }
+    .survey-step.active { display: block; }
+    .survey-q-num {
+      font-size: 0.72rem; font-weight: 700; color: var(--blue);
+      text-transform: uppercase; letter-spacing: 0.8px;
+      margin-bottom: 8px;
+    }
+    .survey-q-text {
+      font-size: 1.05rem; font-weight: 700; color: var(--gray-900);
+      margin-bottom: 18px; line-height: 1.5;
+    }
+    .survey-options {
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .survey-option {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px; border-radius: 10px;
+      border: 1.5px solid var(--gray-200);
+      cursor: pointer; transition: all 0.15s;
+      text-align: left;
+    }
+    .survey-option:hover { border-color: var(--blue); background: #EFF6FF; }
+    .survey-option input[type="radio"],
+    .survey-option input[type="checkbox"] { display: none; }
+    .survey-option.selected {
+      border-color: var(--blue); background: #EFF6FF;
+    }
+    .survey-option-dot {
+      width: 18px; height: 18px; border-radius: 50%;
+      border: 2px solid var(--gray-300); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+    .survey-option.selected .survey-option-dot {
+      border-color: var(--blue); background: var(--blue);
+    }
+    .survey-option.selected .survey-option-dot::after {
+      content: ''; width: 6px; height: 6px;
+      border-radius: 50%; background: white;
+    }
+    .survey-option-label { font-size: 0.9rem; color: var(--gray-700); font-weight: 500; }
+    .survey-price-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    }
+    .survey-price-grid .survey-option {
+      justify-content: center; flex-direction: column; gap: 4px;
+      text-align: center; padding: 14px 10px;
+    }
+    .survey-price-grid .survey-option-dot { display: none; }
+    .survey-price-grid .survey-option-label { font-size: 0.85rem; text-align: center; }
+    .survey-price-badge {
+      font-size: 1.1rem; font-weight: 800; color: var(--blue);
+    }
+    .survey-price-grid .survey-option.selected .survey-price-badge { color: var(--blue-dk); }
+    .survey-textarea {
+      width: 100%; padding: 12px 14px;
+      border: 1.5px solid var(--gray-200); border-radius: 10px;
+      font-size: 0.9rem; color: var(--gray-700);
+      resize: vertical; min-height: 90px; font-family: inherit;
+      outline: none; transition: border-color 0.2s;
+      box-sizing: border-box;
+    }
+    .survey-textarea:focus { border-color: var(--blue); }
+    .survey-nav {
+      display: flex; gap: 8px; justify-content: flex-end;
+      padding: 0 28px 24px;
+    }
+    .survey-btn-prev {
+      background: white; color: var(--gray-600);
+      border: 1.5px solid var(--gray-200); border-radius: var(--radius);
+      padding: 10px 20px; font-size: 0.9rem; font-weight: 600;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .survey-btn-prev:hover { border-color: var(--gray-400); color: var(--gray-900); }
+    .survey-btn-next {
+      background: var(--blue); color: white; border: none;
+      border-radius: var(--radius); padding: 10px 24px;
+      font-size: 0.9rem; font-weight: 700; cursor: pointer;
+      transition: background 0.15s; display: flex; align-items: center; gap: 6px;
+    }
+    .survey-btn-next:hover { background: var(--blue-dk); }
+    .survey-btn-next:disabled { background: var(--gray-300); cursor: not-allowed; }
+    .survey-email-step {
+      padding: 28px;
+    }
+    .survey-email-label {
+      font-size: 0.85rem; font-weight: 600; color: var(--gray-600);
+      margin-bottom: 8px; text-align: left;
+    }
+    .survey-email-row {
+      display: flex; gap: 10px; flex-wrap: wrap;
+    }
+    .survey-email-row input {
+      flex: 1; min-width: 200px;
+      padding: 13px 16px; border-radius: var(--radius);
+      border: 1.5px solid var(--gray-300); font-size: 0.95rem;
+      outline: none; transition: border-color 0.2s;
+    }
+    .survey-email-row input:focus { border-color: var(--blue); }
+    .survey-submit-btn {
+      background: var(--blue); color: white; border: none;
+      border-radius: var(--radius); padding: 13px 22px;
+      font-size: 0.95rem; font-weight: 700; cursor: pointer;
+      transition: background 0.15s; white-space: nowrap;
+    }
+    .survey-submit-btn:hover { background: var(--blue-dk); }
+    .survey-submit-btn:disabled { background: var(--gray-300); cursor: not-allowed; }
+    @media (max-width: 500px) {
+      .survey-step, .survey-email-step { padding: 20px 16px 16px; }
+      .survey-nav { padding: 0 16px 20px; }
+      .survey-price-grid { grid-template-columns: 1fr 1fr; }
+    }
+
     /* ── FOOTER ────────────────────────────────────────── */
     footer {
       background: var(--gray-900); color: #94A3B8;
@@ -1467,12 +1597,123 @@
 <section class="section waitlist-bg" id="waitlist">
   <div class="section-label">베타 신청</div>
   <h2 class="section-title">선착순 1,000명 무료 베타</h2>
-  <p class="section-sub">지금 신청하시면 정식 출시 전 먼저 이용하고, 라이트 플랜 1개월 무료 쿠폰을 받으실 수 있습니다.</p>
+  <p class="section-sub">간단한 설문 후 대기열에 등록하시면 정식 출시 전 먼저 이용하고, 라이트 플랜 1개월 무료 쿠폰을 받으실 수 있습니다.</p>
 
-  <form class="waitlist-form" onsubmit="handleWaitlist(event)">
-    <input type="email" placeholder="이메일 주소를 입력하세요" required />
-    <button type="submit">대기열 등록하기 →</button>
-  </form>
+  <div class="survey-wrap" id="survey-wrap">
+    <!-- 진행 바 -->
+    <div class="survey-progress">
+      <div class="survey-progress-bar" id="survey-prog-bar" style="width:25%"></div>
+    </div>
+
+    <!-- Q1. 앱 사용 의향 -->
+    <div class="survey-step active" id="survey-s1">
+      <div class="survey-q-num">질문 1 / 4</div>
+      <div class="survey-q-text">InsurRX 앱을 사용하실 의향이 있으신가요?</div>
+      <div class="survey-options" id="sq1-opts">
+        <label class="survey-option" onclick="selectOption('sq1', this)">
+          <input type="radio" name="sq1" value="definitely" />
+          <div class="survey-option-dot"></div>
+          <span class="survey-option-label">네, 꼭 사용하고 싶어요</span>
+        </label>
+        <label class="survey-option" onclick="selectOption('sq1', this)">
+          <input type="radio" name="sq1" value="maybe" />
+          <div class="survey-option-dot"></div>
+          <span class="survey-option-label">한번 써볼 것 같아요</span>
+        </label>
+        <label class="survey-option" onclick="selectOption('sq1', this)">
+          <input type="radio" name="sq1" value="unsure" />
+          <div class="survey-option-dot"></div>
+          <span class="survey-option-label">잘 모르겠어요</span>
+        </label>
+        <label class="survey-option" onclick="selectOption('sq1', this)">
+          <input type="radio" name="sq1" value="no" />
+          <div class="survey-option-dot"></div>
+          <span class="survey-option-label">사용하지 않을 것 같아요</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Q2. 유료 이용 의향 -->
+    <div class="survey-step" id="survey-s2">
+      <div class="survey-q-num">질문 2 / 4</div>
+      <div class="survey-q-text">유료 서비스라면 이용하실 의향이 있으신가요?</div>
+      <div class="survey-options" id="sq2-opts">
+        <label class="survey-option" onclick="selectOption('sq2', this)">
+          <input type="radio" name="sq2" value="yes_paid" />
+          <div class="survey-option-dot"></div>
+          <span class="survey-option-label">네, 가치 있다면 유료도 괜찮아요</span>
+        </label>
+        <label class="survey-option" onclick="selectOption('sq2', this)">
+          <input type="radio" name="sq2" value="depends_price" />
+          <div class="survey-option-dot"></div>
+          <span class="survey-option-label">가격에 따라 달라요</span>
+        </label>
+        <label class="survey-option" onclick="selectOption('sq2', this)">
+          <input type="radio" name="sq2" value="free_only" />
+          <div class="survey-option-dot"></div>
+          <span class="survey-option-label">무료만 이용할 것 같아요</span>
+        </label>
+        <label class="survey-option" onclick="selectOption('sq2', this)">
+          <input type="radio" name="sq2" value="not_interested" />
+          <div class="survey-option-dot"></div>
+          <span class="survey-option-label">관심 없어요</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Q3. 지불 의향 금액 -->
+    <div class="survey-step" id="survey-s3">
+      <div class="survey-q-num">질문 3 / 4</div>
+      <div class="survey-q-text">월 얼마까지 지불하실 의향이 있으신가요?</div>
+      <div class="survey-price-grid" id="sq3-opts">
+        <label class="survey-option" onclick="selectOption('sq3', this)">
+          <input type="radio" name="sq3" value="free" />
+          <span class="survey-price-badge">무료</span>
+          <span class="survey-option-label">무료만 이용</span>
+        </label>
+        <label class="survey-option" onclick="selectOption('sq3', this)">
+          <input type="radio" name="sq3" value="low" />
+          <span class="survey-price-badge">~2,900원</span>
+          <span class="survey-option-label">월 1,000–2,900원</span>
+        </label>
+        <label class="survey-option" onclick="selectOption('sq3', this)">
+          <input type="radio" name="sq3" value="mid" />
+          <span class="survey-price-badge">~4,900원</span>
+          <span class="survey-option-label">월 3,000–4,900원</span>
+        </label>
+        <label class="survey-option" onclick="selectOption('sq3', this)">
+          <input type="radio" name="sq3" value="high" />
+          <span class="survey-price-badge">5,000원+</span>
+          <span class="survey-option-label">월 5,000원 이상</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Q4. 추가 의견 -->
+    <div class="survey-step" id="survey-s4">
+      <div class="survey-q-num">질문 4 / 4</div>
+      <div class="survey-q-text">InsurRX에 바라는 점이나 추가 의견을 자유롭게 적어주세요.</div>
+      <textarea class="survey-textarea" id="sq4-text" placeholder="예) 카카오톡 연동이 있으면 좋겠어요, 가족 보험도 한번에 관리하고 싶어요 ..."></textarea>
+    </div>
+
+    <!-- 이메일 입력 (최종) -->
+    <div class="survey-step" id="survey-s5">
+      <div class="survey-q-num">설문 완료 🎉</div>
+      <div class="survey-q-text">이메일을 입력하시면 대기열 등록이 완료됩니다!</div>
+      <div class="survey-email-label">이메일 주소</div>
+      <form class="survey-email-row" onsubmit="handleWaitlist(event)">
+        <input type="email" id="waitlist-email" placeholder="your@email.com" required />
+        <button class="survey-submit-btn" type="submit" id="survey-submit-btn">대기열 등록하기 →</button>
+      </form>
+    </div>
+
+    <!-- 네비게이션 버튼 -->
+    <div class="survey-nav" id="survey-nav">
+      <button class="survey-btn-prev" id="survey-prev-btn" onclick="surveyPrev()" style="display:none">← 이전</button>
+      <button class="survey-btn-next" id="survey-next-btn" onclick="surveyNext()">다음 →</button>
+    </div>
+  </div>
+
   <p class="waitlist-note">🔒 스팸 없음. 출시 알림 1회만 발송됩니다.</p>
 </section>
 
@@ -1529,30 +1770,6 @@
     toast.style.background = isError ? '#DC2626' : 'var(--teal)';
     toast.classList.add('show');
     setTimeout(() => toast.classList.remove('show'), 3500);
-  }
-
-  async function submitLocal(email) {
-    const res = await fetch(`${API_BASE}/waitlist/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, source: 'landing' }),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || '서버 오류가 발생했습니다.');
-    return data.message;
-  }
-
-  async function submitFormspree(email) {
-    if (FORMSPREE_ID === '__FORMSPREE_ID__' || FORMSPREE_ID === '__NOT_SET__') {
-      throw new Error('이메일 수집 설정이 완료되지 않았습니다.');
-    }
-    const res = await fetch(FORMSPREE_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({ email }),
-    });
-    if (!res.ok) throw new Error('제출 중 오류가 발생했습니다.');
-    return '대기열 등록 완료! 출시 알림을 드릴게요.';
   }
 
   /* ── OCR 업로드 플로우 ──────────────────────────── */
@@ -1974,36 +2191,134 @@
     </div>`;
   }
 
+  /* ── SURVEY ─────────────────────────────────────── */
+  let _surveyStep = 1;
+  const SURVEY_TOTAL = 5; // 4 questions + email step
+
+  function surveyUpdateUI() {
+    // 진행 바
+    document.getElementById('survey-prog-bar').style.width =
+      Math.round((_surveyStep / SURVEY_TOTAL) * 100) + '%';
+
+    // 스텝 표시
+    for (let i = 1; i <= SURVEY_TOTAL; i++) {
+      const el = document.getElementById('survey-s' + i);
+      if (el) el.classList.toggle('active', i === _surveyStep);
+    }
+
+    // 이전/다음 버튼
+    const nav = document.getElementById('survey-nav');
+    const prevBtn = document.getElementById('survey-prev-btn');
+    const nextBtn = document.getElementById('survey-next-btn');
+
+    if (_surveyStep === SURVEY_TOTAL) {
+      nav.style.display = 'none'; // 이메일 스텝엔 폼 자체 버튼 사용
+    } else {
+      nav.style.display = 'flex';
+      prevBtn.style.display = _surveyStep > 1 ? 'block' : 'none';
+      nextBtn.textContent = _surveyStep === SURVEY_TOTAL - 1 ? '완료 →' : '다음 →';
+    }
+  }
+
+  function selectOption(name, el) {
+    const container = el.parentElement;
+    container.querySelectorAll('.survey-option').forEach(opt => opt.classList.remove('selected'));
+    el.classList.add('selected');
+    el.querySelector('input').checked = true;
+  }
+
+  function surveyNext() {
+    // Q1~Q3 선택 필수 검증
+    if (_surveyStep <= 3) {
+      const name = 'sq' + _surveyStep;
+      if (!document.querySelector(`input[name="${name}"]:checked`)) {
+        const opts = document.getElementById(`${name}-opts`);
+        opts.style.outline = '2px solid #EF4444';
+        opts.style.borderRadius = '10px';
+        setTimeout(() => { opts.style.outline = ''; opts.style.borderRadius = ''; }, 1000);
+        return;
+      }
+    }
+    if (_surveyStep < SURVEY_TOTAL) {
+      _surveyStep++;
+      surveyUpdateUI();
+    }
+  }
+
+  function surveyPrev() {
+    if (_surveyStep > 1) {
+      _surveyStep--;
+      surveyUpdateUI();
+    }
+  }
+
+  function surveyGetData() {
+    const getVal = (name) => {
+      const el = document.querySelector(`input[name="${name}"]:checked`);
+      return el ? el.value : '';
+    };
+    return {
+      usage_intent: getVal('sq1'),
+      paid_intent: getVal('sq2'),
+      price_range: getVal('sq3'),
+      feedback: document.getElementById('sq4-text').value.trim(),
+    };
+  }
+
   async function handleWaitlist(e) {
     e.preventDefault();
-    const form = e.target;
-    const email = form.querySelector('input[type="email"]').value.trim();
-    const btn = form.querySelector('button[type="submit"]');
+    const email = document.getElementById('waitlist-email').value.trim();
+    const btn = document.getElementById('survey-submit-btn');
 
     btn.disabled = true;
     btn.textContent = '등록 중...';
 
+    const survey = surveyGetData();
+
     try {
-      // Railway 백엔드 우선 시도 (로컬 + GitHub Pages 모두)
       let message;
       try {
-        message = await submitLocal(email);
+        const res = await fetch(`${API_BASE}/waitlist/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, source: 'landing', ...survey }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || '서버 오류가 발생했습니다.');
+        message = data.message;
       } catch (apiErr) {
-        // Railway 오류 시 Formspree 폴백
-        message = await submitFormspree(email);
+        // Formspree 폴백 (설문 데이터 포함)
+        if (FORMSPREE_ID === '__FORMSPREE_ID__' || FORMSPREE_ID === '__NOT_SET__') {
+          throw new Error('이메일 수집 설정이 완료되지 않았습니다.');
+        }
+        const res = await fetch(FORMSPREE_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ email, ...survey }),
+        });
+        if (!res.ok) throw new Error('제출 중 오류가 발생했습니다.');
+        message = '대기열 등록 완료! 출시 알림을 드릴게요.';
       }
       showToast(message);
-      form.reset();
+      // 완료 화면
+      document.getElementById('survey-wrap').innerHTML = `
+        <div style="padding:40px 28px; text-align:center;">
+          <div style="font-size:2.5rem; margin-bottom:16px;">🎉</div>
+          <div style="font-size:1.1rem; font-weight:700; color:var(--gray-900); margin-bottom:8px;">등록이 완료됐어요!</div>
+          <div style="font-size:0.9rem; color:var(--gray-500);">정식 출시 시 ${email}로 알림을 드릴게요.<br>소중한 의견 감사합니다.</div>
+        </div>`;
     } catch (err) {
       const msg = err.message === 'Failed to fetch'
         ? '서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.'
         : err.message;
       showToast(msg, true);
-    } finally {
       btn.disabled = false;
       btn.textContent = '대기열 등록하기 →';
     }
   }
+
+  // 설문 초기화
+  surveyUpdateUI();
 </script>
 
 <!-- INSURER ADD MODAL -->
