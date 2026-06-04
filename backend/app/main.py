@@ -1,11 +1,16 @@
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.api.v1.router import api_router
 from app.core.config import settings
-from app.database import create_tables, run_migrations
-import app.models.waitlist          # noqa: F401 — register model for table creation
-import app.models.analysis_result   # noqa: F401 — register model for table creation
+from app.database import create_tables, run_migrations, AsyncSessionLocal
+import app.models.waitlist          # noqa: F401
+import app.models.analysis_result   # noqa: F401
+import app.models.prompt_template   # noqa: F401
+from app.services import prompt_service
+
+_log = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -13,10 +18,10 @@ async def lifespan(app: FastAPI):
     try:
         await create_tables()
         await run_migrations()
+        async with AsyncSessionLocal() as db:
+            await prompt_service.seed_and_load(db)
     except Exception as e:
-        # DB 연결 실패 시 앱을 종료하지 않고 경고만 출력
-        import logging
-        logging.getLogger(__name__).warning(f"DB 테이블 생성/마이그레이션 실패 (나중에 재시도): {e}")
+        _log.warning("DB 초기화 실패 (기본값으로 동작): %s", e)
     yield
 
 

@@ -189,28 +189,7 @@ def _needs_llm_fallback(doc: ParsedDocument) -> bool:
 
 # ── Stage 2: LLM 폴백 ─────────────────────────────────────────────────────────
 
-LLM_PARSE_PROMPT = """\
-아래는 병원 처방전 또는 진료비 영수증의 OCR 텍스트입니다.
-다음 항목을 JSON으로 추출해주세요. 없으면 null로 표기하세요.
-
-{
-  "hospital": "병원/의원 이름 (예: 강남내과의원)",
-  "department": "진료과 (예: 내과)",
-  "diagnosis": "진단명 (예: 급성상기도감염)",
-  "icd_code": "상병코드 (예: J06.9)",
-  "prescription_date": "처방일 YYYY-MM-DD (예: 2024-03-15)",
-  "total_amount": 본인부담금 숫자만 (예: 28500),
-  "drugs": [
-    {"name": "약품명", "dosage": "용량(예: 500mg)", "days": 복용일수정수, "is_nonbenefit": false}
-  ]
-}
-
-OCR 텍스트:
-\"\"\"
-{ocr_text}
-\"\"\"
-
-JSON만 출력하세요."""
+from app.services.prompt_service import get_prompt as _get_prompt
 
 
 async def _llm_parse(text: str) -> dict:
@@ -223,14 +202,12 @@ async def _llm_parse(text: str) -> dict:
         client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
         # 텍스트가 너무 길면 앞 2000자만 사용 (토큰 절약)
         snippet = text[:2000]
+        prompt = _get_prompt("ocr_llm_parse").format(ocr_text=snippet)
         resp = await client.chat.completions.create(
-            model="gpt-4o-mini",          # 빠르고 저렴한 모델로 파싱
+            model="gpt-4o-mini",
             max_tokens=800,
             temperature=0,
-            messages=[{
-                "role": "user",
-                "content": LLM_PARSE_PROMPT.format(ocr_text=snippet),
-            }],
+            messages=[{"role": "user", "content": prompt}],
         )
         raw = resp.choices[0].message.content.strip()
         # ```json ... ``` 블록 제거
