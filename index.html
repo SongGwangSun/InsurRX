@@ -1825,13 +1825,8 @@
     const file = e.target.files[0];
     if (!file) return;
     _ocrFile = file;
-    const reader = new FileReader();
-    reader.onload = function(ev) {
-      document.getElementById('ocr-preview-img').src = ev.target.result;
-      ocrShowStep(2);
-      document.getElementById('try').scrollIntoView({ behavior: 'smooth', block: 'center' });
-    };
-    reader.readAsDataURL(file);
+    document.getElementById('try').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    ocrAnalyze();
   }
 
   function ocrShowStep(n) {
