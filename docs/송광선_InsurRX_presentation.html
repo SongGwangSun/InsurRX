@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>InsurRX 서비스 기획 발표</title>
+<style>
+  :root {
+    --blue:   #2563EB;
+    --blue-dk:#1D4ED8;
+    --teal:   #0D9488;
+    --teal-lt:#CCFBF1;
+    --dark:   #0F172A;
+    --dark2:  #1E3A5F;
+    --gray:   #64748B;
+    --light:  #F8FAFC;
+    --white:  #FFFFFF;
+    --kakao:  #FEE500;
+    --red:    #EF4444;
+    --green:  #10B981;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',sans-serif;
+    background: #1a1a2e;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    min-height: 100vh; overflow: hidden;
+  }
+
+  /* ── 슬라이드 컨테이너 ── */
+  #deck {
+    width: 1280px; height: 720px;
+    position: relative; overflow: hidden;
+  }
+
+  .slide {
+    position: absolute; inset: 0;
+    width: 1280px; height: 720px;
+    display: none; flex-direction: column;
+    padding: 0;
+    background: var(--white);
+  }
+  .slide.active { display: flex; }
+
+  /* ── 컨트롤 바 ── */
+  #controls {
+    display: flex; align-items: center; gap: 16px;
+    margin-top: 14px;
+  }
+  .ctrl-btn {
+    background: rgba(255,255,255,0.15); color: white;
+    border: 1px solid rgba(255,255,255,0.3); border-radius: 8px;
+    padding: 8px 20px; font-size: 0.9rem; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .ctrl-btn:hover { background: rgba(255,255,255,0.25); }
+  #counter { color: rgba(255,255,255,0.7); font-size: 0.85rem; min-width: 80px; text-align: center; }
+
+  /* ════════════════════════════════════════
+     공통 레이아웃 컴포넌트
+  ════════════════════════════════════════ */
+  .slide-header {
+    padding: 28px 60px 0;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .slide-label {
+    font-size: 0.72rem; font-weight: 800; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--teal); background: var(--teal-lt);
+    padding: 4px 12px; border-radius: 999px;
+  }
+  .slide-title {
+    font-size: 2rem; font-weight: 900; color: var(--dark);
+    letter-spacing: -0.5px; line-height: 1.2;
+  }
+  .slide-body { flex: 1; padding: 24px 60px 32px; }
+
+  .slide-num {
+    position: absolute; bottom: 18px; right: 28px;
+    font-size: 0.72rem; color: #CBD5E1; font-weight: 600;
+  }
+
+  /* 페이지 하단 색 바 */
+  .bottom-bar {
+    height: 5px;
+    background: linear-gradient(90deg, var(--blue), var(--teal));
+  }
+
+  /* 2컬럼 */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; height: 100%; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; height: 100%; }
+
+  /* 카드 */
+  .card {
+    background: var(--light); border-radius: 16px;
+    padding: 24px 22px; border: 1px solid #E2E8F0;
+  }
+  .card-title { font-size: 0.8rem; font-weight: 800; letter-spacing: 0.8px;
+    text-transform: uppercase; margin-bottom: 10px; }
+  .card-big { font-size: 2.6rem; font-weight: 900; line-height: 1; }
+  .card-sub { font-size: 0.82rem; color: var(--gray); margin-top: 6px; line-height: 1.6; }
+
+  /* 강조 숫자 */
+  .stat-blue { color: var(--blue); }
+  .stat-teal { color: var(--teal); }
+  .stat-red  { color: var(--red); }
+
+  /* 태그 */
+  .tag {
+    display: inline-block; border-radius: 6px;
+    padding: 3px 10px; font-size: 0.72rem; font-weight: 700;
+  }
+  .tag-blue { background: #EFF6FF; color: var(--blue); }
+  .tag-teal { background: var(--teal-lt); color: var(--teal); }
+  .tag-red  { background: #FEF2F2; color: var(--red); }
+  .tag-gray { background: #F1F5F9; color: var(--gray); }
+
+  /* 체크리스트 */
+  .check-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .check-list li {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 0.88rem; color: #334155; line-height: 1.5;
+  }
+  .check-list li .ic { flex-shrink: 0; margin-top: 1px; }
+
+  /* 표 */
+  .tbl { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+  .tbl th {
+    background: var(--dark); color: white;
+    padding: 10px 14px; text-align: left; font-weight: 700;
+  }
+  .tbl td { padding: 9px 14px; border-bottom: 1px solid #F1F5F9; vertical-align: top; }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl tr:nth-child(even) td { background: #FAFAFA; }
+
+  /* 화살표 스텝 */
+  .steps-row {
+    display: flex; align-items: center; gap: 0; flex-wrap: nowrap;
+  }
+  .step-box {
+    background: var(--light); border: 1.5px solid #E2E8F0;
+    border-radius: 12px; padding: 14px 12px;
+    text-align: center; flex: 1;
+  }
+  .step-num {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--blue), var(--teal));
+    color: white; font-size: 0.8rem; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 8px;
+  }
+  .step-icon { font-size: 1.6rem; margin-bottom: 6px; }
+  .step-name { font-size: 0.75rem; font-weight: 700; color: var(--dark); line-height: 1.3; }
+  .step-desc { font-size: 0.66rem; color: var(--gray); margin-top: 4px; line-height: 1.4; }
+  .step-arrow { font-size: 1.2rem; color: #CBD5E1; padding: 0 4px; flex-shrink: 0; }
+
+  /* ════════════════════════════════════════
+     SLIDE 1 — 표지
+  ════════════════════════════════════════ */
+  #s1 {
+    background: linear-gradient(135deg, var(--dark) 0%, var(--dark2) 60%, #0D4F4A 100%);
+    color: white; align-items: center; justify-content: center; text-align: center;
+  }
+  .cover-logo {
+    font-size: 3.2rem; font-weight: 900; letter-spacing: -1px; margin-bottom: 24px;
+  }
+  .cover-logo span { color: var(--teal); }
+  .cover-badge {
+    display: inline-block; background: rgba(13,148,136,0.2);
+    border: 1px solid rgba(13,148,136,0.4); border-radius: 999px;
+    padding: 6px 20px; font-size: 0.85rem; font-weight: 700; color: #5EEAD4;
+    margin-bottom: 28px;
+  }
+  .cover-headline {
+    font-size: 2.4rem; font-weight: 900; letter-spacing: -0.5px; line-height: 1.3;
+    margin-bottom: 16px;
+  }
+  .cover-headline em { color: #60A5FA; font-style: normal; }
+  .cover-sub { font-size: 1.05rem; color: #94A3B8; margin-bottom: 48px; line-height: 1.6; }
+  .cover-stats {
+    display: flex; gap: 56px; justify-content: center;
+    border-top: 1px solid rgba(255,255,255,0.1); padding-top: 32px;
+  }
+  .cstat-num { font-size: 2rem; font-weight: 900; color: #60A5FA; }
+  .cstat-lbl { font-size: 0.78rem; color: #94A3B8; margin-top: 4px; }
+
+  /* ════════════════════════════════════════
+     SLIDE 2 — 목차
+  ════════════════════════════════════════ */
+  .toc-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+  }
+  .toc-item {
+    display: flex; align-items: center; gap: 16px;
+    background: var(--light); border-radius: 12px; padding: 16px 18px;
+    border-left: 4px solid var(--blue);
+  }
+  .toc-num {
+    font-size: 1.4rem; font-weight: 900; color: var(--blue); min-width: 32px;
+  }
+  .toc-text strong { font-size: 0.95rem; font-weight: 700; display: block; color: var(--dark); }
+  .toc-text span   { font-size: 0.75rem; color: var(--gray); }
+
+  /* ════════════════════════════════════════
+     SLIDE 3 — 문제 정의
+  ════════════════════════════════════════ */
+  .problem-hero {
+    background: linear-gradient(135deg, #FEF2F2, #FFF7ED);
+    border: 1px solid #FECACA; border-radius: 16px;
+    padding: 24px 28px; margin-bottom: 20px; text-align: center;
+  }
+  .problem-hero .big { font-size: 3.6rem; font-weight: 900; color: var(--red); line-height: 1; }
+  .problem-hero .lbl { font-size: 1rem; color: #7F1D1D; margin-top: 6px; font-weight: 600; }
+
+  /* ════════════════════════════════════════
+     SLIDE 5 — 솔루션
+  ════════════════════════════════════════ */
+  .solution-flow {
+    background: linear-gradient(135deg, var(--dark), var(--dark2));
+    border-radius: 16px; padding: 28px 32px; color: white;
+    display: flex; align-items: center; gap: 0; justify-content: space-around;
+  }
+  .flow-item { text-align: center; }
+  .flow-icon { font-size: 2.4rem; margin-bottom: 10px; }
+  .flow-name { font-size: 0.82rem; font-weight: 700; color: #E2E8F0; }
+  .flow-arrow { font-size: 1.8rem; color: #475569; }
+
+  /* ════════════════════════════════════════
+     SLIDE 6 — 차별점
+  ════════════════════════════════════════ */
+  .diff-row {
+    display: flex; align-items: stretch; gap: 10px; margin-bottom: 10px;
+  }
+  .diff-label {
+    width: 180px; background: var(--dark); color: white;
+    border-radius: 10px; padding: 10px 14px;
+    font-size: 0.8rem; font-weight: 700; display: flex; align-items: center;
+    flex-shrink: 0;
+  }
+  .diff-us {
+    flex: 1; background: #EFF6FF; border: 1.5px solid var(--blue);
+    border-radius: 10px; padding: 10px 14px;
+    font-size: 0.8rem; color: var(--blue); font-weight: 600;
+    display: flex; align-items: center;
+  }
+  .diff-them {
+    flex: 1; background: var(--light); border: 1px solid #E2E8F0;
+    border-radius: 10px; padding: 10px 14px;
+    font-size: 0.8rem; color: var(--gray);
+    display: flex; align-items: center;
+  }
+  .diff-head { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.8px;
+    text-transform: uppercase; margin-bottom: 8px; }
+
+  /* ════════════════════════════════════════
+     SLIDE 9 — AI 파이프라인
+  ════════════════════════════════════════ */
+  .pipeline-row {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 14px;
+  }
+  .pipe-box {
+    border-radius: 10px; padding: 14px 16px; flex: 1;
+  }
+  .pipe-box.blue { background: #EFF6FF; border: 1.5px solid var(--blue); }
+  .pipe-box.teal { background: var(--teal-lt); border: 1.5px solid var(--teal); }
+  .pipe-box.dark { background: var(--dark); color: white; }
+  .pipe-title { font-size: 0.78rem; font-weight: 800; margin-bottom: 4px; }
+  .pipe-box.blue .pipe-title { color: var(--blue); }
+  .pipe-box.teal .pipe-title { color: var(--teal); }
+  .pipe-box.dark .pipe-title { color: #60A5FA; }
+  .pipe-detail { font-size: 0.72rem; color: var(--gray); line-height: 1.5; }
+  .pipe-box.dark .pipe-detail { color: #94A3B8; }
+  .pipe-arrow { font-size: 1.2rem; color: #CBD5E1; flex-shrink: 0; }
+
+  /* ════════════════════════════════════════
+     SLIDE 11 — 비즈니스 모델
+  ════════════════════════════════════════ */
+  .plan-card {
+    border-radius: 14px; padding: 22px 20px; border: 2px solid #E2E8F0;
+    height: 100%; display: flex; flex-direction: column;
+  }
+  .plan-card.popular { border-color: var(--blue); box-shadow: 0 8px 24px rgba(37,99,235,0.12); }
+  .plan-tag { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.5px;
+    text-transform: uppercase; margin-bottom: 8px; }
+  .plan-name { font-size: 1.3rem; font-weight: 800; margin-bottom: 4px; }
+  .plan-price { font-size: 2.2rem; font-weight: 900; color: var(--blue); line-height: 1; margin-bottom: 4px; }
+  .plan-price span { font-size: 0.9rem; font-weight: 400; color: var(--gray); }
+  .plan-desc { font-size: 0.78rem; color: var(--gray); margin-bottom: 14px; }
+  .plan-list { list-style: none; flex: 1; }
+  .plan-list li { padding: 5px 0; font-size: 0.78rem; display: flex; gap: 7px; }
+  .plan-list li .ck { color: var(--teal); font-weight: 700; }
+  .plan-list li .x  { color: #CBD5E1; }
+
+  /* ════════════════════════════════════════
+     SLIDE 12 — 경쟁 분석
+  ════════════════════════════════════════ */
+  .comp-highlight {
+    background: linear-gradient(135deg, var(--blue), var(--teal));
+    color: white; border-radius: 12px; padding: 14px 18px; margin-bottom: 16px;
+    font-size: 0.92rem; font-weight: 700; text-align: center;
+  }
+
+  /* ════════════════════════════════════════
+     SLIDE 13 — 개발 현황
+  ════════════════════════════════════════ */
+  .done-tag  { color: var(--teal); font-weight: 700; font-size: 0.9rem; }
+  .todo-tag  { color: var(--gray); font-size: 0.9rem; }
+
+  /* ════════════════════════════════════════
+     SLIDE 14 — 로드맵
+  ════════════════════════════════════════ */
+  .roadmap-row {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+    height: 100%;
+  }
+  .rm-col { border-radius: 14px; padding: 18px 16px; border: 1.5px solid #E2E8F0; }
+  .rm-col.now { border-color: var(--blue); background: #EFF6FF; }
+  .rm-period { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.8px;
+    text-transform: uppercase; margin-bottom: 10px; }
+  .rm-col.now .rm-period { color: var(--blue); }
+  .rm-col:not(.now) .rm-period { color: var(--gray); }
+  .rm-item { font-size: 0.76rem; color: #334155; padding: 5px 0;
+    border-bottom: 1px dashed #E2E8F0; line-height: 1.4; }
+  .rm-item:last-child { border-bottom: none; }
+  .rm-item .dot { color: var(--teal); margin-right: 5px; }
+
+  /* ════════════════════════════════════════
+     SLIDE 15 — 마무리
+  ════════════════════════════════════════ */
+  #s15 {
+    background: linear-gradient(135deg, var(--dark) 0%, var(--dark2) 60%, #0D4F4A 100%);
+    color: white; align-items: center; justify-content: center; text-align: center;
+  }
+  .closing-title { font-size: 2rem; font-weight: 900; margin-bottom: 8px; }
+  .closing-title em { color: #60A5FA; font-style: normal; }
+  .closing-sub { font-size: 1rem; color: #94A3B8; margin-bottom: 36px; }
+  .closing-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+    max-width: 860px; margin: 0 auto 36px;
+  }
+  .closing-card {
+    background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 14px; padding: 20px 16px;
+  }
+  .closing-card .icon { font-size: 2rem; margin-bottom: 8px; }
+  .closing-card strong { font-size: 0.9rem; font-weight: 700; display: block; margin-bottom: 4px; }
+  .closing-card span { font-size: 0.78rem; color: #94A3B8; }
+  .closing-url {
+    font-size: 0.85rem; color: #5EEAD4;
+    background: rgba(13,148,136,0.15); border: 1px solid rgba(13,148,136,0.3);
+    border-radius: 8px; padding: 8px 20px; display: inline-block; margin: 4px 8px;
+    font-family: monospace;
+  }
+</style>
+</head>
+<body>
+
+<div id="deck">
+
+  <!-- ══════════ SLIDE 1: 표지 ══════════ -->
+  <div class="slide active" id="s1">
+    <div class="cover-logo">Insur<span>RX</span></div>
+    <div class="cover-badge">AI 보험금 자동 확인 서비스</div>
+    <div class="cover-headline">처방전 사진 한 장으로<br><em>내 숨은 보험금</em>을 3초 안에</div>
+    <div class="cover-sub">OCR + RAG 기반 실손·정액 보상 분석 챗봇<br>2026ICT AI 서비스 개발 과정 프로젝트</div>
+    <div class="cover-stats">
+      <div><div class="cstat-num">2조+</div><div class="cstat-lbl">연간 미청구 보험금</div></div>
+      <div><div class="cstat-num">3초</div><div class="cstat-lbl">AI 보상 확인 시간</div></div>
+      <div><div class="cstat-num">98%</div><div class="cstat-lbl">약관 분석 정확도</div></div>
+      <div><div class="cstat-num">1,358</div><div class="cstat-lbl">임베딩된 약관 조항</div></div>
+    </div>
+    <div class="slide-num">1 / 15</div>
+  </div>
+
+  <!-- ══════════ SLIDE 2: 목차 ══════════ -->
+  <div class="slide" id="s2">
+    <div class="slide-header">
+      <span class="slide-label">Contents</span>
+      <h2 class="slide-title">발표 순서</h2>
+    </div>
+    <div class="slide-body" style="display:flex;align-items:center;">
+      <div class="toc-grid" style="width:100%">
+        <div class="toc-item"><div class="toc-num">01</div><div class="toc-text"><strong>문제 정의</strong><span>연간 2조+ 미청구 보험금, 기존 방식의 한계</span></div></div>
+        <div class="toc-item" style="border-left-color:var(--teal)"><div class="toc-num" style="color:var(--teal)">02</div><div class="toc-text"><strong>솔루션 & 차별점</strong><span>InsurRX가 다른 이유 5가지</span></div></div>
+        <div class="toc-item"><div class="toc-num">03</div><div class="toc-text"><strong>서비스 플로우</strong><span>처방전 → 분석 결과 7단계</span></div></div>
+        <div class="toc-item" style="border-left-color:var(--teal)"><div class="toc-num" style="color:var(--teal)">04</div><div class="toc-text"><strong>기술 아키텍처</strong><span>GPT-4o Vision OCR + RAG 파이프라인</span></div></div>
+        <div class="toc-item"><div class="toc-num">05</div><div class="toc-text"><strong>비즈니스 모델</strong><span>Freemium + B2B SaaS</span></div></div>
+        <div class="toc-item" style="border-left-color:var(--teal)"><div class="toc-num" style="color:var(--teal)">06</div><div class="toc-text"><strong>개발 현황 & 로드맵</strong><span>현재 동작 중인 서비스 + 향후 계획</span></div></div>
+      </div>
+    </div>
+    <div class="bottom-bar"></div>
+    <div class="slide-num">2 / 15</div>
+  </div>
+
+  <!-- ══════════ SLIDE 3: 문제 — 시장 현황 ══════════ -->
+  <div class="slide" id="s3">
+    <div class="slide-header">
+      <span class="slide-label">Problem</span>
+      <h2 class="slide-title">매년 2조 원이 그냥 사라집니다</h2>
+    </div>
+    <div class="slide-body">
+      <div class="problem-hero">
+        <div class="big">2조 원+</div>
+        <div class="lbl">국내 연간 미청구 보험금 추정액 (금융감독원 참고)</div>
+      </div>
+      <div class="three-col" style="height:auto;gap:16px">
+        <div class="card">
+          <div class="card-title" style="color:var(--red)">① 복잡성</div>
+          <div style="font-size:2rem;margin-bottom:8px">📋</div>
+          <div style="font-size:0.85rem;color:#334155;line-height:1.6">수백 페이지 약관<br>어려운 법률 용어<br>면책 조항 해석 불가</div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="color:var(--red)">② 귀찮음</div>
+          <div style="font-size:2rem;margin-bottom:8px">😩</div>
+          <div style="font-size:0.85rem;color:#334155;line-height:1.6">소액(1~5만원) 청구<br>절차가 더 번거로움<br>보험사 콜센터 30분 대기</div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="color:var(--red)">③ 무지</div>
+          <div style="font-size:2rem;margin-bottom:8px">❓</div>
+          <div style="font-size:0.85rem;color:#334155;line-height:1.6">특약 존재 자체를 모름<br>보장 범위 불명확<br>1인 평균 3.2개 보험 보유</div>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-bar"></div>
+    <div class="slide-num">3 / 15</div>
+  </div>
+
+  <!-- ══════════ SLIDE 4: 문제 — 기존 방식 한계 ══════════ -->
+  <div class="slide" id="s4">
+    <div class="slide-header">
+      <span class="slide-label">Problem</span>
+      <h2 class="slide-title">기존 방법은 왜 안 될까요?</h2>
+    </div>
+    <div class="slide-body">
+      <table class="tbl">
+        <thead>
+          <tr><th>방법</th><th>문제점</th><th>사용자 경험</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>보험사 앱</strong></td>
+            <td>내 보험 1개만 확인, 타사 비교 불가</td>
+            <td><span class="tag tag-red">불편</span></td>
+          </tr>
+          <tr>
+            <td><strong>콜센터 상담</strong></td>
+            <td>평균 대기 30분, 업무시간만 운영</td>
+            <td><span class="tag tag-red">느림</span></td>
+          </tr>
+          <tr>
+            <td><strong>보험 설계사</strong></td>
+            <td>영업 목적 개입, 객관성 부족</td>
+            <td><span class="tag tag-red">불신</span></td>
+          </tr>
+          <tr>
+            <td><strong>직접 약관 검색</strong></td>
+            <td>수백 페이지 중 해당 조항 찾기 불가</td>
+            <td><span class="tag tag-red">불가능</span></td>
+          </tr>
+          <tr>
+            <td><strong>토스·굿닥 앱</strong></td>
+            <td>보험료 비교만, 실제 보상 분석 없음</td>
+            <td><span class="tag tag-gray">미흡</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="margin-top:18px;background:#FFF7ED;border-left:4px solid #F59E0B;border-radius:0 10px 10px 0;padding:14px 18px;font-size:0.88rem;color:#78350F;">
+        💡 <strong>결론:</strong> 보험금을 제대로 청구하려면 전문가가 필요하다 → InsurRX가 그 전문가를 AI로 대체합니다
+      </div>
+    </div>
+    <div class="bottom-bar"></div>
+    <div class="slide-num">4 / 15</div>
+  </div>
+
+  <!-- ══════════ SLIDE 5: 솔루션 ══════════ -->
+  <div class="slide" id="s5">
+    <div class="slide-header">
+      <span class="slide-label">Solution</span>
+      <h2 class="slide-title">InsurRX — 처방전 1장, 3초면 됩니다</h2>
+    </div>
+    <div class="slide-body">
+      <div style="text-align:center;margin-bottom:24px">
+        <span style="font-size:1.05rem;color:var(--gray);font-weight:600">
+          사진 업로드 → AI가 처방전을 읽고 → 내 보험 약관과 매칭 → 보상 금액 즉시 산출
+        </span>
+      </div>
+      <div class="solution-flow" style="margin-bottom:22px">
+        <div class="flow-item"><div class="flow-icon">📄</div><div class="flow-name">처방전 / 영수증</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-item"><div class="flow-icon">🤖</div><div class="flow-name">GPT-4o Vision<br>OCR</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-item"><div class="flow-icon">🔍</div><div class="flow-name">Pinecone<br>약관 검색</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-item"><div class="flow-icon">🧠</div><div class="flow-name">GPT-4o<br>보상 판단</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-item"><div class="flow-icon">💰</div><div class="flow-name">예상 금액<br>+ 약관 근거</div></div>
+      </div>
+      <div class="three-col" style="height:auto;gap:14px">
+        <div class="card" style="text-align:center">
+          <div class="card-big stat-blue">3초</div>
+          <div class="card-sub">OCR + RAG 분석<br>평균 응답 시간</div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div class="card-big stat-teal">4개사</div>
+          <div class="card-sub">현대해상·삼성화재<br>AXA 약관 탑재</div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div class="card-big stat-blue">92%</div>
+          <div class="card-sub">엔드투엔드 테스트<br>AI 신뢰도 확인</div>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-bar"></div>
+    <div class="slide-num">5 / 15</div>
+  </div>
+
+  <!-- ══════════ SLIDE 6: 차별점 ══════════ -->
+  <div class="slide" id="s6">
+    <div class="slide-header">
+      <span class="slide-label">Differentiation</span>
+      <h2 class="slide-title">InsurRX가 다른 5가지 이유</h2>
+    </div>
+    <div class="slide-body">
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <div style="width:180px;flex-shrink:0"></div>
+        <div class="diff-head" style="flex:1;color:var(--blue)">✦ InsurRX</div>
+        <div class="diff-head" style="flex:1;color:var(--gray)">기존 서비스</div>
+      </div>
+      <div class="diff-row">
+        <div class="diff-label">🔬 분석 단위</div>
+        <div class="diff-us">질병코드·약품 단위 정밀 분석</div>
+        <div class="diff-them">진단명 키워드 단순 매칭</div>
+      </div>
+      <div class="diff-row">
+        <div class="diff-label">🚫 면책 조항</div>
+        <div class="diff-us">비급여·선천성 AI 사전 필터링</div>
+        <div class="diff-them">수동 확인 필요 / 없음</div>
+      </div>
+      <div class="diff-row">
+        <div class="diff-label">📜 약관 근거</div>
+        <div class="diff-us">적용 조항 원문 인용 제공</div>
+        <div class="diff-them">결과만 표시</div>
+      </div>
+      <div class="diff-row">
+        <div class="diff-label">🏦 다보험 비교</div>
+        <div class="diff-us">보유 보험 전체 동시 매칭</div>
+        <div class="diff-them">단일 보험사만 가능</div>
+      </div>
+      <div class="diff-row">
+        <div class="diff-label">⚡ 속도</div>
+        <div class="diff-us">3초 이내 완전 자동화</div>
+        <div class="diff-them">수 분 ~ 수십 분 소요</div>
+      </div>
+    </div>
+    <div class="bottom-bar"></div>
+    <div class="slide-num">6 / 15</div>
+  </div>
+
+  <!-- ══════════ SLIDE 7: 서비스 플로우 ══════════ -->
+  <div class="slide" id="s7">
+    <div class="slide-header">
+      <span class="slide-label">User Flow</span>
+      <h2 class="slide-title">처방전 한 장으로 7단계 완성</h2>
+    </div>
+    <div class="slide-body" style="display:flex;flex-direction:column;justify-content:center;gap:18px">
+      <div class="steps-row">
+        <div class="step-box">
+          <div class="step-num">1</div>
+          <div class="step-icon">📷</div>
+          <div class="step-name">촬영 방법 선택</div>
+          <div class="step-desc">카메라 촬영<br>갤러리 선택</div>
+        </div>
+        <div class="step-arrow">›</div>
+        <div class="step-box">
+          <div class="step-num">2</div>
+          <div class="step-icon">🖼️</div>
+          <div class="step-name">미리보기 확인</div>
+          <div class="step-desc">사진 확인 후<br>분석 시작</div>
+        </div>
+        <div class="step-arrow">›</div>
+        <div class="step-box" style="background:#EFF6FF;border-color:var(--blue)">
+          <div class="step-num">3</div>
+          <div class="step-icon">🤖</div>
+          <div class="step-name">OCR 분석</div>
+          <div class="step-desc">GPT-4o Vision<br>텍스트 추출</div>
+        </div>
+        <div class="step-arrow">›</div>
+        <div class="step-box">
+          <div class="step-num">4</div>
+          <div class="step-icon">✅</div>
+          <div class="step-name">인식 결과 확인</div>
+          <div class="step-desc">상병코드·약품<br>금액 표시</div>
+        </div>
+      </div>
+      <div style="text-align:center;font-size:1.4rem;color:#CBD5E1">↓</div>
+      <div class="steps-row">
+        <div class="step-box">
+          <div class="step-num">5</div>
+          <div class="step-icon">📋</div>
+          <div class="step-name">보험 선택</div>
+          <div class="step-desc">체크박스로<br>보험 선택</div>
+        </div>
+        <div class="step-arrow">›</div>
+        <div class="step-box" style="background:#EFF6FF;border-color:var(--blue)">
+          <div class="step-num">6</div>
+          <div class="step-icon">🧠</div>
+          <div class="step-name">RAG 분석</div>
+          <div class="step-desc">Pinecone 검색<br>+ GPT-4o 판단</div>
+        </div>
+        <div class="step-arrow">›</div>
+        <div class="step-box" style="background:var(--teal-lt);border-color:var(--teal);flex:2">
+          <div class="step-num" style="background:var(--teal)">7</div>
+          <div class="step-icon">💰</div>
+          <div class="step-name">분석 결과 리포트</div>
+          <div class="step-desc">청구 가능 여부 · 예상 금액 · 계산 내역 · 약관 근거 · AI 신뢰도</div>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-bar"></div>
+    <div class="slide-num">7 / 15</div>
+  </div>
+
+  <!-- ══════════ SLIDE 8: 기술 아키텍처 ══════════ -->
+  <div class="slide" id="s8">
+    <div class="slide-header">
+      <span class="slide-label">Architecture</span>
+      <h2 class="slide-title">기술 아키텍처</h2>
+    </div>
+    <div class="slide-body">
+      <div class="two-col">
+        <div>
+          <div style="display:flex;flex-direction:column;gap:10px;height:100%;justify-content:center">
+            <div style="background:#F0FDF4;border:1.5px solid #BBF7D0;border-radius:12px;padding:14px 16px;text-align:center">
+              <div style="font-size:0.75rem;font-weight:700;color:var(--teal);margin-bottom:4px">FRONTEND</div>
+              <div style="font-weight:700">GitHub Pages</div>
+              <div style="font-size:0.75rem;color:var(--gray)">index.html · OCR UI · 카카오 채널</div>
+            </div>
+            <div style="text-align:center;color:#CBD5E1;font-size:1rem">↕ HTTPS / CORS</div>
+            <div style="background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:12px;padding:14px 16px;text-align:center">
+              <div style="font-size:0.75rem;font-weight:700;color:var(--blue);margin-bottom:4px">BACKEND</div>
+              <div style="font-weight:700">Railway · FastAPI · Python 3.12</div>
+              <div style="font-size:0.75rem;color:var(--gray)">/upload · /analyze · /waitlist · /result</div>
+            </div>
+            <div style="display:flex;gap:10px">
+              <div style="flex:1;background:var(--light);border:1px solid #E2E8F0;border-radius:10px;padding:10px;text-align:center">
+                <div style="font-size:0.7rem;font-weight:700;color:var(--teal)">VECTOR DB</div>
+                <div style="font-size:0.82rem;font-weight:700">Pinecone</div>
+                <div style="font-size:0.68rem;color:var(--gray)">1,358 vectors</div>
+              </div>
+              <div style="flex:1;background:var(--light);border:1px solid #E2E8F0;border-radius:10px;padding:10px;text-align:center">
+                <div style="font-size:0.7rem;font-weight:700;color:var(--blue)">RDBMS</div>
+                <div style="font-size:0.82rem;font-weight:700">PostgreSQL</div>
+                <div style="font-size:0.68rem;color:var(--gray)">Railway 내장</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:0.78rem;font-weight:800;letter-spacing:0.8px;color:var(--gray);text-transform:uppercase;margin-bottom:12px">기술 스택</div>
+          <table class="tbl" style="font-size:0.78rem">
+            <tbody>
+              <tr><td style="font-weight:700;color:var(--blue)">OCR</td><td>GPT-4o Vision (gpt-4o-mini)</td></tr>
+              <tr><td style="font-weight:700;color:var(--blue)">LLM</td><td>GPT-4o (보상 분석)</td></tr>
+              <tr><td style="font-weight:700;color:var(--blue)">임베딩</td><td>text-embedding-3-small</td></tr>
+              <tr><td style="font-weight:700;color:var(--teal)">RAG</td><td>LangChain 0.3.25</td></tr>
+              <tr><td style="font-weight:700;color:var(--teal)">Vector DB</td><td>Pinecone (AWS us-east-1)</td></tr>
+              <tr><td style="font-weight:700;color:var(--gray)">Backend</td><td>FastAPI · SQLAlchemy 2.0</td></tr>
+              <tr><td style="font-weight:700;color:var(--gray)">배포</td><td>Railway (Docker) + GitHub Pages</td></tr>
+              <tr><td style="font-weight:700;color:var(--gray)">CI/CD</td><td>GitHub Actions</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-bar"></div>
+    <div class="slide-num">8 / 15</div>
+  </div>
+
+  <!-- ══════════ SLIDE 9: AI 파이프라인 ══════════ -->
+  <div class="slide" id="s9">
+    <div class="slide-header">
+      <span class="slide-label">AI Pipeline</span>
+      <h2 class="slide-title">GPT-4o Vision OCR + RAG 파이프라인</h2>
+    </div>
+    <div class="slide-body">
+      <div style="font-size:0.8rem;font-weight:700;color:var(--gray);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.8px">① OCR 파이프라인</div>
+      <div class="pipeline-row">
+        <div class="pipe-box blue">
+          <div class="pipe-title">이미지 입력</div>
+          <div class="pipe-detail">JPEG / PNG / WEBP<br>HEIC 자동 변환</div>
+        </div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-box blue">
+          <div class="pipe-title">GPT-4o Vision</div>
+          <div class="pipe-detail">base64 인코딩<br>의료 문서 최적화 프롬프트</div>
+        </div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-box blue">
+          <div class="pipe-title">정규식 파서</div>
+          <div class="pipe-detail">ICD코드 · 약품명<br>금액 · 날짜 추출</div>
+        </div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-box blue">
+          <div class="pipe-title">LLM 폴백</div>
+          <div class="pipe-detail">핵심 필드 2개+ 누락 시<br>gpt-4o-mini 보완</div>
+        </div>
+      </div>
+      <div style="font-size:0.8rem;font-weight:700;color:var(--gray);margin:14px 0 10px;text-transform:uppercase;letter-spacing:0.8px">② RAG 파이프라인</div>
+      <div class="pipeline-row">
+        <div class="pipe-box teal">
+          <div class="pipe-title">쿼리 생성</div>
+          <div class="pipe-detail">상병코드 · 진단명<br>진료과 조합</div>
+        </div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-box teal">
+          <div class="pipe-title">벡터 임베딩</div>
+          <div class="pipe-detail">text-embedding<br>-3-small (1536d)</div>
+        </div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-box teal">
+          <div class="pipe-title">Pinecone 검색</div>
+          <div class="pipe-detail">Top-5 유사 조항<br>policy_id 필터링</div>
+        </div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-box dark">
+          <div class="pipe-title">GPT-4o 분석</div>
+          <div class="pipe-detail">보상 여부 · 금액<br>약관 근거 · 신뢰도</div>
+        </div>
+      </div>
+      <div style="background:#FFF9EE;border:1px solid #F0D8A8;border-radius:10px;padding:12px 16px;font-size:0.78rem;color:#7A5C20;margin-top:14px">
+        📌 <strong>실서비스 테스트 결과:</strong> J06.9 급성상기도감염, 28,500원 → 청구 가능, 예상 보상 ₩18,500, 신뢰도 92%
+      </div>
+    </div>
+    <div class="bottom-bar"></div>
+    <div class="slide-num">9 / 15</div>
+  </div>
+
+  <!-- ══════════ SLIDE 10: 타겟 사용자 ══════════ -->
+  <div class="slide" id="s10">
+    <div class="slide-header">
+      <span class="slide-label">Target User</span>
+      <h2 class="slide-title">누가 InsurRX를 필요로 할까요?</h2>
+    </div>
+    <div class="slide-body">
+      <div class="two-col">
+        <div>
+          <div style="background:linear-gradient(135deg,#EFF6FF,#F0FDF4);border:1px solid #BFDBFE;border-radius:16px;padding:24px;height:100%">
+            <div style="font-size:2.4rem;margin-bottom:12px">👩‍💼</div>
+            <div style="font-size:1rem;font-weight:800;margin-bottom:6px">메인 페르소나</div>
+            <div style="font-size:1.2rem;font-weight:700;color:var(--blue);margin-bottom:12px">"37세 IT 기업 과장 워킹맘"</div>
+            <ul class="check-list">
+              <li><span class="ic">👶</span>자녀 둘, 월 2~3회 소아과·이비인후과 방문</li>
+              <li><span class="ic">📋</span>실손·어린이보험 가입 중, 특약 내용 모름</li>
+              <li><span class="ic">😤</span>소액이라 청구 포기, 영수증만 쌓임</li>
+              <li><span class="ic">📱</span>카카오톡 주 사용, 모바일 우선</li>
+              <li><span class="ic">⏱️</span>바빠서 콜센터 30분 대기 불가</li>
+            </ul>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;justify-content:center">
+          <div style="font-size:0.78rem;font-weight:800;letter-spacing:0.8px;color:var(--gray);text-transform:uppercase;margin-bottom:4px">세컨더리 타겟</div>
+          <div class="card" style="padding:14px 16px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:1.4rem">🏥</span>
+              <div>
+                <div style="font-weight:700;font-size:0.88rem">만성질환자 (40~60대)</div>
+                <div style="font-size:0.75rem;color:var(--gray)">월 1~2회 병원 방문, 청구 의향 높음</div>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="padding:14px 16px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:1.4rem">👨‍👩‍👧‍👦</span>
+              <div>
+                <div style="font-weight:700;font-size:0.88rem">자녀 보험 보유 부모</div>
+                <div style="font-size:0.75rem;color:var(--gray)">어린이보험 특약 활용 빈도 높음</div>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="padding:14px 16px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:1.4rem">💼</span>
+              <div>
+                <div style="font-weight:700;font-size:0.88rem">보험 설계사 (B2B)</div>
+                <div style="font-size:0.75rem;color:var(--gray)">고객 상담 도구, GA SaaS API</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-bar"></div>
+    <div class="slide-num">10 / 15</div>
+  </div>
+
+  <!-- ══════════ SLIDE 11: 비즈니스 모델 ══════════ -->
+  <div class="slide" id="s11">
+    <div class="slide-header">
+      <span class="slide-label">Business Model</span>
+      <h2 class="slide-title">Freemium + B2B SaaS</h2>
+    </div>
+    <div class="slide-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;height:78%">
+        <div class="plan-card">
+          <div class="plan-tag" style="color:var(--gray)">FREE</div>
+          <div class="plan-name">베이직</div>
+          <div class="plan-price">₩0<span> /월</span></div>
+          <div class="plan-desc">핵심 기능 무료, 영원히</div>
+          <ul class="plan-list">
+            <li><span class="ck">✓</span> 월 5회 보상 확인</li>
+            <li><span class="ck">✓</span> GPT-4o Vision OCR</li>
+            <li><span class="ck">✓</span> 기본 약관 매칭</li>
+            <li><span class="x">✗</span> 자동 청구 대행</li>
+            <li><span class="x">✗</span> 가족 계정 관리</li>
+          </ul>
+        </div>
+        <div class="plan-card popular">
+          <div style="text-align:center;background:var(--blue);color:white;font-size:0.7rem;font-weight:700;padding:4px;border-radius:6px;margin-bottom:8px">🔥 베타 특가</div>
+          <div class="plan-tag" style="color:var(--blue)">PRO</div>
+          <div class="plan-name">라이트</div>
+          <div class="plan-price">₩2,900<span> /월</span></div>
+          <div class="plan-desc">커피 한 잔 값으로 숨은 보험금</div>
+          <ul class="plan-list">
+            <li><span class="ck">✓</span> 무제한 보상 확인</li>
+            <li><span class="ck">✓</span> 면책 조항 AI 필터링</li>
+            <li><span class="ck">✓</span> 원클릭 자동 청구</li>
+            <li><span class="ck">✓</span> 가족 3인 통합 관리</li>
+            <li><span class="ck">✓</span> 12개월 이력 보관</li>
+          </ul>
+        </div>
+        <div class="plan-card" style="border-color:var(--teal)">
+          <div class="plan-tag" style="color:var(--teal)">B2B</div>
+          <div class="plan-name">엔터프라이즈</div>
+          <div class="plan-price" style="color:var(--teal);font-size:1.4rem">협의</div>
+          <div class="plan-desc">보험 GA·설계사·병원 대상</div>
+          <ul class="plan-list">
+            <li><span class="ck">✓</span> API 건당 과금</li>
+            <li><span class="ck">✓</span> 설계사 상담 도구</li>
+            <li><span class="ck">✓</span> CPA 제휴 수수료</li>
+            <li><span class="ck">✓</span> 화이트라벨 제공</li>
+            <li><span class="ck">✓</span> 전담 계정 관리</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-bar"></div>
+    <div class="slide-num">11 / 15</div>
+  </div>
+
+  <!-- ══════════ SLIDE 12: 경쟁 분석 ══════════ -->
+  <div class="slide" id="s12">
+    <div class="slide-header">
+      <span class="slide-label">Competition</span>
+      <h2 class="slide-title">경쟁 서비스 대비 포지셔닝</h2>
+    </div>
+    <div class="slide-body">
+      <div class="comp-highlight">
+        InsurRX 핵심 차별점: <strong>"질병코드·약품 단위 면책 조항 AI 필터링"</strong> — 경쟁사 없음
+      </div>
+      <table class="tbl">
+        <thead>
+          <tr><th>서비스</th><th>강점</th><th>보험 분석</th><th>OCR</th><th>면책 필터</th><th>다사 비교</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong style="color:var(--blue)">InsurRX</strong></td>
+            <td>AI 정밀 보상 분석</td>
+            <td><span class="tag tag-teal">정밀</span></td>
+            <td><span class="tag tag-teal">✓ 자동</span></td>
+            <td><span class="tag tag-teal">✓ AI</span></td>
+            <td><span class="tag tag-teal">✓ 4개사</span></td>
+          </tr>
+          <tr>
+            <td><strong>토스 보험</strong></td>
+            <td>대형 플랫폼·신뢰도</td>
+            <td><span class="tag tag-gray">비교만</span></td>
+            <td><span class="tag tag-red">✗</span></td>
+            <td><span class="tag tag-red">✗</span></td>
+            <td><span class="tag tag-gray">제한적</span></td>
+          </tr>
+          <tr>
+            <td><strong>굿닥</strong></td>
+            <td>병원 정보 강점</td>
+            <td><span class="tag tag-red">없음</span></td>
+            <td><span class="tag tag-red">✗</span></td>
+            <td><span class="tag tag-red">✗</span></td>
+            <td><span class="tag tag-red">✗</span></td>
+          </tr>
+          <tr>
+            <td><strong>시그널플래너</strong></td>
+            <td>포트폴리오 관리</td>
+            <td><span class="tag tag-gray">수동</span></td>
+            <td><span class="tag tag-red">✗</span></td>
+            <td><span class="tag tag-red">✗</span></td>
+            <td><span class="tag tag-gray">일부</span></td>
+          </tr>
+          <tr>
+            <td><strong>카카오페이 보험</strong></td>
+            <td>간편 가입·청구</td>
+            <td><span class="tag tag-gray">자사만</span></td>
+            <td><span class="tag tag-red">✗</span></td>
+            <td><span class="tag tag-red">✗</span></td>
+            <td><span class="tag tag-red">✗</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="bottom-bar"></div>
+    <div class="slide-num">12 / 15</div>
+  </div>
+
+  <!-- ══════════ SLIDE 13: 개발 현황 ══════════ -->
+  <div class="slide" id="s13">
+    <div class="slide-header">
+      <span class="slide-label">Current Status</span>
+      <h2 class="slide-title">지금 실제로 동작 중입니다</h2>
+    </div>
+    <div class="slide-body">
+      <div class="two-col">
+        <div>
+          <div style="font-size:0.78rem;font-weight:800;letter-spacing:0.8px;color:var(--teal);text-transform:uppercase;margin-bottom:10px">✅ 완료 (실서비스)</div>
+          <ul class="check-list">
+            <li><span class="ic done-tag">✅</span>GPT-4o Vision OCR — 처방전 인식 확인</li>
+            <li><span class="ic done-tag">✅</span>RAG 보상 분석 — 신뢰도 92% 테스트</li>
+            <li><span class="ic done-tag">✅</span>카카오톡 채널 연결</li>
+            <li><span class="ic done-tag">✅</span>랜딩페이지 + OCR UI 7단계 플로우</li>
+            <li><span class="ic done-tag">✅</span>Waitlist 이메일 수집 (PostgreSQL)</li>
+            <li><span class="ic done-tag">✅</span>Railway FastAPI 백엔드 배포</li>
+            <li><span class="ic done-tag">✅</span>4개 보험사 약관 1,358개 벡터 탑재</li>
+            <li><span class="ic done-tag">✅</span>단위 테스트 27개 통과</li>
+          </ul>
+        </div>
+        <div>
+          <div style="font-size:0.78rem;font-weight:800;letter-spacing:0.8px;color:var(--gray);text-transform:uppercase;margin-bottom:10px">🔲 예정</div>
+          <ul class="check-list">
+            <li><span class="ic" style="color:var(--red)">🔴</span>카카오톡 챗봇 시나리오 연동</li>
+            <li><span class="ic" style="color:var(--red)">🔴</span>CBT (Waitlist 유저 초대)</li>
+            <li><span class="ic" style="color:#F59E0B">🟡</span>마이데이터 API — 내 보험 자동 불러오기</li>
+            <li><span class="ic" style="color:#F59E0B">🟡</span>원클릭 청구 대행</li>
+            <li><span class="ic" style="color:var(--teal)">🟢</span>약관 10개사 → 30개사 확대</li>
+            <li><span class="ic" style="color:var(--teal)">🟢</span>가족 계정·이력 관리</li>
+          </ul>
+          <div style="margin-top:16px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:10px;padding:12px 14px">
+            <div style="font-size:0.8rem;font-weight:700;color:var(--teal);margin-bottom:4px">🌐 Live URL</div>
+            <div style="font-size:0.75rem;color:#334155;font-family:monospace;word-break:break-all">songgwangsun.github.io/InsurRX</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-bar"></div>
+    <div class="slide-num">13 / 15</div>
+  </div>
+
+  <!-- ══════════ SLIDE 14: 로드맵 ══════════ -->
+  <div class="slide" id="s14">
+    <div class="slide-header">
+      <span class="slide-label">Roadmap</span>
+      <h2 class="slide-title">2026~2027 개발 로드맵</h2>
+    </div>
+    <div class="slide-body">
+      <div class="roadmap-row">
+        <div class="rm-col now">
+          <div class="rm-period">2026 Q2 ← 현재</div>
+          <div class="rm-item"><span class="dot">✅</span>MVP 개발 완료</div>
+          <div class="rm-item"><span class="dot">✅</span>OCR + RAG 실서비스</div>
+          <div class="rm-item"><span class="dot">✅</span>Railway 배포</div>
+          <div class="rm-item"><span class="dot">🔲</span>CBT 1,000명 시작</div>
+        </div>
+        <div class="rm-col">
+          <div class="rm-period">2026 Q3</div>
+          <div class="rm-item"><span class="dot">·</span>카카오톡 챗봇 정식 운영</div>
+          <div class="rm-item"><span class="dot">·</span>마이데이터 API 연동</div>
+          <div class="rm-item"><span class="dot">·</span>원클릭 청구 파일럿</div>
+          <div class="rm-item"><span class="dot">·</span>약관 30개사 확대</div>
+        </div>
+        <div class="rm-col">
+          <div class="rm-period">2026 Q4</div>
+          <div class="rm-item"><span class="dot">·</span>라이트 플랜 유료 전환</div>
+          <div class="rm-item"><span class="dot">·</span>B2B GA SaaS API 베타</div>
+          <div class="rm-item"><span class="dot">·</span>가족 계정 출시</div>
+          <div class="rm-item"><span class="dot">·</span>12개월 이력 관리</div>
+        </div>
+        <div class="rm-col">
+          <div class="rm-period">2027 ~</div>
+          <div class="rm-item"><span class="dot">·</span>마이데이터 전면 자동화</div>
+          <div class="rm-item"><span class="dot">·</span>전 보험사 청구 대행</div>
+          <div class="rm-item"><span class="dot">·</span>카카오페이·토스 제휴</div>
+          <div class="rm-item"><span class="dot">·</span>해외 보험 확장 검토</div>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-bar"></div>
+    <div class="slide-num">14 / 15</div>
+  </div>
+
+  <!-- ══════════ SLIDE 15: 마무리 ══════════ -->
+  <div class="slide" id="s15">
+    <div class="cover-logo" style="font-size:2.4rem;margin-bottom:14px">Insur<span>RX</span></div>
+    <div class="closing-title">버려지는 영수증,<br><em>내 숨은 보험금</em>으로.</div>
+    <div class="closing-sub">처방전 1장 · AI 3초 · 내 보험금 자동 확인</div>
+    <div class="closing-grid">
+      <div class="closing-card">
+        <div class="icon">🤖</div>
+        <strong>GPT-4o Vision OCR</strong>
+        <span>한글·영문·숫자<br>처방전 자동 인식</span>
+      </div>
+      <div class="closing-card">
+        <div class="icon">📚</div>
+        <strong>RAG 약관 분석</strong>
+        <span>1,358개 벡터<br>면책 조항 AI 필터링</span>
+      </div>
+      <div class="closing-card">
+        <div class="icon">💰</div>
+        <strong>보상 결과 리포트</strong>
+        <span>예상 금액 + 약관 근거<br>AI 신뢰도 제공</span>
+      </div>
+    </div>
+    <div>
+      <a class="closing-url" href="https://songgwangsun.github.io/InsurRX/" target="_blank">🌐 songgwangsun.github.io/InsurRX</a>
+      <a class="closing-url" href="https://pf.kakao.com/_xmxfjxjX" target="_blank">💛 카카오톡 채널</a>
+    </div>
+    <div class="slide-num" style="color:rgba(255,255,255,0.3)">15 / 15</div>
+  </div>
+
+</div><!-- /deck -->
+
+<!-- 컨트롤 -->
+<div id="controls">
+  <button class="ctrl-btn" onclick="move(-1)">◀ 이전</button>
+  <div id="counter">1 / 15</div>
+  <button class="ctrl-btn" onclick="move(1)">다음 ▶</button>
+  <button class="ctrl-btn" onclick="toggleFS()">⛶ 전체화면</button>
+</div>
+
+<script>
+  const TOTAL = 15;
+  let cur = 1;
+
+  function goTo(n) {
+    n = Math.max(1, Math.min(TOTAL, n));
+    document.getElementById('s' + cur).classList.remove('active');
+    cur = n;
+    document.getElementById('s' + cur).classList.add('active');
+    document.getElementById('counter').textContent = cur + ' / ' + TOTAL;
+  }
+
+  function move(d) { goTo(cur + d); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); move(1); }
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')  { e.preventDefault(); move(-1); }
+    if (e.key === 'Home')  goTo(1);
+    if (e.key === 'End')   goTo(TOTAL);
+  });
+
+  // 클릭 / 터치로 다음 슬라이드
+  document.getElementById('deck').addEventListener('click', e => {
+    const x = e.clientX;
+    const w = document.getElementById('deck').offsetWidth;
+    if (x > w * 0.75) move(1);
+    else if (x < w * 0.25) move(-1);
+  });
+
+  function toggleFS() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen();
+    }
+  }
+
+  // 화면 비율에 맞게 스케일 조정
+  function scale() {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight - 60;
+    const s = Math.min(vw / 1280, vh / 720);
+    document.getElementById('deck').style.transform = 'scale(' + s + ')';
+    document.getElementById('deck').style.transformOrigin = 'top center';
+  }
+  window.addEventListener('resize', scale);
+  scale();
+</script>
+</body>
+</html>

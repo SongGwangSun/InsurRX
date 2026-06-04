@@ -8,6 +8,8 @@
     :root {
       --blue:    #2563EB;
       --blue-dk: #1D4ED8;
+      --mint:    #34D399;
+      --mint-dk: #10B981;
       --teal:    #0D9488;
       --teal-lt: #CCFBF1;
       --gray-50: #F8FAFC;
@@ -46,12 +48,13 @@
     }
     .logo span { color: var(--teal); }
     nav .nav-cta {
-      background: var(--blue); color: var(--white);
+      background: linear-gradient(90deg, var(--blue), var(--mint));
+      color: var(--white);
       border: none; border-radius: 8px;
       padding: 8px 18px; font-size: 0.875rem; font-weight: 600;
-      cursor: pointer; transition: background 0.2s;
+      cursor: pointer; transition: opacity 0.2s;
     }
-    nav .nav-cta:hover { background: var(--blue-dk); }
+    nav .nav-cta:hover { opacity: 0.88; }
 
     /* ── HERO ──────────────────────────────────────────── */
     .hero {
@@ -60,38 +63,67 @@
       align-items: center; justify-content: center;
       text-align: center;
       padding: 100px 5% 60px;
-      background: linear-gradient(160deg, #EFF6FF 0%, #F0FDF4 60%, #CCFBF1 100%);
+      background: linear-gradient(160deg, #060F1E 0%, #0B1A35 45%, #071F1A 100%);
       position: relative; overflow: hidden;
     }
     .hero::before {
       content: '';
-      position: absolute; top: -80px; right: -80px;
-      width: 400px; height: 400px; border-radius: 50%;
-      background: radial-gradient(circle, rgba(37,99,235,0.08) 0%, transparent 70%);
+      position: absolute; top: -10%; left: -8%;
+      width: 65%; height: 70%; border-radius: 50%;
+      background: radial-gradient(ellipse, rgba(37,99,235,0.3) 0%, transparent 68%);
+      animation: auroraFloat 9s ease-in-out infinite;
+      pointer-events: none;
     }
+    .hero::after {
+      content: '';
+      position: absolute; bottom: -5%; right: -8%;
+      width: 60%; height: 65%;
+      background: radial-gradient(ellipse, rgba(52,211,153,0.22) 0%, transparent 65%);
+      animation: auroraFloat 11s ease-in-out infinite reverse;
+      pointer-events: none;
+    }
+    @keyframes auroraFloat {
+      0%, 100% { transform: translate(0, 0) scale(1);      opacity: 0.8; }
+      33%       { transform: translate(3%, -4%) scale(1.05); opacity: 1; }
+      66%       { transform: translate(-2%, 3%) scale(0.97); opacity: 0.7; }
+    }
+
+    /* bot avatar */
+    .bot-avatar {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--blue) 0%, var(--mint) 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; margin-bottom: 20px;
+      box-shadow: 0 0 36px rgba(52,211,153,0.4), 0 0 18px rgba(37,99,235,0.35);
+      position: relative; z-index: 1;
+    }
+
     .badge {
       display: inline-flex; align-items: center; gap: 6px;
-      background: var(--teal-lt); color: var(--teal);
+      background: rgba(52,211,153,0.12); color: var(--mint);
+      border: 1px solid rgba(52,211,153,0.35);
       border-radius: 999px; padding: 6px 16px;
       font-size: 0.8rem; font-weight: 700; letter-spacing: 0.5px;
-      margin-bottom: 28px;
+      margin-bottom: 28px; position: relative; z-index: 1;
     }
     .badge::before { content: '●'; font-size: 0.5rem; }
     .hero h1 {
       font-size: clamp(2rem, 5vw, 3.4rem);
       font-weight: 900; letter-spacing: -1px; line-height: 1.2;
-      color: var(--gray-900); margin-bottom: 20px;
+      color: white; margin-bottom: 20px;
+      position: relative; z-index: 1;
     }
     .hero h1 em {
       font-style: normal;
-      background: linear-gradient(90deg, var(--blue), var(--teal));
+      background: linear-gradient(90deg, #60A5FA, var(--mint));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
     .hero p {
       max-width: 560px; margin: 0 auto 40px;
-      font-size: 1.1rem; color: var(--gray-500);
+      font-size: 1.1rem; color: rgba(255,255,255,0.65);
+      position: relative; z-index: 1;
     }
-    .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; position: relative; z-index: 1; }
     .btn-kakao {
       display: inline-flex; align-items: center; gap: 8px;
       background: var(--kakao); color: var(--kakao-dk);
@@ -99,29 +131,30 @@
       padding: 16px 28px; font-size: 1rem; font-weight: 800;
       cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
       box-shadow: 0 4px 14px rgba(254,229,0,0.5);
-      text-decoration: none; /* <a> 태그 밑줄 제거 */
+      text-decoration: none;
     }
     .btn-kakao:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(254,229,0,0.6); }
     .btn-kakao svg { width: 22px; height: 22px; }
     .btn-secondary {
       display: inline-flex; align-items: center; gap: 6px;
-      background: var(--white); color: var(--blue);
-      border: 2px solid var(--blue); border-radius: var(--radius);
+      background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.9);
+      border: 1.5px solid rgba(255,255,255,0.25); border-radius: var(--radius);
       padding: 14px 24px; font-size: 1rem; font-weight: 700;
       cursor: pointer; transition: background 0.15s;
     }
-    .btn-secondary:hover { background: #EFF6FF; }
+    .btn-secondary:hover { background: rgba(255,255,255,0.16); }
 
     /* hero stats */
     .hero-stats {
       display: flex; gap: 40px; justify-content: center;
       margin-top: 60px; flex-wrap: wrap;
+      position: relative; z-index: 1;
     }
     .stat { text-align: center; }
     .stat-num {
-      font-size: 2rem; font-weight: 900; color: var(--blue); line-height: 1;
+      font-size: 2rem; font-weight: 900; color: var(--mint); line-height: 1;
     }
-    .stat-label { font-size: 0.8rem; color: var(--gray-500); margin-top: 4px; }
+    .stat-label { font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-top: 4px; }
 
     /* ── PROBLEM / SOLUTION ────────────────────────────── */
     .section { padding: 80px 5%; }
@@ -190,7 +223,7 @@
     }
     .step-num {
       width: 48px; height: 48px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--blue), var(--teal));
+      background: linear-gradient(135deg, var(--blue), var(--mint));
       color: var(--white); font-size: 1.2rem; font-weight: 800;
       display: flex; align-items: center; justify-content: center;
       margin: 0 auto 16px;
@@ -456,7 +489,7 @@
       padding: 10px 14px; display: flex; align-items: center; gap: 10px;
     }
     .conf-bar-wrap { flex: 1; height: 6px; background: #E8E4DC; border-radius: 999px; overflow: hidden; }
-    .conf-bar { height: 100%; background: linear-gradient(90deg, #2563EB, #0D9488); border-radius: 999px; }
+    .conf-bar { height: 100%; background: linear-gradient(90deg, var(--blue), var(--mint)); border-radius: 999px; }
     .conf-pct { font-size: 0.78rem; font-weight: 700; color: #2563EB; }
     .result-actions {
       padding: 12px 20px; background: white; border-top: 1px solid #E8E4DC;
@@ -518,10 +551,13 @@
       background: rgba(255,255,255,0.05);
       border: 1px solid rgba(255,255,255,0.15);
       border-radius: 999px; padding: 14px 28px;
-      max-width: 480px; margin: 48px auto 0;
+      max-width: 660px; margin: 48px auto 0; white-space: nowrap;
       font-size: 0.9rem; color: #CBD5E1;
     }
     .privacy-badge .shield { font-size: 1.4rem; }
+    @media (max-width: 680px) {
+      .privacy-badge { font-size: 0.75rem; padding: 12px 18px; white-space: normal; }
+    }
 
     /* ── PRICING ───────────────────────────────────────── */
     .pricing-grid {
@@ -799,7 +835,7 @@
     .ocr-loading-msg { font-size: 1rem; font-weight: 700; color: var(--gray-900); margin-bottom: 6px; }
     .ocr-loading-sub { font-size: 0.82rem; color: var(--gray-500); margin-bottom: 20px; }
     .ocr-prog-wrap { height: 6px; background: var(--gray-100); border-radius: 999px; overflow: hidden; }
-    .ocr-prog { height: 100%; background: linear-gradient(90deg, var(--blue), var(--teal)); border-radius: 999px; width: 0; transition: width 0.35s ease; }
+    .ocr-prog { height: 100%; background: linear-gradient(90deg, var(--blue), var(--mint)); border-radius: 999px; width: 0; transition: width 0.35s ease; }
 
     /* 결과 */
     .ocr-result-box {
@@ -1013,6 +1049,7 @@
 
 <!-- HERO -->
 <section class="hero">
+  <div class="bot-avatar">🤖</div>
   <div class="badge">AI 보험금 자동 확인 서비스</div>
   <h1>버려지는 영수증,<br><em>내 숨은 보험금</em>으로.</h1>
   <p>처방전 사진 한 장만 찍어 올리면<br>AI가 3초 만에 내 보험 혜택과 예상 수령액을 알려드립니다.</p>
@@ -1267,7 +1304,10 @@
         <div class="app-layout">
           <!-- 사이드바 -->
           <div class="app-sidebar">
-            <div class="app-sidebar-logo">Insur<span>RX</span></div>
+            <div style="display:flex;align-items:center;gap:8px;padding:0 4px 8px;border-bottom:1px solid #DDD8CE;">
+              <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#2563EB,#34D399);display:flex;align-items:center;justify-content:center;font-size:0.9rem;flex-shrink:0;">🤖</div>
+              <div class="app-sidebar-logo" style="border-bottom:none;padding:0">Insur<span>RX</span></div>
+            </div>
 
             <div class="sidebar-section-title">내 보험 · POLICIES</div>
             <div>
