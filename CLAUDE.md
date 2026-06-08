@@ -74,7 +74,15 @@ OCR + RAG로 **3초 이내** 실손/정액 보상 여부 및 예상 지급액 �
 - [x] `schemas/user.py`, `schemas/insurer.py`, `schemas/user_policy.py`
 - [x] `schemas/upload.py`, `schemas/analysis.py`, `schemas/result.py`, `schemas/waitlist.py`
 
-### 테스트 **48/48 통과** ✅ (2026-06-08)
+### 카카오톡 챗봇 연동 ✅ (2026-06-08)
+- [x] `KakaoSession` 모델 — 대화 상태 관리 (idle/wait_image/processing/done/error)
+- [x] `POST /api/v1/kakao/skill` — 카카오 i 오픈빌더 스킬 서버
+  - 이미지 수신 → 약관 선택 → 비동기 OCR+RAG → 결과 확인 폴링
+  - 카카오 5초 응답 제한 대응: BackgroundTasks 비동기 파이프라인
+- [x] response_builder — basicCard/simpleText/quickReplies 포맷 빌더
+- [x] 랜딩페이지: 히어로 CTA 카카오 채팅 직링크 + 웹 대시보드 병렬 버튼
+
+### 테스트 **55/55 통과** ✅ (2026-06-08)
 - [x] `tests/test_api.py` — health check, analyze, 파일 형식 검증
 - [x] `tests/test_rag.py` — RAG 파이프라인 단위 테스트
 - [x] `tests/test_waitlist.py` — waitlist 등록 및 중복 처리
@@ -95,40 +103,23 @@ OCR + RAG로 **3초 이내** 실손/정액 보상 여부 및 예상 지급액 �
 
 ## ❌ 미완료 작업 (우선순위 순)
 
-### 🟡 중간 — 기능 완성도
+### 🔴 높음
 
-1. **Railway 배포 후 초기 데이터 설정** (1회 실행 필요)
-   ```bash
-   cd backend
-   # 관리자 계정 생성
-   ADMIN_EMAIL=songgs33@gmail.com ADMIN_NAME=관리자 ADMIN_PASSWORD=비밀번호 python -m scripts.create_admin
-   # 보험사·상품 시드
-   python -m scripts.seed_insurers
-   ```
+1. **카카오 i 오픈빌더 시나리오 수동 설정** (외부 작업)
+   - 스킬 URL: `POST https://magnificent-celebration-production-2dd9.up.railway.app/api/v1/kakao/skill`
+   - 발화 블록 연결: 처음으로, 보험금 분석, 결과 확인, 도움말, 이미지 수신 이벤트
+   - 카카오 비즈니스 채널 → 오픈빌더 연결: business.kakao.com
 
-2. **Pinecone 공개 약관 policy_id 매핑 확인**
-   - `dashboard.html` publicPolicySelect의 value는 `{ins.code}-{p.product_code.toLowerCase()}` 형식
-   - Pinecone 메타데이터의 `policy_id` 필드와 일치해야 함 (예: `hyundai-hi2204`)
-   - `data/policies/raw/*.json`의 `policy_id` 값 확인 후 dropdown option value 동기화 필요
+2. **CBT (클로즈드 베타 테스트)**
+   - Waitlist 유저 초대 → 실제 처방전으로 테스트
+   - 쿼리 로그 분석 → RAG 응답 정확도 개선
 
-3. **파서 진단명/총액 추출 개선**
-   - `parse_medical_document()` 에서 hospital, diagnosis, total_amount 미반환 케이스
-   - RAG 정확도에 직접 영향
+### 🟢 낮음
 
-### 🟢 낮음 — 완성도/운영
-
-4. **Milvus 연동 구현** (`app/services/rag/retriever.py`)
-   - `_query_milvus()` 현재 빈 배열 반환 — Pinecone 대신 자체 호스팅 원할 경우 필요
-
-5. **마이데이터 API 연동** (온보딩 Step 1)
-   - 현재 policy_ids를 사용자가 선택하는 구조
-   - 금융위 마이데이터 API로 내 보험 자동 불러오기
-
-6. **카카오톡 챗봇 채널 연동**
-   - 랜딩페이지 CTA에 카카오 채널 추가 버튼 있음
-
-7. **CBT (클로즈드 베타 테스트)**
-   - Waitlist 유저 초대 → 쿼리 로그 분석 → 응답 정확도 개선
+3. **마이데이터 API 연동** — 금융위 마이데이터로 내 보험 자동 불러오기
+4. **원클릭 청구 대행** — 보험사 API 연동 (파일럿)
+5. **가족 계정 통합 관리**
+6. **Milvus 연동** (`app/services/rag/retriever.py` — 자체 호스팅 원할 때)
 
 ---
 

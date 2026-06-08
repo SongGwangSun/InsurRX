@@ -493,14 +493,44 @@ add_body(doc, 'InsurRX 핵심 차별점: 질병코드·약품 단위 면책 조�
 # 10. 개발 현황
 # ──────────────────────────────────────────────────────────
 add_heading(doc, '10. 개발 현황', level=1, color=BLUE)
-add_heading(doc, '✅ 완료 (2026-05-28 기준)', level=2, color=TEAL)
+add_heading(doc, '✅ 완료 (2026-06-08 기준)', level=2, color=TEAL)
 
 completed = [
-    ('인프라',       ['FastAPI 백엔드 Railway 배포 · PostgreSQL 연동', 'GitHub Pages 랜딩페이지 자동 배포 (CI/CD)', 'CORS 설정, Docker 컨테이너 배포']),
-    ('AI 파이프라인',['GPT-4o Vision OCR — 처방전 인식 실서비스 확인', 'Pinecone 벡터 DB — 4개 약관 1,358개 벡터 업서트 완료', 'RAG 보상 분석 — 엔드투엔드 테스트 통과 (신뢰도 92%)']),
-    ('API',          ['POST /api/v1/upload/ — OCR 처리', 'POST /api/v1/analyze/ — 보상 분석', 'POST /api/v1/waitlist/ — 이메일 수집', 'GET  /api/v1/result/{id} — 결과 조회']),
-    ('프론트엔드',   ['랜딩페이지 (히어로, Before/After, How it works, 데모, 요금제, Waitlist)', 'OCR 업로드 섹션 — 7단계 플로우 (카메라/갤러리 → OCR → 보험 선택 → 결과)', '카카오톡 채널 연결']),
-    ('테스트',       ['단위 테스트 27개 통과 (OCR 파서, RAG, Waitlist, API)']),
+    ('인프라',
+     ['FastAPI 백엔드 Railway 배포 · PostgreSQL 연동',
+      'GitHub Pages 3페이지 자동 배포 (index / dashboard / admin)',
+      'CI(pytest 55개) · CD(Railway + GitHub Pages) 파이프라인',
+      'CORS 설정, Docker 컨테이너 배포']),
+    ('인증 · 회원',
+     ['JWT 회원가입 · 로그인 (bcrypt + python-jose)',
+      '프로필 수정 · 비밀번호 변경 API',
+      '관리자 권한 분리 (is_admin) · 회원 활성/비활성 토글']),
+    ('AI 파이프라인',
+     ['GPT-4o Vision OCR — 처방전 인식 실서비스 확인',
+      'Pinecone 벡터 DB — 4개 공개 약관 1,358개 벡터 업서트 완료',
+      '개인 보험증권 업로드 → 청킹 → 임베딩 → 개인 네임스페이스(user-{id}) 업서트',
+      'RAG 보상 분석 — 공개 약관 + 개인 보험증권 통합 검색 (JWT 자동 연동)',
+      '엔드투엔드 테스트 통과 (신뢰도 92%)']),
+    ('API (총 20+ 엔드포인트)',
+     ['POST /upload/ — GPT-4o Vision OCR · 파싱(정규식+LLM 폴백)',
+      'POST /analyze/ — 통합 RAG 보상 분석 (JWT 선택 인증)',
+      'POST /auth/register · /auth/login · PATCH /auth/me · POST /auth/me/change-password',
+      'POST /my/policies/upload · GET/DELETE /my/policies/ — 개인 보험증권 관리',
+      'GET/POST/PATCH/DELETE /insurers/{id}/products/ — 보험사·상품 CRUD',
+      'GET /my/analyses/ · DELETE /my/analyses/{id} — 분석 히스토리',
+      'GET /admin/users · PATCH /admin/users/{id}/toggle-* · GET /admin/stats',
+      'POST /kakao/skill — 카카오 i 오픈빌더 스킬 서버']),
+    ('프론트엔드',
+     ['index.html — 랜딩페이지 (히어로, How it works, OCR 데모, 요금제, Waitlist)',
+      'dashboard.html — 회원 대시보드 (보상 분석 5단계 · 보험증권 관리 · 히스토리 · 계정 설정)',
+      'admin.html — 관리자 패널 (보험사·상품 CRUD · 회원 목록 · 시스템 통계)']),
+    ('카카오 챗봇',
+     ['카카오 i 오픈빌더 스킬 서버 구현 (POST /kakao/skill)',
+      '대화 세션 관리 (KakaoSession DB) — 이미지 수신 → 약관 선택 → 비동기 분석 → 결과 확인',
+      '카카오 5초 응답 제한 대응: OCR+RAG 백그라운드 처리 후 결과 폴링',
+      '랜딩페이지 히어로 CTA: 카카오톡 채팅 직링크 연결']),
+    ('테스트',
+     ['단위·통합 테스트 55개 통과 (auth 6 · insurer 6 · user_policy 6 · kakao 7 + 기존 30)']),
 ]
 for category, items in completed:
     p = doc.add_paragraph()
@@ -512,16 +542,15 @@ for category, items in completed:
         p2.add_run(item).font.size = Pt(9.5)
         p2.paragraph_format.left_indent = Cm(0.5)
 
-add_heading(doc, '🔲 예정 작업', level=2, color=TEAL)
+add_heading(doc, '🔲 향후 작업', level=2, color=TEAL)
 add_table(doc,
     headers=['우선순위', '기능'],
     rows=[
-        ('🔴 높음', '카카오톡 챗봇 시나리오 연동'),
-        ('🔴 높음', 'CBT (Waitlist 유저 초대, 피드백 수집)'),
-        ('🟡 중간', '마이데이터 API — 내 보험 자동 불러오기'),
-        ('🟡 중간', '원클릭 청구 대행 (보험사 API 연동)'),
+        ('🔴 높음', 'CBT — Waitlist 유저 초대 · 쿼리 로그 분석 · 응답 정확도 개선'),
+        ('🟡 중간', '마이데이터 API — 내 보험 자동 불러오기 (금융위 오픈API)'),
+        ('🟡 중간', '원클릭 청구 대행 — 보험사 API 연동 (파일럿)'),
         ('🟢 낮음', '가족 계정 통합 관리'),
-        ('🟢 낮음', '청구 이력 12개월 보관'),
+        ('🟢 낮음', '청구 이력 12개월 보관 · 알림 서비스'),
     ]
 )
 
@@ -532,14 +561,14 @@ add_heading(doc, '11. 외부 서비스 구성', level=1, color=BLUE)
 add_table(doc,
     headers=['서비스', '용도', '상태'],
     rows=[
-        ('OpenAI (gpt-4o-mini)',          'OCR 텍스트 추출',          '✅ 운영 중'),
-        ('OpenAI (gpt-4o)',               '보상 분석 LLM',            '✅ 운영 중'),
-        ('OpenAI (text-embedding-3-small)','약관 벡터 임베딩',         '✅ 운영 중'),
-        ('Pinecone',                       '약관 벡터 검색 DB',        '✅ 운영 중'),
-        ('Railway',                        '백엔드 호스팅 + PostgreSQL','✅ 운영 중'),
-        ('GitHub Pages',                   '프론트엔드 호스팅',        '✅ 운영 중'),
-        ('Formspree',                      'Waitlist 폴백',            '✅ 운영 중'),
-        ('KakaoTalk 채널',                 '고객 채널',                '✅ 연결됨'),
+        ('OpenAI (gpt-4o-mini)',           'OCR 텍스트 추출',                  '✅ 운영 중'),
+        ('OpenAI (gpt-4o)',                '보상 분석 LLM',                    '✅ 운영 중'),
+        ('OpenAI (text-embedding-3-small)','공개 약관 + 개인 보험증권 임베딩',  '✅ 운영 중'),
+        ('Pinecone (insurrx-policies)',    '공개 약관 + 개인 보험증권 벡터 검색 (네임스페이스 분리)', '✅ 운영 중'),
+        ('Railway (iad 리전)',              'FastAPI 백엔드 + PostgreSQL 호스팅','✅ 운영 중'),
+        ('GitHub Pages',                   'index / dashboard / admin 호스팅',  '✅ 운영 중'),
+        ('Formspree',                      'Waitlist 이메일 수집 폴백',         '✅ 운영 중'),
+        ('KakaoTalk 채널',                 '챗봇 채널 (오픈빌더 스킬 서버 연결)','✅ 채널 개설'),
     ]
 )
 
@@ -600,10 +629,10 @@ add_code_block(doc,
 
 add_heading(doc, 'POST /api/v1/analyze/', level=2, color=TEAL)
 add_code_block(doc,
-    '// Request\n'
+    '// Request  (Authorization: Bearer <token> 선택)\n'
     '{\n'
     '  "parsed": { /* ParsedDocument */ },\n'
-    '  "policy_ids": ["hyundai-silson-v4", "axa-dental-2501"]\n'
+    '  "policy_ids": ["hyundai-silson-v4"]  // 선택사항 — 로그인 시 개인 보험증권 자동 포함\n'
     '}\n'
     '\n'
     '// Response 200\n'
@@ -627,6 +656,45 @@ add_code_block(doc,
     '}'
 )
 
+add_heading(doc, 'POST /api/v1/auth/register  ·  /auth/login', level=2, color=TEAL)
+add_code_block(doc,
+    '// POST /auth/register\n'
+    '{ "name": "홍길동", "email": "user@example.com", "password": "pass1234" }\n'
+    '→ 201 { "access_token": "eyJ...", "token_type": "bearer", "user": { ... } }\n'
+    '\n'
+    '// POST /auth/login  (OAuth2PasswordBearer)\n'
+    'username=user@example.com&password=pass1234\n'
+    '→ 200 { "access_token": "eyJ...", "user": { "id": 1, "is_admin": false, ... } }'
+)
+
+add_heading(doc, 'POST /api/v1/my/policies/upload', level=2, color=TEAL)
+add_code_block(doc,
+    '// Request: multipart/form-data  (Authorization 필수)\n'
+    '{ "file": "<PDF or 이미지>", "product_id": 2 }  // product_id 선택\n'
+    '\n'
+    '// Response 202 — 임베딩은 백그라운드 처리\n'
+    '{ "policy_id": 1, "original_name": "내보험증권.pdf",\n'
+    '  "status": "pending", "message": "업로드 완료. 임베딩 진행 중..." }'
+)
+
+add_heading(doc, 'POST /api/v1/kakao/skill', level=2, color=TEAL)
+add_code_block(doc,
+    '// 카카오 i 오픈빌더 스킬 서버 요청 (v2)\n'
+    '{\n'
+    '  "userRequest": { "utterance": "보험금 분석", "user": { "id": "kakao_uid" } },\n'
+    '  "action": { "params": { "image": { "url": "https://..." } } }\n'
+    '}\n'
+    '\n'
+    '// Response — 카드 형식\n'
+    '{\n'
+    '  "version": "2.0",\n'
+    '  "template": {\n'
+    '    "outputs": [{ "basicCard": { "title": "✅ 보험금 청구 가능 — ₩18,500", ... } }],\n'
+    '    "quickReplies": [{ "label": "🔄 다시 분석", "action": "message" }]\n'
+    '  }\n'
+    '}'
+)
+
 # ──────────────────────────────────────────────────────────
 # 푸터 (마지막 단락)
 # ──────────────────────────────────────────────────────────
@@ -641,6 +709,7 @@ r_f.font.italic = True
 # ──────────────────────────────────────────────────────────
 # 저장
 # ──────────────────────────────────────────────────────────
-OUTPUT = '/mnt/d/work/2026ict/InsurRX/docs/기획서_InsurRX_v1.0.docx'
+from pathlib import Path
+OUTPUT = Path(__file__).parent / '기획서_InsurRX_v1.0.docx'
 doc.save(OUTPUT)
 print(f'저장 완료: {OUTPUT}')
