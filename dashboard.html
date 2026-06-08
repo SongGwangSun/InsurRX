@@ -9,9 +9,7 @@
       --blue:    #2563EB;
       --blue-dk: #1D4ED8;
       --mint:    #34D399;
-      --mint-dk: #10B981;
       --teal:    #0D9488;
-      --teal-lt: #CCFBF1;
       --gray-50: #F8FAFC;
       --gray-100:#F1F5F9;
       --gray-200:#E2E8F0;
@@ -22,176 +20,152 @@
       --white:   #FFFFFF;
       --red:     #EF4444;
       --green:   #22C55E;
-      --yellow:  #EAB308;
       --radius:  12px;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-      color: var(--gray-900);
-      background: var(--gray-50);
-      line-height: 1.6;
-    }
+    body { font-family: 'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif; color: var(--gray-900); background: var(--gray-50); line-height: 1.6; }
 
-    /* ── NAV ───────────────────────────────── */
-    nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 5%; height: 64px;
-      background: rgba(255,255,255,0.95);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--gray-200);
-    }
-    .logo { font-size: 1.35rem; font-weight: 800; color: var(--blue); letter-spacing: -0.5px; }
-    .logo span { color: var(--teal); }
-    .nav-right { display: flex; align-items: center; gap: 12px; }
-    .nav-user { font-size: 0.875rem; color: var(--gray-700); font-weight: 500; }
-    .btn-sm {
-      padding: 7px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 600;
-      border: none; cursor: pointer; transition: opacity 0.2s;
-    }
-    .btn-outline { background: transparent; border: 1.5px solid var(--gray-300); color: var(--gray-700); }
-    .btn-outline:hover { border-color: var(--blue); color: var(--blue); }
-    .btn-primary { background: linear-gradient(90deg, var(--blue), var(--teal)); color: var(--white); }
-    .btn-primary:hover { opacity: 0.88; }
+    /* NAV */
+    nav { position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:0 5%;height:64px;background:rgba(255,255,255,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--gray-200); }
+    .logo { font-size:1.35rem;font-weight:800;color:var(--blue);text-decoration:none;letter-spacing:-.5px; }
+    .logo span { color:var(--teal); }
+    .nav-right { display:flex;align-items:center;gap:10px; }
+    .nav-user { font-size:.875rem;color:var(--gray-700);font-weight:500; }
+    .btn-sm { padding:7px 16px;border-radius:8px;font-size:.85rem;font-weight:600;border:none;cursor:pointer;transition:all .2s; }
+    .btn-outline { background:transparent;border:1.5px solid var(--gray-300);color:var(--gray-700); }
+    .btn-outline:hover { border-color:var(--blue);color:var(--blue); }
+    .btn-primary { background:linear-gradient(90deg,var(--blue),var(--teal));color:var(--white); }
+    .btn-primary:hover { opacity:.88; }
 
-    /* ── AUTH MODAL OVERLAY ─────────────────── */
-    .overlay {
-      position: fixed; inset: 0; z-index: 300;
-      background: rgba(15,23,42,0.55);
-      display: flex; align-items: center; justify-content: center;
-      padding: 1rem;
-    }
-    .overlay.hidden { display: none; }
-    .modal {
-      background: var(--white); border-radius: 20px;
-      padding: 2.5rem 2rem; width: 100%; max-width: 440px;
-      box-shadow: 0 24px 64px rgba(0,0,0,0.18);
-    }
-    .modal h2 { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.3rem; color: var(--gray-900); }
-    .modal p.sub { font-size: 0.875rem; color: var(--gray-500); margin-bottom: 1.5rem; }
-    .tabs { display: flex; gap: 0; border-radius: 10px; overflow: hidden; border: 1.5px solid var(--gray-200); margin-bottom: 1.5rem; }
-    .tab-btn {
-      flex: 1; padding: 10px; font-size: 0.9rem; font-weight: 600;
-      border: none; background: transparent; cursor: pointer; color: var(--gray-500);
-      transition: background 0.2s, color 0.2s;
-    }
-    .tab-btn.active { background: var(--blue); color: var(--white); }
-    .form-group { margin-bottom: 1rem; }
-    .form-group label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--gray-700); margin-bottom: 5px; }
-    .form-group input {
-      width: 100%; padding: 10px 14px; border: 1.5px solid var(--gray-200);
-      border-radius: 9px; font-size: 0.9rem; outline: none;
-      transition: border-color 0.2s;
-    }
-    .form-group input:focus { border-color: var(--blue); }
-    .btn-full {
-      width: 100%; padding: 13px; border-radius: 10px; font-size: 1rem; font-weight: 700;
-      border: none; cursor: pointer; margin-top: 0.5rem;
-      background: linear-gradient(90deg, var(--blue), var(--teal)); color: var(--white);
-      transition: opacity 0.2s;
-    }
-    .btn-full:hover { opacity: 0.88; }
-    .btn-full:disabled { opacity: 0.5; cursor: not-allowed; }
-    .error-msg { font-size: 0.82rem; color: var(--red); margin-top: 0.75rem; min-height: 1.2em; }
+    /* AUTH MODAL */
+    .overlay { position:fixed;inset:0;z-index:300;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:1rem; }
+    .overlay.hidden { display:none; }
+    .modal { background:var(--white);border-radius:20px;padding:2.5rem 2rem;width:100%;max-width:440px;box-shadow:0 24px 64px rgba(0,0,0,.18); }
+    .modal h2 { font-size:1.5rem;font-weight:800;margin-bottom:.3rem; }
+    .modal p.sub { font-size:.875rem;color:var(--gray-500);margin-bottom:1.5rem; }
+    .tabs { display:flex;border-radius:10px;overflow:hidden;border:1.5px solid var(--gray-200);margin-bottom:1.5rem; }
+    .tab-btn { flex:1;padding:10px;font-size:.9rem;font-weight:600;border:none;background:transparent;cursor:pointer;color:var(--gray-500);transition:background .2s,color .2s; }
+    .tab-btn.active { background:var(--blue);color:var(--white); }
+    .form-group { margin-bottom:1rem; }
+    .form-group label { display:block;font-size:.82rem;font-weight:600;color:var(--gray-700);margin-bottom:5px; }
+    .form-group input { width:100%;padding:10px 14px;border:1.5px solid var(--gray-200);border-radius:9px;font-size:.9rem;outline:none;transition:border-color .2s; }
+    .form-group input:focus { border-color:var(--blue); }
+    .btn-full { width:100%;padding:13px;border-radius:10px;font-size:1rem;font-weight:700;border:none;cursor:pointer;margin-top:.5rem;background:linear-gradient(90deg,var(--blue),var(--teal));color:var(--white);transition:opacity .2s; }
+    .btn-full:hover { opacity:.88; }
+    .btn-full:disabled { opacity:.5;cursor:not-allowed; }
+    .error-msg { font-size:.82rem;color:var(--red);margin-top:.75rem;min-height:1.2em; }
 
-    /* ── LAYOUT ─────────────────────────────── */
-    .page-wrap { max-width: 1100px; margin: 0 auto; padding: 88px 1.5rem 3rem; }
+    /* LAYOUT */
+    .page-wrap { max-width:1100px;margin:0 auto;padding:88px 1.5rem 3rem; }
 
-    /* ── WELCOME BANNER ─────────────────────── */
-    .welcome-banner {
-      background: linear-gradient(135deg, var(--blue) 0%, var(--teal) 100%);
-      border-radius: 18px; padding: 2rem 2.5rem;
-      color: var(--white); margin-bottom: 2rem;
-      display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: 1rem;
-    }
-    .welcome-banner h1 { font-size: 1.6rem; font-weight: 800; }
-    .welcome-banner p  { font-size: 0.9rem; opacity: 0.85; margin-top: 4px; }
-    .badge-admin {
-      background: rgba(255,255,255,0.25); border-radius: 6px;
-      padding: 3px 10px; font-size: 0.75rem; font-weight: 700;
-      margin-left: 8px; vertical-align: middle;
-    }
+    /* WELCOME */
+    .welcome-banner { background:linear-gradient(135deg,var(--blue) 0%,var(--teal) 100%);border-radius:18px;padding:2rem 2.5rem;color:var(--white);margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem; }
+    .welcome-banner h1 { font-size:1.6rem;font-weight:800; }
+    .welcome-banner p  { font-size:.9rem;opacity:.85;margin-top:4px; }
 
-    /* ── SECTION HEADER ─────────────────────── */
-    .section-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 1rem;
-    }
-    .section-header h2 { font-size: 1.15rem; font-weight: 700; }
-    .section-header span { font-size: 0.82rem; color: var(--gray-500); }
+    /* MAIN TABS */
+    .main-tabs { display:flex;gap:0;border-radius:12px;overflow:hidden;border:1.5px solid var(--gray-200);background:var(--white);margin-bottom:1.5rem;width:fit-content; }
+    .main-tab-btn { padding:11px 24px;font-size:.9rem;font-weight:600;border:none;background:transparent;cursor:pointer;color:var(--gray-500);transition:background .2s,color .2s;white-space:nowrap; }
+    .main-tab-btn.active { background:var(--blue);color:var(--white); }
+    .tab-content { display:none; }
+    .tab-content.active { display:block; }
 
-    /* ── UPLOAD CARD ────────────────────────── */
-    .upload-card {
-      background: var(--white); border-radius: var(--radius); padding: 1.75rem;
-      border: 2px dashed var(--gray-300); margin-bottom: 2rem;
-      transition: border-color 0.2s;
-    }
-    .upload-card:hover { border-color: var(--blue); }
-    .upload-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; }
-    .upload-card p  { font-size: 0.85rem; color: var(--gray-500); margin-bottom: 1.2rem; }
-    .upload-row { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end; }
-    .upload-row select, .upload-row input[type="file"] {
-      flex: 1; min-width: 160px; padding: 9px 12px;
-      border: 1.5px solid var(--gray-200); border-radius: 9px;
-      font-size: 0.875rem; background: var(--white); outline: none;
-    }
-    .upload-row select:focus, .upload-row input[type="file"]:focus { border-color: var(--blue); }
-    .upload-btn {
-      padding: 10px 24px; border-radius: 9px; font-size: 0.9rem; font-weight: 700;
-      border: none; cursor: pointer;
-      background: linear-gradient(90deg, var(--blue), var(--teal));
-      color: var(--white); white-space: nowrap; transition: opacity 0.2s;
-    }
-    .upload-btn:hover { opacity: 0.88; }
-    .upload-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .upload-progress { margin-top: 1rem; }
-    .progress-bar-wrap { height: 6px; background: var(--gray-100); border-radius: 99px; overflow: hidden; }
-    .progress-bar { height: 100%; background: linear-gradient(90deg, var(--blue), var(--mint)); border-radius: 99px; transition: width 0.5s; }
-    .progress-text { font-size: 0.8rem; color: var(--gray-500); margin-top: 6px; }
+    /* SECTION HEADER */
+    .section-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem; }
+    .section-header h2 { font-size:1.1rem;font-weight:700; }
+    .section-header span { font-size:.82rem;color:var(--gray-500); }
 
-    /* ── POLICIES TABLE ─────────────────────── */
-    .policies-wrap {
-      background: var(--white); border-radius: var(--radius);
-      border: 1px solid var(--gray-200); overflow: hidden; margin-bottom: 2rem;
-    }
-    table { width: 100%; border-collapse: collapse; }
-    thead th {
-      background: var(--gray-50); padding: 12px 16px;
-      font-size: 0.8rem; font-weight: 600; color: var(--gray-500);
-      text-align: left; border-bottom: 1px solid var(--gray-200);
-    }
-    tbody tr { border-bottom: 1px solid var(--gray-100); }
-    tbody tr:last-child { border-bottom: none; }
-    tbody tr:hover { background: var(--gray-50); }
-    tbody td { padding: 12px 16px; font-size: 0.875rem; vertical-align: middle; }
-    .badge {
-      display: inline-block; padding: 3px 9px; border-radius: 99px; font-size: 0.75rem; font-weight: 600;
-    }
-    .badge-pending    { background: #FEF3C7; color: #92400E; }
-    .badge-processing { background: #DBEAFE; color: #1E40AF; }
-    .badge-ready      { background: #DCFCE7; color: #166534; }
-    .badge-failed     { background: #FEE2E2; color: #991B1B; }
-    .del-btn {
-      background: none; border: none; cursor: pointer; color: var(--gray-300);
-      font-size: 1.1rem; padding: 4px 6px; border-radius: 6px;
-      transition: color 0.2s, background 0.2s;
-    }
-    .del-btn:hover { color: var(--red); background: #FEE2E2; }
-    .empty-row td { text-align: center; color: var(--gray-300); padding: 2.5rem; font-size: 0.875rem; }
+    /* CARDS */
+    .card { background:var(--white);border-radius:var(--radius);border:1px solid var(--gray-200);padding:1.5rem;margin-bottom:1.5rem; }
+    .card h3 { font-size:1rem;font-weight:700;margin-bottom:.5rem; }
+    .card p  { font-size:.85rem;color:var(--gray-500);margin-bottom:1rem; }
 
-    /* ── TOASTS ─────────────────────────────── */
-    .toast-wrap { position: fixed; bottom: 24px; right: 24px; z-index: 999; display: flex; flex-direction: column; gap: 10px; }
-    .toast {
-      padding: 12px 18px; border-radius: 10px; font-size: 0.875rem; font-weight: 600;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.12); animation: slideIn 0.3s ease;
-      max-width: 320px;
-    }
-    .toast-success { background: #DCFCE7; color: #166534; }
-    .toast-error   { background: #FEE2E2; color: #991B1B; }
-    .toast-info    { background: #DBEAFE; color: #1E40AF; }
-    @keyframes slideIn { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    /* UPLOAD (policy) */
+    .upload-card { background:var(--white);border-radius:var(--radius);padding:1.5rem;border:2px dashed var(--gray-300);margin-bottom:1.5rem;transition:border-color .2s; }
+    .upload-card:hover { border-color:var(--blue); }
+    .upload-row { display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end; }
+    .upload-row select, .upload-row input[type="file"] { flex:1;min-width:160px;padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:9px;font-size:.875rem;background:var(--white);outline:none; }
+    .upload-row select:focus,.upload-row input:focus { border-color:var(--blue); }
+    .upload-btn { padding:10px 24px;border-radius:9px;font-size:.9rem;font-weight:700;border:none;cursor:pointer;background:linear-gradient(90deg,var(--blue),var(--teal));color:var(--white);white-space:nowrap;transition:opacity .2s; }
+    .upload-btn:hover { opacity:.88; }
+    .upload-btn:disabled { opacity:.5;cursor:not-allowed; }
+    .progress-bar-wrap { height:6px;background:var(--gray-100);border-radius:99px;overflow:hidden;margin-top:.75rem; }
+    .progress-bar { height:100%;background:linear-gradient(90deg,var(--blue),var(--mint));border-radius:99px;transition:width .5s; }
+    .progress-text { font-size:.8rem;color:var(--gray-500);margin-top:6px; }
+
+    /* ANALYZE ZONE */
+    .analyze-drop { border:2px dashed var(--gray-300);border-radius:var(--radius);padding:2.5rem 1.5rem;text-align:center;cursor:pointer;transition:all .2s;background:var(--white);margin-bottom:1.2rem; }
+    .analyze-drop:hover,.analyze-drop.drag-over { border-color:var(--blue);background:#EFF6FF; }
+    .analyze-drop .drop-icon { font-size:2.5rem;margin-bottom:.5rem; }
+    .analyze-drop p { font-size:.9rem;color:var(--gray-500); }
+    .analyze-drop strong { color:var(--blue); }
+    #analyzeFileInput { display:none; }
+    .step-bar { display:flex;gap:0;margin-bottom:1.5rem;border-radius:10px;overflow:hidden; }
+    .step { flex:1;padding:10px 8px;text-align:center;font-size:.78rem;font-weight:600;color:var(--gray-400);background:var(--gray-100);border-right:1px solid var(--gray-200);transition:all .3s; }
+    .step:last-child { border-right:none; }
+    .step.done    { background:#DCFCE7;color:#166534; }
+    .step.active  { background:var(--blue);color:var(--white); }
+
+    /* OCR RESULT PREVIEW */
+    .ocr-preview { background:var(--gray-50);border:1px solid var(--gray-200);border-radius:10px;padding:1rem;margin-bottom:1rem; }
+    .ocr-preview h4 { font-size:.85rem;font-weight:700;color:var(--gray-700);margin-bottom:.5rem; }
+    .ocr-fields { display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.5rem; }
+    .ocr-field { background:var(--white);border:1px solid var(--gray-200);border-radius:8px;padding:.5rem .75rem; }
+    .ocr-field .label { font-size:.72rem;color:var(--gray-500);font-weight:600; }
+    .ocr-field .value { font-size:.875rem;font-weight:700;color:var(--gray-900);margin-top:2px; }
+    .ocr-field .value.empty { color:var(--gray-300);font-weight:400; }
+
+    /* RESULT CARD */
+    .result-card { border-radius:var(--radius);border:1px solid var(--gray-200);overflow:hidden;margin-bottom:1.5rem; }
+    .result-header { padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem; }
+    .result-header.claimable   { background:linear-gradient(135deg,#065F46,#0D9488);color:var(--white); }
+    .result-header.unclaimable { background:linear-gradient(135deg,#991B1B,#B45309);color:var(--white); }
+    .result-title { font-size:1.25rem;font-weight:800; }
+    .result-payout { font-size:1.5rem;font-weight:900; }
+    .result-summary { padding:1rem 1.5rem;font-size:.875rem;color:var(--gray-700);background:var(--white);border-bottom:1px solid var(--gray-100); }
+    .coverage-list { padding:.75rem 1.5rem 1.25rem; }
+    .coverage-list h4 { font-size:.85rem;font-weight:700;color:var(--gray-500);margin-bottom:.6rem;text-transform:uppercase;letter-spacing:.05em; }
+    .coverage-item { background:var(--gray-50);border-radius:9px;padding:.75rem 1rem;margin-bottom:.5rem;border-left:3px solid var(--gray-200); }
+    .coverage-item.covered   { border-left-color:var(--green); }
+    .coverage-item.uncovered { border-left-color:var(--red); }
+    .coverage-item .ci-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:.3rem; }
+    .coverage-item .ci-name   { font-weight:700;font-size:.875rem; }
+    .coverage-item .ci-badge  { font-size:.73rem;font-weight:700;padding:2px 8px;border-radius:99px; }
+    .ci-badge.yes { background:#DCFCE7;color:#166534; }
+    .ci-badge.no  { background:#FEE2E2;color:#991B1B; }
+    .coverage-item .ci-reason { font-size:.8rem;color:var(--gray-500); }
+    .coverage-item .ci-cite   { font-size:.75rem;color:var(--teal);margin-top:3px;font-style:italic; }
+    .confidence-bar { margin-top:.25rem;height:5px;border-radius:99px;background:var(--gray-200);overflow:hidden; }
+    .confidence-fill { height:100%;background:linear-gradient(90deg,var(--blue),var(--mint));border-radius:99px; }
+
+    /* POLICIES TABLE */
+    .policies-wrap { background:var(--white);border-radius:var(--radius);border:1px solid var(--gray-200);overflow:hidden;margin-bottom:1.5rem; }
+    table { width:100%;border-collapse:collapse; }
+    thead th { background:var(--gray-50);padding:11px 14px;font-size:.78rem;font-weight:600;color:var(--gray-500);text-align:left;border-bottom:1px solid var(--gray-200); }
+    tbody tr { border-bottom:1px solid var(--gray-100); }
+    tbody tr:last-child { border-bottom:none; }
+    tbody tr:hover { background:var(--gray-50); }
+    tbody td { padding:11px 14px;font-size:.875rem;vertical-align:middle; }
+    .badge { display:inline-block;padding:3px 9px;border-radius:99px;font-size:.75rem;font-weight:600; }
+    .badge-pending    { background:#FEF3C7;color:#92400E; }
+    .badge-processing { background:#DBEAFE;color:#1E40AF; }
+    .badge-ready      { background:#DCFCE7;color:#166534; }
+    .badge-failed     { background:#FEE2E2;color:#991B1B; }
+    .del-btn { background:none;border:none;cursor:pointer;color:var(--gray-300);font-size:1.1rem;padding:4px 6px;border-radius:6px;transition:color .2s,background .2s; }
+    .del-btn:hover { color:var(--red);background:#FEE2E2; }
+    .empty-row td { text-align:center;color:var(--gray-300);padding:2.5rem;font-size:.875rem; }
+
+    /* SPINNER */
+    .spinner { display:inline-block;width:20px;height:20px;border:2.5px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    /* TOASTS */
+    .toast-wrap { position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;gap:10px; }
+    .toast { padding:12px 18px;border-radius:10px;font-size:.875rem;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.12);animation:slideIn .3s ease;max-width:320px; }
+    .toast-success { background:#DCFCE7;color:#166534; }
+    .toast-error   { background:#FEE2E2;color:#991B1B; }
+    .toast-info    { background:#DBEAFE;color:#1E40AF; }
+    @keyframes slideIn { from { transform:translateX(60px);opacity:0; } to { transform:translateX(0);opacity:1; } }
   </style>
 </head>
 <body>
@@ -212,136 +186,170 @@
   <div class="modal">
     <h2>InsurRX 시작하기</h2>
     <p class="sub">AI로 내 보험 보상을 3초 안에 확인하세요.</p>
-
     <div class="tabs">
       <button class="tab-btn active" id="tabLogin" onclick="switchTab('login')">로그인</button>
       <button class="tab-btn" id="tabRegister" onclick="switchTab('register')">회원가입</button>
     </div>
-
-    <!-- 로그인 폼 -->
     <div id="loginForm">
-      <div class="form-group">
-        <label>이메일</label>
-        <input type="email" id="loginEmail" placeholder="example@email.com" />
-      </div>
-      <div class="form-group">
-        <label>비밀번호</label>
-        <input type="password" id="loginPw" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')doLogin()" />
-      </div>
+      <div class="form-group"><label>이메일</label><input type="email" id="loginEmail" placeholder="example@email.com" /></div>
+      <div class="form-group"><label>비밀번호</label><input type="password" id="loginPw" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')doLogin()" /></div>
       <button class="btn-full" onclick="doLogin()" id="loginBtn">로그인</button>
       <div class="error-msg" id="loginErr"></div>
     </div>
-
-    <!-- 회원가입 폼 -->
     <div id="registerForm" style="display:none">
-      <div class="form-group">
-        <label>이름</label>
-        <input type="text" id="regName" placeholder="홍길동" />
-      </div>
-      <div class="form-group">
-        <label>이메일</label>
-        <input type="email" id="regEmail" placeholder="example@email.com" />
-      </div>
-      <div class="form-group">
-        <label>비밀번호 (6자 이상)</label>
-        <input type="password" id="regPw" placeholder="비밀번호 설정" />
-      </div>
-      <div class="form-group">
-        <label>비밀번호 확인</label>
-        <input type="password" id="regPw2" placeholder="비밀번호 재입력" onkeydown="if(event.key==='Enter')doRegister()" />
-      </div>
+      <div class="form-group"><label>이름</label><input type="text" id="regName" placeholder="홍길동" /></div>
+      <div class="form-group"><label>이메일</label><input type="email" id="regEmail" placeholder="example@email.com" /></div>
+      <div class="form-group"><label>비밀번호 (6자 이상)</label><input type="password" id="regPw" placeholder="비밀번호 설정" /></div>
+      <div class="form-group"><label>비밀번호 확인</label><input type="password" id="regPw2" placeholder="비밀번호 재입력" onkeydown="if(event.key==='Enter')doRegister()" /></div>
       <button class="btn-full" onclick="doRegister()" id="registerBtn">회원가입</button>
       <div class="error-msg" id="registerErr"></div>
     </div>
   </div>
 </div>
 
-<!-- MAIN CONTENT -->
+<!-- MAIN -->
 <div class="page-wrap" id="mainContent" style="display:none">
 
-  <!-- Welcome Banner -->
   <div class="welcome-banner">
     <div>
       <h1 id="welcomeName">안녕하세요!</h1>
-      <p>업로드한 보험증권을 기반으로 AI가 보상 여부를 분석합니다.</p>
-    </div>
-    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-      <a href="index.html#try" class="btn-sm btn-primary" style="text-decoration:none; border-radius:8px; padding:9px 18px; font-weight:700; color:white;">보상 분석 시작</a>
+      <p id="welcomeSub">업로드한 보험증권을 기반으로 AI가 보상 여부를 분석합니다.</p>
     </div>
   </div>
 
-  <!-- Upload Section -->
-  <div class="section-header">
-    <h2>보험증권 / 약관 업로드</h2>
-    <span>PDF · JPG · PNG · WEBP 최대 20MB</span>
+  <!-- 주 탭 -->
+  <div class="main-tabs">
+    <button class="main-tab-btn active" id="mtAnalyze" onclick="switchMainTab('analyze')">🔍 보상 분석</button>
+    <button class="main-tab-btn" id="mtPolicies" onclick="switchMainTab('policies')">📄 내 보험증권</button>
   </div>
 
-  <div class="upload-card">
-    <h3>내 보험 문서 등록</h3>
-    <p>보험증권 또는 약관 파일을 업로드하면 AI가 자동으로 분석하여 벡터 DB에 등록합니다.<br>등록 후 보상 분석 시 내 보험 내용이 정확하게 반영됩니다.</p>
-    <div class="upload-row">
-      <select id="productSelect">
-        <option value="">보험 상품 선택 (선택사항)</option>
-      </select>
-      <input type="file" id="policyFile" accept=".pdf,.jpg,.jpeg,.png,.webp" />
-      <button class="upload-btn" id="uploadBtn" onclick="uploadPolicy()">업로드</button>
+  <!-- ═══ TAB: 보상 분석 ══════════════════════════════════════════════ -->
+  <div class="tab-content active" id="tabAnalyze">
+
+    <!-- 단계 표시 -->
+    <div class="step-bar">
+      <div class="step" id="step1">① 파일 선택</div>
+      <div class="step" id="step2">② OCR 분석</div>
+      <div class="step" id="step3">③ 내용 확인</div>
+      <div class="step" id="step4">④ 보상 분석</div>
+      <div class="step" id="step5">⑤ 결과 확인</div>
     </div>
-    <div class="upload-progress" id="uploadProgress" style="display:none">
-      <div class="progress-bar-wrap">
-        <div class="progress-bar" id="progressBar" style="width:0%"></div>
+
+    <!-- Step 1: 파일 드롭존 -->
+    <div id="analyzeZone">
+      <div class="analyze-drop" id="dropZone"
+           onclick="document.getElementById('analyzeFileInput').click()"
+           ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+        <div class="drop-icon">📋</div>
+        <p><strong>처방전 또는 진료비 영수증</strong>을 여기에 끌어다 놓거나 클릭해 선택</p>
+        <p style="font-size:.78rem;margin-top:.3rem;color:var(--gray-300)">JPG · PNG · WEBP · PDF 지원 · 최대 10MB</p>
       </div>
-      <div class="progress-text" id="progressText">업로드 중...</div>
+      <input type="file" id="analyzeFileInput" accept=".jpg,.jpeg,.png,.webp,.pdf" onchange="onFileSelected(this.files[0])" />
+
+      <!-- 공개 약관 선택 (선택사항) -->
+      <div class="card" style="margin-bottom:0">
+        <h3 style="font-size:.9rem">보험사 약관 추가 검색 <span style="font-weight:400;color:var(--gray-500)">(선택사항)</span></h3>
+        <p style="margin-bottom:.6rem">로그인 시 내 보험증권이 자동으로 분석에 포함됩니다.</p>
+        <select id="publicPolicySelect" style="width:100%;padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:9px;font-size:.875rem;outline:none;">
+          <option value="">공개 약관 선택 안 함</option>
+        </select>
+      </div>
     </div>
+
+    <!-- Step 2: OCR 진행 중 -->
+    <div id="ocrLoading" style="display:none;text-align:center;padding:3rem 0">
+      <div style="font-size:3rem;margin-bottom:1rem">🔍</div>
+      <p style="font-weight:700;font-size:1.1rem">OCR 분석 중...</p>
+      <p style="color:var(--gray-500);font-size:.875rem;margin-top:.3rem">이미지에서 텍스트를 추출하고 있습니다.</p>
+      <div style="width:200px;margin:1rem auto 0">
+        <div class="progress-bar-wrap"><div class="progress-bar" style="width:60%"></div></div>
+      </div>
+    </div>
+
+    <!-- Step 3: OCR 결과 확인 -->
+    <div id="ocrResult" style="display:none">
+      <div class="ocr-preview">
+        <h4>OCR 추출 결과 — 분석에 사용할 정보입니다</h4>
+        <div class="ocr-fields" id="ocrFields"></div>
+      </div>
+      <button class="btn-full" style="max-width:300px" onclick="runAnalysis()" id="runAnalysisBtn">
+        AI 보상 분석 시작
+      </button>
+    </div>
+
+    <!-- Step 4: 분석 중 -->
+    <div id="analysisLoading" style="display:none;text-align:center;padding:3rem 0">
+      <div style="font-size:3rem;margin-bottom:1rem">🤖</div>
+      <p style="font-weight:700;font-size:1.1rem">보상 여부 분석 중...</p>
+      <p style="color:var(--gray-500);font-size:.875rem;margin-top:.3rem">AI가 약관을 검토하고 있습니다. 최대 15초 소요됩니다.</p>
+      <div style="width:200px;margin:1rem auto 0">
+        <div class="progress-bar-wrap"><div class="progress-bar" id="analysisBar" style="width:20%"></div></div>
+      </div>
+    </div>
+
+    <!-- Step 5: 분석 결과 -->
+    <div id="analysisResult" style="display:none">
+      <div id="resultCard"></div>
+      <button class="btn-sm btn-outline" style="margin-top:.5rem" onclick="resetAnalyze()">다시 분석하기</button>
+    </div>
+
   </div>
 
-  <!-- My Policies Table -->
-  <div class="section-header">
-    <h2>내 보험증권 목록</h2>
-    <button class="btn-sm btn-outline" onclick="loadPolicies()">새로고침</button>
-  </div>
-  <div class="policies-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>파일명</th>
-          <th>상태</th>
-          <th>청크 수</th>
-          <th>업로드일</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody id="policiesBody">
-        <tr class="empty-row"><td colspan="6">로딩 중...</td></tr>
-      </tbody>
-    </table>
-  </div>
+  <!-- ═══ TAB: 내 보험증권 ════════════════════════════════════════════ -->
+  <div class="tab-content" id="tabPolicies">
 
+    <div class="section-header" style="margin-bottom:1rem">
+      <h2>보험증권 / 약관 업로드</h2>
+      <span>PDF · JPG · PNG · WEBP 최대 20MB</span>
+    </div>
+    <div class="upload-card">
+      <h3>내 보험 문서 등록</h3>
+      <p>보험증권 또는 약관 파일을 업로드하면 AI가 자동으로 임베딩하여 벡터 DB에 저장합니다.<br>등록된 문서는 보상 분석 시 자동으로 검색 대상에 포함됩니다.</p>
+      <div class="upload-row">
+        <select id="productSelect"><option value="">보험 상품 선택 (선택사항)</option></select>
+        <input type="file" id="policyFile" accept=".pdf,.jpg,.jpeg,.png,.webp" />
+        <button class="upload-btn" id="uploadBtn" onclick="uploadPolicy()">업로드</button>
+      </div>
+      <div id="uploadProgress" style="display:none">
+        <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+        <div class="progress-text" id="progressText">업로드 중...</div>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <h2>내 보험증권 목록</h2>
+      <button class="btn-sm btn-outline" onclick="loadPolicies()">새로고침</button>
+    </div>
+    <div class="policies-wrap">
+      <table>
+        <thead><tr><th>#</th><th>파일명</th><th>상태</th><th>청크 수</th><th>업로드일</th><th></th></tr></thead>
+        <tbody id="policiesBody"><tr class="empty-row"><td colspan="6">로딩 중...</td></tr></tbody>
+      </table>
+    </div>
+
+  </div>
 </div>
 
-<!-- Not logged in placeholder -->
-<div class="page-wrap" id="guestContent" style="display:none; text-align:center; padding-top:160px;">
-  <div style="font-size:4rem;">🔒</div>
-  <h2 style="margin-top:1rem; font-size:1.5rem;">로그인이 필요합니다</h2>
-  <p style="color:var(--gray-500); margin-top:.5rem; margin-bottom:1.5rem;">보험증권 관리 및 AI 분석 기능을 이용하려면 로그인하세요.</p>
-  <button class="btn-sm btn-primary" style="font-size:1rem; padding:12px 32px;" onclick="showAuth()">로그인 / 회원가입</button>
+<!-- 미로그인 -->
+<div class="page-wrap" id="guestContent" style="display:none;text-align:center;padding-top:160px;">
+  <div style="font-size:4rem">🔒</div>
+  <h2 style="margin-top:1rem;font-size:1.5rem">로그인이 필요합니다</h2>
+  <p style="color:var(--gray-500);margin-top:.5rem;margin-bottom:1.5rem">보험증권 관리 및 AI 분석 기능을 이용하려면 로그인하세요.</p>
+  <button class="btn-sm btn-primary" style="font-size:1rem;padding:12px 32px" onclick="showAuth()">로그인 / 회원가입</button>
 </div>
 
-<!-- TOASTS -->
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script>
 const API = 'https://magnificent-celebration-production-2dd9.up.railway.app/api/v1';
-let authToken = localStorage.getItem('insurrx_token');
+let authToken   = localStorage.getItem('insurrx_token');
 let currentUser = JSON.parse(localStorage.getItem('insurrx_user') || 'null');
+let _parsedDoc  = null;   // OCR 결과 임시 저장
 
-// ── 초기화 ─────────────────────────────────────
+// ── 초기화 ────────────────────────────────────────────
 window.onload = () => {
-  if (authToken && currentUser) {
-    enterDashboard();
-  } else {
-    document.getElementById('guestContent').style.display = '';
-  }
+  if (authToken && currentUser) enterDashboard();
+  else document.getElementById('guestContent').style.display = '';
 };
 
 function enterDashboard() {
@@ -351,108 +359,260 @@ function enterDashboard() {
   document.getElementById('loginNavBtn').style.display = 'none';
   document.getElementById('logoutBtn').style.display = '';
   document.getElementById('navUserName').textContent = currentUser.name + '님';
-  if (currentUser.is_admin) {
-    document.getElementById('adminLink').style.display = '';
-  }
+  if (currentUser.is_admin) document.getElementById('adminLink').style.display = '';
   document.getElementById('welcomeName').textContent = `안녕하세요, ${currentUser.name}님!`;
+  const cnt = document.getElementById('welcomeSub');
+  cnt.textContent = '업로드한 보험증권을 기반으로 AI가 보상 여부를 분석합니다.';
   loadProductOptions();
-  loadPolicies();
+  loadPublicPolicies();
 }
 
-function showAuth() {
-  document.getElementById('authOverlay').classList.remove('hidden');
+// ── 주 탭 전환 ─────────────────────────────────────────
+function switchMainTab(name) {
+  ['analyze','policies'].forEach(t => {
+    document.getElementById('tab' + cap(t)).classList.toggle('active', t === name);
+    document.getElementById('mt' + cap(t)).classList.toggle('active', t === name);
+  });
+  if (name === 'policies') loadPolicies();
 }
+function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+// ── AUTH 모달 ─────────────────────────────────────────
+function showAuth() { document.getElementById('authOverlay').classList.remove('hidden'); }
 
 function switchTab(tab) {
-  const isLogin = tab === 'login';
-  document.getElementById('loginForm').style.display = isLogin ? '' : 'none';
-  document.getElementById('registerForm').style.display = isLogin ? 'none' : '';
-  document.getElementById('tabLogin').classList.toggle('active', isLogin);
-  document.getElementById('tabRegister').classList.toggle('active', !isLogin);
+  const isL = tab === 'login';
+  document.getElementById('loginForm').style.display = isL ? '' : 'none';
+  document.getElementById('registerForm').style.display = isL ? 'none' : '';
+  document.getElementById('tabLogin').classList.toggle('active', isL);
+  document.getElementById('tabRegister').classList.toggle('active', !isL);
   document.getElementById('loginErr').textContent = '';
   document.getElementById('registerErr').textContent = '';
 }
 
-// ── 로그인 ─────────────────────────────────────
 async function doLogin() {
-  const email = document.getElementById('loginEmail').value.trim();
-  const pw    = document.getElementById('loginPw').value;
+  const email = v('loginEmail'), pw = v('loginPw');
   if (!email || !pw) { document.getElementById('loginErr').textContent = '이메일과 비밀번호를 입력하세요.'; return; }
-
   const btn = document.getElementById('loginBtn');
   btn.disabled = true; btn.textContent = '로그인 중...';
-
   try {
-    const form = new FormData();
-    form.append('username', email);
-    form.append('password', pw);
-    const res = await fetch(`${API}/auth/login`, { method: 'POST', body: form });
+    const form = new FormData(); form.append('username', email); form.append('password', pw);
+    const res  = await fetch(`${API}/auth/login`, { method: 'POST', body: form });
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || '로그인 실패');
-    saveAuth(data);
-    enterDashboard();
-    toast('로그인 되었습니다.', 'success');
-  } catch (e) {
-    document.getElementById('loginErr').textContent = e.message;
-  } finally {
-    btn.disabled = false; btn.textContent = '로그인';
-  }
+    saveAuth(data); enterDashboard(); toast('로그인 되었습니다.', 'success');
+  } catch(e) { document.getElementById('loginErr').textContent = e.message; }
+  finally { btn.disabled = false; btn.textContent = '로그인'; }
 }
 
-// ── 회원가입 ───────────────────────────────────
 async function doRegister() {
-  const name  = document.getElementById('regName').value.trim();
-  const email = document.getElementById('regEmail').value.trim();
-  const pw    = document.getElementById('regPw').value;
-  const pw2   = document.getElementById('regPw2').value;
+  const name = v('regName'), email = v('regEmail'), pw = v('regPw'), pw2 = v('regPw2');
   const errEl = document.getElementById('registerErr');
-
   if (!name || !email || !pw) { errEl.textContent = '모든 항목을 입력하세요.'; return; }
   if (pw.length < 6) { errEl.textContent = '비밀번호는 6자 이상이어야 합니다.'; return; }
-  if (pw !== pw2) { errEl.textContent = '비밀번호가 일치하지 않습니다.'; return; }
-
+  if (pw !== pw2)    { errEl.textContent = '비밀번호가 일치하지 않습니다.'; return; }
   const btn = document.getElementById('registerBtn');
   btn.disabled = true; btn.textContent = '가입 중...';
-
   try {
-    const res = await fetch(`${API}/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password: pw }),
-    });
+    const res  = await fetch(`${API}/auth/register`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, email, password: pw }) });
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || '회원가입 실패');
-    saveAuth(data);
-    enterDashboard();
-    toast(`${data.user.name}님, 환영합니다!`, 'success');
-  } catch (e) {
-    errEl.textContent = e.message;
-  } finally {
-    btn.disabled = false; btn.textContent = '회원가입';
-  }
+    saveAuth(data); enterDashboard(); toast(`${data.user.name}님, 환영합니다!`, 'success');
+  } catch(e) { errEl.textContent = e.message; }
+  finally { btn.disabled = false; btn.textContent = '회원가입'; }
 }
 
 function saveAuth(data) {
-  authToken = data.access_token;
-  currentUser = data.user;
+  authToken = data.access_token; currentUser = data.user;
   localStorage.setItem('insurrx_token', authToken);
   localStorage.setItem('insurrx_user', JSON.stringify(currentUser));
 }
-
 function logout() {
   authToken = null; currentUser = null;
-  localStorage.removeItem('insurrx_token');
-  localStorage.removeItem('insurrx_user');
-  document.getElementById('mainContent').style.display = 'none';
-  document.getElementById('guestContent').style.display = '';
-  document.getElementById('loginNavBtn').style.display = '';
-  document.getElementById('logoutBtn').style.display = 'none';
-  document.getElementById('navUserName').textContent = '';
-  document.getElementById('adminLink').style.display = 'none';
-  toast('로그아웃 되었습니다.', 'info');
+  localStorage.removeItem('insurrx_token'); localStorage.removeItem('insurrx_user');
+  location.reload();
 }
 
-// ── 보험 상품 목록 로드 ─────────────────────────
+// ══ 보상 분석 탭 ══════════════════════════════════════════════
+
+function setStep(n) {
+  for (let i = 1; i <= 5; i++) {
+    const el = document.getElementById('step' + i);
+    el.classList.remove('active','done');
+    if (i < n) el.classList.add('done');
+    else if (i === n) el.classList.add('active');
+  }
+}
+
+function onDragOver(e) { e.preventDefault(); document.getElementById('dropZone').classList.add('drag-over'); }
+function onDragLeave()  { document.getElementById('dropZone').classList.remove('drag-over'); }
+function onDrop(e)      { e.preventDefault(); onDragLeave(); if (e.dataTransfer.files[0]) onFileSelected(e.dataTransfer.files[0]); }
+
+function onFileSelected(file) {
+  if (!file) return;
+  const allowed = ['image/jpeg','image/jpg','image/png','image/webp','application/pdf'];
+  if (!allowed.includes(file.type)) { toast('JPG, PNG, WEBP, PDF 파일만 지원합니다.', 'error'); return; }
+  if (file.size > 10 * 1024 * 1024) { toast('파일 크기는 10MB 이하여야 합니다.', 'error'); return; }
+  runOCR(file);
+}
+
+async function runOCR(file) {
+  setStep(2);
+  document.getElementById('analyzeZone').style.display = 'none';
+  document.getElementById('ocrLoading').style.display = '';
+  document.getElementById('ocrResult').style.display = 'none';
+  document.getElementById('analysisResult').style.display = 'none';
+
+  try {
+    const form = new FormData(); form.append('file', file);
+    const headers = authToken ? { Authorization: `Bearer ${authToken}` } : {};
+    const res  = await fetch(`${API}/upload/`, { method: 'POST', headers, body: form });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'OCR 실패');
+
+    _parsedDoc = data.parsed;
+    setStep(3);
+    document.getElementById('ocrLoading').style.display = 'none';
+    renderOcrResult(data.parsed);
+    document.getElementById('ocrResult').style.display = '';
+  } catch(e) {
+    document.getElementById('ocrLoading').style.display = 'none';
+    document.getElementById('analyzeZone').style.display = '';
+    setStep(1);
+    toast(`OCR 오류: ${e.message}`, 'error');
+  }
+}
+
+function renderOcrResult(parsed) {
+  const fields = [
+    { label: '병원명',    value: parsed.hospital },
+    { label: '진료과',    value: parsed.department },
+    { label: '상병코드',  value: parsed.icd_code },
+    { label: '진단명',    value: parsed.diagnosis },
+    { label: '처방일',    value: parsed.prescription_date },
+    { label: '총 진료비', value: parsed.total_amount ? parsed.total_amount.toLocaleString() + '원' : null },
+  ];
+  const drugs = (parsed.drugs || []).map(d => d.name).join(', ');
+  if (drugs) fields.push({ label: '처방 약품', value: drugs });
+
+  document.getElementById('ocrFields').innerHTML = fields.map(f => `
+    <div class="ocr-field">
+      <div class="label">${f.label}</div>
+      <div class="value ${f.value ? '' : 'empty'}">${f.value || '인식 불가'}</div>
+    </div>
+  `).join('');
+}
+
+async function runAnalysis() {
+  if (!_parsedDoc) return;
+  setStep(4);
+  document.getElementById('ocrResult').style.display = 'none';
+  document.getElementById('analysisLoading').style.display = '';
+
+  // 진행 바 애니메이션
+  let pct = 20;
+  const bar = document.getElementById('analysisBar');
+  const timer = setInterval(() => { pct = Math.min(pct + 5, 85); bar.style.width = pct + '%'; }, 800);
+
+  const publicPolicyId = document.getElementById('publicPolicySelect').value;
+  const policy_ids = publicPolicyId ? [publicPolicyId] : [];
+
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (authToken) headers.Authorization = `Bearer ${authToken}`;
+    const res  = await fetch(`${API}/analyze/`, {
+      method: 'POST', headers,
+      body: JSON.stringify({ parsed: _parsedDoc, policy_ids }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || '분석 실패');
+
+    clearInterval(timer); bar.style.width = '100%';
+    setStep(5);
+    setTimeout(() => {
+      document.getElementById('analysisLoading').style.display = 'none';
+      renderAnalysisResult(data);
+      document.getElementById('analysisResult').style.display = '';
+    }, 400);
+  } catch(e) {
+    clearInterval(timer);
+    document.getElementById('analysisLoading').style.display = 'none';
+    document.getElementById('ocrResult').style.display = '';
+    setStep(3);
+    toast(`분석 오류: ${e.message}`, 'error');
+  }
+}
+
+function renderAnalysisResult(data) {
+  const isOk     = data.is_claimable;
+  const payout   = data.estimated_payout;
+  const pct      = Math.round((data.confidence || 0) * 100);
+  const items    = data.coverage_items || [];
+
+  const itemsHtml = items.map(ci => `
+    <div class="coverage-item ${ci.is_covered ? 'covered' : 'uncovered'}">
+      <div class="ci-header">
+        <span class="ci-name">${esc(ci.policy_name)} · ${esc(ci.article)}</span>
+        <span class="ci-badge ${ci.is_covered ? 'yes' : 'no'}">${ci.is_covered ? '✔ 보장' : '✘ 미보장'}</span>
+      </div>
+      <div class="ci-reason">${esc(ci.reason)}</div>
+      ${ci.citation ? `<div class="ci-cite">"${esc(ci.citation)}"</div>` : ''}
+    </div>
+  `).join('');
+
+  document.getElementById('resultCard').innerHTML = `
+    <div class="result-card">
+      <div class="result-header ${isOk ? 'claimable' : 'unclaimable'}">
+        <div>
+          <div class="result-title">${isOk ? '✅ 보험금 청구 가능' : '❌ 청구 어려움'}</div>
+          <div style="font-size:.85rem;opacity:.8;margin-top:4px">신뢰도 ${pct}%</div>
+          <div class="confidence-bar" style="width:160px;margin-top:6px">
+            <div class="confidence-fill" style="width:${pct}%"></div>
+          </div>
+        </div>
+        ${isOk ? `<div class="result-payout">₩${payout.toLocaleString()}</div>` : ''}
+      </div>
+      <div class="result-summary">${esc(data.llm_summary)}</div>
+      ${items.length ? `<div class="coverage-list"><h4>약관 조항별 검토</h4>${itemsHtml}</div>` : ''}
+    </div>
+  `;
+}
+
+function resetAnalyze() {
+  _parsedDoc = null;
+  setStep(1);
+  document.getElementById('analyzeZone').style.display = '';
+  document.getElementById('ocrLoading').style.display = 'none';
+  document.getElementById('ocrResult').style.display = 'none';
+  document.getElementById('analysisLoading').style.display = 'none';
+  document.getElementById('analysisResult').style.display = 'none';
+  document.getElementById('analyzeFileInput').value = '';
+}
+
+// ══ 공개 약관 선택 로드 ════════════════════════════════════
+async function loadPublicPolicies() {
+  try {
+    const res = await fetch(`${API}/insurers/`);
+    const insurers = await res.json();
+    const sel = document.getElementById('publicPolicySelect');
+    // 제품 코드를 policy_id로 사용 (Pinecone 메타데이터 policy_id 필드와 매핑)
+    insurers.forEach(ins => {
+      if (!ins.products?.length) return;
+      const grp = document.createElement('optgroup');
+      grp.label = ins.name;
+      ins.products.forEach(p => {
+        const opt = document.createElement('option');
+        // 공개 약관 policy_id는 data/policies/raw/*.json의 policy_id 값과 일치해야 함
+        opt.value = ins.code + '-' + p.product_code.toLowerCase();
+        opt.textContent = `${p.name}`;
+        grp.appendChild(opt);
+      });
+      sel.appendChild(grp);
+    });
+  } catch {}
+}
+
+// ══ 보험증권 탭 ════════════════════════════════════════════
 async function loadProductOptions() {
   try {
     const res = await fetch(`${API}/insurers/`);
@@ -460,143 +620,95 @@ async function loadProductOptions() {
     const sel = document.getElementById('productSelect');
     sel.innerHTML = '<option value="">보험 상품 선택 (선택사항)</option>';
     insurers.forEach(ins => {
-      if (!ins.products || !ins.products.length) return;
+      if (!ins.products?.length) return;
       const grp = document.createElement('optgroup');
       grp.label = ins.name;
       ins.products.forEach(p => {
         const opt = document.createElement('option');
-        opt.value = p.id;
-        opt.textContent = `${p.name} (${p.product_code})`;
+        opt.value = p.id; opt.textContent = `${p.name} (${p.product_code})`;
         grp.appendChild(opt);
       });
       sel.appendChild(grp);
     });
-  } catch (e) {
-    console.warn('상품 목록 로드 실패:', e);
-  }
+  } catch {}
 }
 
-// ── 보험증권 업로드 ─────────────────────────────
 async function uploadPolicy() {
-  const fileInput = document.getElementById('policyFile');
-  if (!fileInput.files.length) { toast('파일을 선택해 주세요.', 'error'); return; }
-
-  const file      = fileInput.files[0];
+  const fi = document.getElementById('policyFile');
+  if (!fi.files.length) { toast('파일을 선택해 주세요.', 'error'); return; }
+  const file = fi.files[0];
   const productId = document.getElementById('productSelect').value;
-
-  const formData = new FormData();
-  formData.append('file', file);
-  if (productId) formData.append('product_id', productId);
-
+  const form = new FormData();
+  form.append('file', file);
+  if (productId) form.append('product_id', productId);
   const btn = document.getElementById('uploadBtn');
   btn.disabled = true;
-  showProgress(30, '파일 업로드 중...');
-
+  showProg(30, '파일 업로드 중...');
   try {
-    const res = await fetch(`${API}/my/policies/upload`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${authToken}` },
-      body: formData,
-    });
+    const res  = await fetch(`${API}/my/policies/upload`, { method:'POST', headers:{ Authorization:`Bearer ${authToken}` }, body: form });
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || '업로드 실패');
-
-    showProgress(80, '임베딩 처리 중 (백그라운드)...');
+    showProg(80, '임베딩 처리 중 (백그라운드)...');
     await new Promise(r => setTimeout(r, 800));
-    showProgress(100, '업로드 완료!');
-    setTimeout(() => hideProgress(), 1500);
-
-    toast(`"${data.original_name}" 업로드 완료. 임베딩이 진행 중입니다.`, 'success');
-    fileInput.value = '';
-    document.getElementById('productSelect').value = '';
+    showProg(100, '완료!');
+    setTimeout(() => hideProg(), 1500);
+    toast(`"${data.original_name}" 업로드 완료`, 'success');
+    fi.value = ''; document.getElementById('productSelect').value = '';
     await loadPolicies();
-  } catch (e) {
-    hideProgress();
-    toast(e.message, 'error');
-  } finally {
-    btn.disabled = false;
-  }
+  } catch(e) { hideProg(); toast(e.message, 'error'); }
+  finally { btn.disabled = false; }
 }
 
-function showProgress(pct, msg) {
+function showProg(pct, msg) {
   document.getElementById('uploadProgress').style.display = '';
   document.getElementById('progressBar').style.width = pct + '%';
   document.getElementById('progressText').textContent = msg;
 }
-function hideProgress() {
-  document.getElementById('uploadProgress').style.display = 'none';
-}
+function hideProg() { document.getElementById('uploadProgress').style.display = 'none'; }
 
-// ── 내 보험증권 목록 ────────────────────────────
 async function loadPolicies() {
   try {
-    const res = await fetch(`${API}/my/policies/`, {
-      headers: { Authorization: `Bearer ${authToken}` },
-    });
+    const res = await fetch(`${API}/my/policies/`, { headers:{ Authorization:`Bearer ${authToken}` } });
     if (res.status === 401) { logout(); return; }
-    const policies = await res.json();
-    renderPolicies(policies);
-  } catch (e) {
-    document.getElementById('policiesBody').innerHTML =
-      `<tr class="empty-row"><td colspan="6">불러오기 실패</td></tr>`;
-  }
+    renderPolicies(await res.json());
+  } catch { document.getElementById('policiesBody').innerHTML = `<tr class="empty-row"><td colspan="6">불러오기 실패</td></tr>`; }
 }
 
 function renderPolicies(list) {
-  const tbody = document.getElementById('policiesBody');
-  if (!list.length) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="6">등록된 보험증권이 없습니다. 위에서 업로드해 보세요.</td></tr>`;
-    return;
-  }
-  tbody.innerHTML = list.map((p, i) => `
+  const tb = document.getElementById('policiesBody');
+  if (!list.length) { tb.innerHTML = `<tr class="empty-row"><td colspan="6">등록된 보험증권이 없습니다.</td></tr>`; return; }
+  tb.innerHTML = list.map((p, i) => `
     <tr>
-      <td style="color:var(--gray-500)">${i + 1}</td>
+      <td style="color:var(--gray-500)">${i+1}</td>
       <td style="font-weight:500">${esc(p.original_name)}</td>
       <td>${statusBadge(p.status)}</td>
       <td>${p.chunk_count > 0 ? p.chunk_count + '개' : '-'}</td>
-      <td style="color:var(--gray-500); font-size:0.82rem">${fmtDate(p.uploaded_at)}</td>
-      <td><button class="del-btn" onclick="deletePolicy(${p.id}, '${esc(p.original_name)}')" title="삭제">🗑</button></td>
+      <td style="color:var(--gray-500);font-size:.82rem">${fmtDate(p.uploaded_at)}</td>
+      <td><button class="del-btn" onclick="deletePolicy(${p.id},'${esc(p.original_name)}')" title="삭제">🗑</button></td>
     </tr>
   `).join('');
 }
 
 function statusBadge(s) {
-  const map = { pending:'처리 대기', processing:'임베딩 중', ready:'사용 가능', failed:'오류' };
-  const cls = { pending:'badge-pending', processing:'badge-processing', ready:'badge-ready', failed:'badge-failed' };
-  return `<span class="badge ${cls[s] || ''}">${map[s] || s}</span>`;
+  const m = { pending:'처리 대기',processing:'임베딩 중',ready:'사용 가능',failed:'오류' };
+  const c = { pending:'badge-pending',processing:'badge-processing',ready:'badge-ready',failed:'badge-failed' };
+  return `<span class="badge ${c[s]||''}">${m[s]||s}</span>`;
 }
 
 async function deletePolicy(id, name) {
-  if (!confirm(`"${name}" 을(를) 삭제하면 벡터 DB에서도 제거됩니다. 계속할까요?`)) return;
+  if (!confirm(`"${name}" 을(를) 삭제합니다. 벡터 DB에서도 제거됩니다.`)) return;
   try {
-    const res = await fetch(`${API}/my/policies/${id}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${authToken}` },
-    });
+    const res = await fetch(`${API}/my/policies/${id}`, { method:'DELETE', headers:{ Authorization:`Bearer ${authToken}` } });
     if (!res.ok && res.status !== 204) throw new Error('삭제 실패');
-    toast(`"${name}" 삭제 완료`, 'success');
-    await loadPolicies();
-  } catch (e) {
-    toast(e.message, 'error');
-  }
+    toast(`"${name}" 삭제 완료`, 'success'); await loadPolicies();
+  } catch(e) { toast(e.message, 'error'); }
 }
 
-// ── 유틸 ─────────────────────────────────────────
-function fmtDate(iso) {
-  if (!iso) return '-';
-  const d = new Date(iso);
-  return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
-}
-function esc(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-
-function toast(msg, type = 'info') {
-  const wrap = document.getElementById('toastWrap');
-  const el = document.createElement('div');
-  el.className = `toast toast-${type}`;
-  el.textContent = msg;
-  wrap.appendChild(el);
-  setTimeout(() => el.remove(), 3500);
-}
+// ── 유틸 ──────────────────────────────────────────────────
+function v(id) { return document.getElementById(id).value.trim(); }
+function fmtDate(iso) { if (!iso) return '-'; const d = new Date(iso); return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`; }
+function esc(s) { return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function toast(msg, type='info') { const w=document.getElementById('toastWrap'),el=document.createElement('div');el.className=`toast toast-${type}`;el.textContent=msg;w.appendChild(el);setTimeout(()=>el.remove(),3500); }
 </script>
 </body>
 </html>

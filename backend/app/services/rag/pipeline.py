@@ -10,6 +10,7 @@ from ai.rag.chain import run_coverage_chain
 async def run_rag_pipeline(
     parsed_doc: ParsedDocument,
     policy_ids: list[str],
+    user_namespaces: list[str] | None = None,
 ) -> AnalyzeResponse:
     """
     1. 파싱된 의료 문서를 쿼리 텍스트로 변환
@@ -18,7 +19,7 @@ async def run_rag_pipeline(
     """
     query = _build_query(parsed_doc)
     embedding = await get_query_embedding(query)
-    clauses = await retrieve_relevant_clauses(embedding, policy_ids)
+    clauses = await retrieve_relevant_clauses(embedding, policy_ids, user_namespaces)
 
     document_info = _format_document_info(parsed_doc)
     clauses_text = _format_clauses(clauses)

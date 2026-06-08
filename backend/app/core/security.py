@@ -59,3 +59,19 @@ async def get_current_admin(current_user=Depends(get_current_user)):
     if not current_user.is_admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="관리자 권한이 필요합니다.")
     return current_user
+
+
+# 비로그인도 허용하는 선택적 인증 — 토큰 없거나 유효하지 않으면 None 반환
+_optional_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
+
+
+async def get_optional_user(
+    token: Optional[str] = Depends(_optional_scheme),
+    db: AsyncSession = Depends(get_db),
+):
+    if not token:
+        return None
+    try:
+        return await get_current_user(token=token, db=db)
+    except HTTPException:
+        return None
