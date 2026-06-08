@@ -28,3 +28,18 @@ class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserResponse
+
+
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+
+
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str
+
+
+class AdminUserResponse(UserResponse):
+    is_active: bool
+    policy_count: int = 0
+    analysis_count: int = 0

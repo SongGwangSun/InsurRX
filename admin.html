@@ -169,6 +169,8 @@
     <a onclick="showSection('insurers')" class="active" id="sideInsurera"><span class="icon">🏢</span> 보험사 관리</a>
     <a onclick="showSection('products')" id="sideProd"><span class="icon">📋</span> 보험 상품 관리</a>
     <div class="sidebar-title" style="margin-top:1rem">회원 관리</div>
+    <a onclick="showSection('users')" id="sideUsers"><span class="icon">👥</span> 회원 목록</a>
+    <a onclick="showSection('stats')" id="sideStats"><span class="icon">📊</span> 시스템 통계</a>
     <a href="dashboard.html"><span class="icon">👤</span> 내 대시보드</a>
   </aside>
 
@@ -268,6 +270,46 @@
       </div>
 
       <div id="productsPerInsurer"></div>
+    </div>
+
+    <!-- ═══ 회원 목록 ═══════════════════════════════════════════════ -->
+    <div class="section" id="sectionUsers">
+      <div class="page-header"><h1>회원 목록</h1><p>전체 가입자를 관리합니다.</p></div>
+      <div class="card">
+        <div class="card-header">
+          <h2>전체 회원 <span id="userCountBadge" style="font-size:.82rem;color:var(--gray-500);font-weight:400"></span></h2>
+          <button class="btn-sm btn-outline" onclick="loadUsers()">새로고침</button>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>#</th><th>이름</th><th>이메일</th><th>권한</th><th>증권</th><th>분석</th><th>가입일</th><th>상태</th><th>작업</th></tr></thead>
+            <tbody id="usersTbody"><tr class="tbl-empty"><td colspan="9">로딩 중...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ 시스템 통계 ══════════════════════════════════════════════ -->
+    <div class="section" id="sectionStats">
+      <div class="page-header"><h1>시스템 통계</h1><p>서비스 사용 현황입니다.</p></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem">
+        <div class="card" style="text-align:center;padding:1.5rem">
+          <div style="font-size:2rem;font-weight:900;color:var(--blue)" id="statUsers">-</div>
+          <div style="font-size:.85rem;color:var(--gray-500);margin-top:4px">총 회원 수</div>
+        </div>
+        <div class="card" style="text-align:center;padding:1.5rem">
+          <div style="font-size:2rem;font-weight:900;color:var(--teal)" id="statPolicies">-</div>
+          <div style="font-size:.85rem;color:var(--gray-500);margin-top:4px">업로드된 보험증권</div>
+        </div>
+        <div class="card" style="text-align:center;padding:1.5rem">
+          <div style="font-size:2rem;font-weight:900;color:#7C3AED" id="statAnalyses">-</div>
+          <div style="font-size:.85rem;color:var(--gray-500);margin-top:4px">총 분석 횟수</div>
+        </div>
+        <div class="card" style="text-align:center;padding:1.5rem">
+          <div style="font-size:2rem;font-weight:900;color:var(--green)" id="statRate">-</div>
+          <div style="font-size:.85rem;color:var(--gray-500);margin-top:4px">청구 가능률</div>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -386,13 +428,13 @@ function showSection(name) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
   document.getElementById(`section${cap(name)}`).classList.add('active');
-  if (name === 'insurers') {
-    document.getElementById('sideInsurera').classList.add('active');
-    loadInsurers();
-  } else {
-    document.getElementById('sideProd').classList.add('active');
-    loadAllProducts();
-  }
+  const sideMap = { insurers:'sideInsurera', products:'sideProd', users:'sideUsers', stats:'sideStats' };
+  const sideEl  = document.getElementById(sideMap[name]);
+  if (sideEl) sideEl.classList.add('active');
+  if (name === 'insurers') loadInsurers();
+  else if (name === 'products') loadAllProducts();
+  else if (name === 'users')    loadUsers();
+  else if (name === 'stats')    loadStats();
 }
 function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
@@ -610,6 +652,66 @@ async function apiDelete(path) {
 // ─── Modal helpers ────────────────────────────────
 function openModal(id)  { document.getElementById(id).classList.remove('hidden'); }
 function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+// ═══ 회원 목록 ═════════════════════════════════════════════
+
+async function loadUsers() {
+  document.getElementById('usersTbody').innerHTML = `<tr class="tbl-empty"><td colspan="9">로딩 중...</td></tr>`;
+  try {
+    const list = await apiGet('/admin/users');
+    document.getElementById('userCountBadge').textContent = `(${list.length}명)`;
+    document.getElementById('usersTbody').innerHTML = list.length
+      ? list.map((u, i) => `
+          <tr>
+            <td style="color:var(--gray-500)">${i+1}</td>
+            <td style="font-weight:600">${esc(u.name)}</td>
+            <td style="font-size:.82rem">${esc(u.email)}</td>
+            <td>${u.is_admin ? '<span class="badge badge-on">관리자</span>' : '<span class="badge badge-off">일반</span>'}</td>
+            <td style="text-align:center">${u.policy_count}</td>
+            <td style="text-align:center">${u.analysis_count}</td>
+            <td style="font-size:.78rem;color:var(--gray-500)">${fmtDate(u.created_at)}</td>
+            <td><span class="badge ${u.is_active ? 'badge-on' : 'badge-off'}">${u.is_active ? '활성' : '비활성'}</span></td>
+            <td>
+              <div class="action-row">
+                <button class="btn-sm btn-outline" onclick="toggleActive(${u.id},'${esc(u.name)}')">${u.is_active ? '비활성화' : '활성화'}</button>
+                <button class="btn-sm ${u.is_admin ? 'btn-danger' : 'btn-outline'}" onclick="toggleAdmin(${u.id},'${esc(u.name)}')">${u.is_admin ? '권한 회수' : '관리자 지정'}</button>
+              </div>
+            </td>
+          </tr>`)
+      .join('')
+      : `<tr class="tbl-empty"><td colspan="9">가입자가 없습니다.</td></tr>`;
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function toggleActive(id, name) {
+  if (!confirm(`"${name}" 계정을 ${id}번 활성/비활성 토글합니까?`)) return;
+  try { await apiPatch(`/admin/users/${id}/toggle-active`, {}); toast('변경 완료', 'success'); loadUsers(); }
+  catch(e) { toast(e.message, 'error'); }
+}
+
+async function toggleAdmin(id, name) {
+  if (!confirm(`"${name}" 계정의 관리자 권한을 변경합니까?`)) return;
+  try { await apiPatch(`/admin/users/${id}/toggle-admin`, {}); toast('변경 완료', 'success'); loadUsers(); }
+  catch(e) { toast(e.message, 'error'); }
+}
+
+// ═══ 시스템 통계 ════════════════════════════════════════════
+
+async function loadStats() {
+  try {
+    const s = await apiGet('/admin/stats');
+    document.getElementById('statUsers').textContent    = s.total_users;
+    document.getElementById('statPolicies').textContent = s.total_policies;
+    document.getElementById('statAnalyses').textContent = s.total_analyses;
+    document.getElementById('statRate').textContent     = s.claimable_rate + '%';
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+function fmtDate(iso) {
+  if (!iso) return '-';
+  const d = new Date(iso);
+  return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+}
 
 // ─── Util ─────────────────────────────────────────
 function v(id) { return document.getElementById(id).value.trim(); }
