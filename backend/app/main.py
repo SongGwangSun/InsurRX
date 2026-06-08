@@ -11,6 +11,7 @@ import app.models.prompt_template   # noqa: F401
 import app.models.user              # noqa: F401
 import app.models.insurer           # noqa: F401
 import app.models.user_policy       # noqa: F401
+import app.models.kakao_session     # noqa: F401
 from app.services import prompt_service
 
 _log = logging.getLogger(__name__)

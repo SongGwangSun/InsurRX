@@ -1067,23 +1067,26 @@
   <h1>버려지는 영수증,<br><em>내 숨은 보험금</em>으로.</h1>
   <p>처방전 사진 한 장만 찍어 올리면<br>AI가 1분 이내에 내 보험 혜택과 예상 수령액을 알려드립니다.</p>
   <div class="hero-btns">
-    <!-- 로그인 상태: 대시보드로 / 비로그인: 회원가입으로 -->
-    <a id="heroPrimaryBtn" class="btn-kakao" href="dashboard.html"
+    <a class="btn-kakao"
+       href="https://pf.kakao.com/_xmxfjxjX/chat"
+       target="_blank" rel="noopener"
        style="text-decoration:none;display:inline-flex;align-items:center;gap:8px">
-      🚀 보상 분석 시작하기
+      <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+        <path d="M12 3C6.48 3 2 6.58 2 11c0 2.82 1.68 5.3 4.24 6.84L5.17 21l4.04-2.14c.91.2 1.84.3 2.79.3 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/>
+      </svg>
+      카카오톡으로 바로 시작
     </a>
-    <button class="btn-secondary" onclick="scrollToTry()">
-      📷 먼저 체험하기
-    </button>
+    <a id="heroDashBtn" class="btn-secondary"
+       href="dashboard.html"
+       style="text-decoration:none;display:inline-flex;align-items:center;gap:6px">
+      💻 웹 대시보드
+    </a>
   </div>
   <script>
   (function(){
     const user = JSON.parse(localStorage.getItem('insurrx_user')||'null');
-    const btn  = document.getElementById('heroPrimaryBtn');
-    if (!user) {
-      btn.textContent = '🚀 무료로 시작하기';
-      btn.href = 'dashboard.html';
-    }
+    const btn  = document.getElementById('heroDashBtn');
+    if (user) btn.textContent = '💻 내 대시보드 열기';
   })();
   </script>
 
@@ -1633,7 +1636,7 @@
         <li><span class="x">✗</span> 가족 계정 관리</li>
         <li><span class="x">✗</span> 청구 이력 보관</li>
       </ul>
-      <button class="btn-plan free">무료로 시작하기</button>
+      <a class="btn-plan free" href="https://pf.kakao.com/_xmxfjxjX/chat" target="_blank" rel="noopener" style="text-decoration:none;display:block;text-align:center">카카오톡으로 시작하기</a>
     </div>
 
     <div class="price-card popular">

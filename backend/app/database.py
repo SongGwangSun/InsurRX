@@ -31,6 +31,7 @@ async def run_migrations():
         ("waitlist",             "feedback",         "TEXT"),
         ("insurance_products",   "vector_policy_id", "VARCHAR(100)"),
         ("analysis_results",     "user_id",          "INTEGER"),
+        # kakao_sessions는 create_tables()가 신규 테이블로 자동 생성
     ]
     async with engine.begin() as conn:
         from sqlalchemy import text
