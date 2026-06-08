@@ -8,6 +8,9 @@ from app.database import create_tables, run_migrations, AsyncSessionLocal
 import app.models.waitlist          # noqa: F401
 import app.models.analysis_result   # noqa: F401
 import app.models.prompt_template   # noqa: F401
+import app.models.user              # noqa: F401
+import app.models.insurer           # noqa: F401
+import app.models.user_policy       # noqa: F401
 from app.services import prompt_service
 
 _log = logging.getLogger(__name__)

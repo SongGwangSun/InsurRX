@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     ]
     IMAGE_RETENTION_SECONDS: int = 30
 
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7일
+
     class Config:
         env_file = ".env"
 

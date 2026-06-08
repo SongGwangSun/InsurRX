@@ -1044,8 +1044,21 @@
 <!-- NAV -->
 <nav>
   <div class="logo">Insur<span>RX</span></div>
-  <button class="nav-cta" onclick="scrollToWaitlist()">무료 베타 신청</button>
+  <div style="display:flex;align-items:center;gap:10px">
+    <a href="dashboard.html" id="navDashBtn" style="display:none;text-decoration:none;padding:7px 16px;border-radius:8px;font-size:0.85rem;font-weight:600;border:1.5px solid #CBD5E1;color:#334155">대시보드</a>
+    <a href="dashboard.html" id="navLoginBtn" style="text-decoration:none;padding:7px 16px;border-radius:8px;font-size:0.85rem;font-weight:600;border:1.5px solid #CBD5E1;color:#334155">로그인</a>
+    <button class="nav-cta" onclick="scrollToWaitlist()">무료 베타 신청</button>
+  </div>
 </nav>
+<script>
+(function(){
+  const user = JSON.parse(localStorage.getItem('insurrx_user')||'null');
+  if(user){
+    document.getElementById('navLoginBtn').style.display='none';
+    document.getElementById('navDashBtn').style.display='';
+  }
+})();
+</script>
 
 <!-- HERO -->
 <section class="hero">

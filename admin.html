@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InsurRX — 관리자 패널</title>
+  <style>
+    :root {
+      --blue:    #2563EB;
+      --blue-dk: #1D4ED8;
+      --mint:    #34D399;
+      --teal:    #0D9488;
+      --gray-50: #F8FAFC;
+      --gray-100:#F1F5F9;
+      --gray-200:#E2E8F0;
+      --gray-300:#CBD5E1;
+      --gray-500:#64748B;
+      --gray-700:#334155;
+      --gray-900:#0F172A;
+      --white:   #FFFFFF;
+      --red:     #EF4444;
+      --green:   #22C55E;
+      --radius:  12px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+      color: var(--gray-900); background: var(--gray-50); line-height: 1.6;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 5%; height: 64px;
+      background: rgba(255,255,255,0.95); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--gray-200);
+    }
+    .logo { font-size: 1.35rem; font-weight: 800; color: var(--blue); text-decoration: none; letter-spacing: -0.5px; }
+    .logo span { color: var(--teal); }
+    .nav-right { display: flex; align-items: center; gap: 10px; }
+    .nav-badge { background: #FEF3C7; color: #92400E; font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 99px; }
+    .btn-sm {
+      padding: 7px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 600;
+      border: none; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-outline { background: transparent; border: 1.5px solid var(--gray-300); color: var(--gray-700); }
+    .btn-outline:hover { border-color: var(--blue); color: var(--blue); }
+    .btn-primary { background: linear-gradient(90deg, var(--blue), var(--teal)); color: var(--white); }
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-danger { background: #FEE2E2; color: #991B1B; }
+    .btn-danger:hover { background: var(--red); color: var(--white); }
+
+    /* LAYOUT */
+    .layout { display: flex; min-height: 100vh; padding-top: 64px; }
+    .sidebar {
+      width: 220px; flex-shrink: 0;
+      background: var(--white); border-right: 1px solid var(--gray-200);
+      padding: 1.5rem 0; position: fixed; top: 64px; bottom: 0; left: 0;
+      overflow-y: auto;
+    }
+    .sidebar-title { font-size: 0.72rem; font-weight: 700; color: var(--gray-500); padding: 0 1.25rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.08em; }
+    .sidebar a {
+      display: flex; align-items: center; gap: 8px; padding: 9px 1.25rem;
+      font-size: 0.875rem; font-weight: 500; color: var(--gray-700);
+      text-decoration: none; border-radius: 0; cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .sidebar a:hover { background: var(--gray-100); }
+    .sidebar a.active { background: #EFF6FF; color: var(--blue); font-weight: 700; border-left: 3px solid var(--blue); }
+    .sidebar .icon { width: 18px; text-align: center; }
+
+    .main { margin-left: 220px; flex: 1; padding: 2rem; max-width: 1040px; }
+
+    /* ACCESS DENIED */
+    #accessDenied { display:none; text-align:center; padding: 6rem 2rem; }
+    #accessDenied .icon { font-size: 4rem; }
+    #accessDenied h2 { font-size: 1.4rem; font-weight: 800; margin-top: 1rem; }
+    #accessDenied p { color: var(--gray-500); margin-top: .4rem; }
+
+    /* CARDS */
+    .page-header { margin-bottom: 1.5rem; }
+    .page-header h1 { font-size: 1.4rem; font-weight: 800; }
+    .page-header p { font-size: 0.875rem; color: var(--gray-500); margin-top: 3px; }
+
+    .card {
+      background: var(--white); border-radius: var(--radius);
+      border: 1px solid var(--gray-200); padding: 1.5rem; margin-bottom: 1.5rem;
+    }
+    .card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1.2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--gray-100);
+    }
+    .card-header h2 { font-size: 1rem; font-weight: 700; }
+
+    /* FORM INLINE */
+    .form-inline { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 1rem; }
+    .form-field { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 140px; }
+    .form-field label { font-size: 0.78rem; font-weight: 600; color: var(--gray-700); }
+    .form-field input, .form-field select {
+      padding: 8px 12px; border: 1.5px solid var(--gray-200); border-radius: 8px;
+      font-size: 0.875rem; outline: none; background: var(--white);
+    }
+    .form-field input:focus, .form-field select:focus { border-color: var(--blue); }
+    .form-field input[readonly] { background: var(--gray-50); cursor: not-allowed; }
+
+    /* TABLE */
+    .tbl-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th { background: var(--gray-50); padding: 10px 14px; font-size: 0.78rem; font-weight: 600; color: var(--gray-500); text-align: left; border-bottom: 1px solid var(--gray-200); }
+    tbody tr { border-bottom: 1px solid var(--gray-100); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--gray-50); }
+    tbody td { padding: 10px 14px; font-size: 0.875rem; vertical-align: middle; }
+    .badge { display: inline-block; padding: 2px 9px; border-radius: 99px; font-size: 0.73rem; font-weight: 700; }
+    .badge-on  { background: #DCFCE7; color: #166534; }
+    .badge-off { background: #F1F5F9; color: var(--gray-500); }
+    .action-row { display: flex; gap: 6px; }
+    .tbl-empty td { text-align: center; color: var(--gray-300); padding: 2rem; font-size: 0.875rem; }
+
+    /* PRODUCT TABLE NESTED */
+    .product-section { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--gray-100); }
+    .product-section h4 { font-size: 0.85rem; font-weight: 700; color: var(--gray-700); margin-bottom: 0.75rem; }
+
+    /* MODAL */
+    .modal-overlay { position: fixed; inset: 0; z-index: 400; background: rgba(15,23,42,0.5); display: flex; align-items: center; justify-content: center; padding: 1rem; }
+    .modal-overlay.hidden { display: none; }
+    .modal-box { background: var(--white); border-radius: 18px; padding: 2rem; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+    .modal-box h3 { font-size: 1.1rem; font-weight: 800; margin-bottom: 1.2rem; }
+    .modal-form { display: flex; flex-direction: column; gap: 1rem; }
+    .modal-form .form-field { flex: none; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 1.2rem; }
+
+    /* TOASTS */
+    .toast-wrap { position: fixed; bottom: 24px; right: 24px; z-index: 999; display: flex; flex-direction: column; gap: 10px; }
+    .toast { padding: 11px 16px; border-radius: 10px; font-size: 0.875rem; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,0.1); animation: slideIn 0.3s ease; max-width: 320px; }
+    .toast-success { background: #DCFCE7; color: #166534; }
+    .toast-error   { background: #FEE2E2; color: #991B1B; }
+    .toast-info    { background: #DBEAFE; color: #1E40AF; }
+    @keyframes slideIn { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* SECTION VISIBILITY */
+    .section { display: none; }
+    .section.active { display: block; }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="logo">Insur<span>RX</span></a>
+  <div class="nav-right">
+    <span class="nav-badge">관리자</span>
+    <span style="font-size:0.875rem; color:var(--gray-700)" id="navName"></span>
+    <a href="dashboard.html" class="btn-sm btn-outline">대시보드</a>
+    <button class="btn-sm btn-outline" onclick="doLogout()">로그아웃</button>
+  </div>
+</nav>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div style="padding: 0 1.25rem 1rem;">
+      <div style="font-size:0.82rem; color:var(--gray-500)">관리자 패널</div>
+    </div>
+    <div class="sidebar-title">보험 관리</div>
+    <a onclick="showSection('insurers')" class="active" id="sideInsurera"><span class="icon">🏢</span> 보험사 관리</a>
+    <a onclick="showSection('products')" id="sideProd"><span class="icon">📋</span> 보험 상품 관리</a>
+    <div class="sidebar-title" style="margin-top:1rem">회원 관리</div>
+    <a href="dashboard.html"><span class="icon">👤</span> 내 대시보드</a>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main" id="mainContent" style="display:none">
+
+    <!-- ═══ 보험사 관리 ═════════════════════════════════════ -->
+    <div class="section active" id="sectionInsurers">
+      <div class="page-header">
+        <h1>보험사 관리</h1>
+        <p>보험사를 추가·수정·비활성화합니다.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>새 보험사 추가</h2>
+        </div>
+        <div class="form-inline">
+          <div class="form-field">
+            <label>보험사명 *</label>
+            <input type="text" id="ins_name" placeholder="예: 현대해상" />
+          </div>
+          <div class="form-field">
+            <label>코드 * (영문소문자)</label>
+            <input type="text" id="ins_code" placeholder="예: hyundai" />
+          </div>
+          <div class="form-field" style="min-width:240px">
+            <label>로고 URL (선택)</label>
+            <input type="text" id="ins_logo" placeholder="https://..." />
+          </div>
+          <button class="btn-sm btn-primary" onclick="createInsurer()">추가</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>보험사 목록</h2>
+          <button class="btn-sm btn-outline" onclick="loadInsurers()">새로고침</button>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th><th>보험사명</th><th>코드</th><th>상품 수</th><th>상태</th><th>작업</th>
+              </tr>
+            </thead>
+            <tbody id="insurersTbody">
+              <tr class="tbl-empty"><td colspan="6">로딩 중...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ 보험 상품 관리 ════════════════════════════════════ -->
+    <div class="section" id="sectionProducts">
+      <div class="page-header">
+        <h1>보험 상품 관리</h1>
+        <p>각 보험사별 상품을 추가·수정·비활성화합니다.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>새 상품 추가</h2>
+        </div>
+        <div class="form-inline">
+          <div class="form-field">
+            <label>보험사 *</label>
+            <select id="prod_insurer_id"></select>
+          </div>
+          <div class="form-field">
+            <label>상품명 *</label>
+            <input type="text" id="prod_name" placeholder="예: 실손의료보험 Hi2204" />
+          </div>
+          <div class="form-field">
+            <label>상품 코드 *</label>
+            <input type="text" id="prod_code" placeholder="예: Hi2204" />
+          </div>
+          <div class="form-field">
+            <label>유형 *</label>
+            <select id="prod_type">
+              <option value="실손">실손</option>
+              <option value="암">암</option>
+              <option value="치아">치아</option>
+              <option value="어린이">어린이</option>
+              <option value="종신">종신</option>
+              <option value="상해">상해</option>
+              <option value="기타">기타</option>
+            </select>
+          </div>
+          <div class="form-field" style="min-width:200px">
+            <label>설명 (선택)</label>
+            <input type="text" id="prod_desc" placeholder="짧은 설명" />
+          </div>
+          <button class="btn-sm btn-primary" onclick="createProduct()">추가</button>
+        </div>
+      </div>
+
+      <div id="productsPerInsurer"></div>
+    </div>
+
+  </div>
+
+  <!-- ACCESS DENIED -->
+  <div id="accessDenied">
+    <div class="icon">⛔</div>
+    <h2>접근 권한이 없습니다</h2>
+    <p>관리자 계정으로 로그인해야 합니다.</p>
+    <br>
+    <a href="dashboard.html" class="btn-sm btn-primary" style="text-decoration:none; padding:10px 24px; border-radius:9px;">대시보드로 이동</a>
+  </div>
+
+</div>
+
+<!-- 보험사 수정 모달 -->
+<div class="modal-overlay hidden" id="editInsurerModal">
+  <div class="modal-box">
+    <h3>보험사 수정</h3>
+    <input type="hidden" id="edit_ins_id" />
+    <div class="modal-form">
+      <div class="form-field">
+        <label>보험사명</label>
+        <input type="text" id="edit_ins_name" />
+      </div>
+      <div class="form-field">
+        <label>코드 (변경 불가)</label>
+        <input type="text" id="edit_ins_code" readonly />
+      </div>
+      <div class="form-field">
+        <label>로고 URL</label>
+        <input type="text" id="edit_ins_logo" />
+      </div>
+      <div class="form-field">
+        <label>상태</label>
+        <select id="edit_ins_active">
+          <option value="true">활성</option>
+          <option value="false">비활성</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-sm btn-outline" onclick="closeModal('editInsurerModal')">취소</button>
+      <button class="btn-sm btn-primary" onclick="saveInsurer()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 상품 수정 모달 -->
+<div class="modal-overlay hidden" id="editProductModal">
+  <div class="modal-box">
+    <h3>상품 수정</h3>
+    <input type="hidden" id="edit_prod_id" />
+    <input type="hidden" id="edit_prod_ins_id" />
+    <div class="modal-form">
+      <div class="form-field">
+        <label>상품명</label>
+        <input type="text" id="edit_prod_name" />
+      </div>
+      <div class="form-field">
+        <label>상품 코드</label>
+        <input type="text" id="edit_prod_code" />
+      </div>
+      <div class="form-field">
+        <label>유형</label>
+        <select id="edit_prod_type">
+          <option>실손</option><option>암</option><option>치아</option>
+          <option>어린이</option><option>종신</option><option>상해</option><option>기타</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>설명</label>
+        <input type="text" id="edit_prod_desc" />
+      </div>
+      <div class="form-field">
+        <label>상태</label>
+        <select id="edit_prod_active">
+          <option value="true">활성</option>
+          <option value="false">비활성</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-sm btn-outline" onclick="closeModal('editProductModal')">취소</button>
+      <button class="btn-sm btn-primary" onclick="saveProduct()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOASTS -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+const API = 'https://magnificent-celebration-production-2dd9.up.railway.app/api/v1';
+const authToken  = localStorage.getItem('insurrx_token');
+const currentUser = JSON.parse(localStorage.getItem('insurrx_user') || 'null');
+
+window.onload = () => {
+  if (!authToken || !currentUser || !currentUser.is_admin) {
+    document.getElementById('accessDenied').style.display = '';
+    return;
+  }
+  document.getElementById('navName').textContent = currentUser.name;
+  document.getElementById('mainContent').style.display = '';
+  loadInsurers();
+};
+
+function doLogout() {
+  localStorage.removeItem('insurrx_token');
+  localStorage.removeItem('insurrx_user');
+  location.href = 'dashboard.html';
+}
+
+// ── 섹션 전환 ───────────────────────────────────
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
+  document.getElementById(`section${cap(name)}`).classList.add('active');
+  if (name === 'insurers') {
+    document.getElementById('sideInsurera').classList.add('active');
+    loadInsurers();
+  } else {
+    document.getElementById('sideProd').classList.add('active');
+    loadAllProducts();
+  }
+}
+function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+// ═══ 보험사 ════════════════════════════════════════
+
+let _insurers = [];
+
+async function loadInsurers() {
+  const res = await apiGet('/insurers/?include_inactive=true');
+  _insurers = res;
+  renderInsurerTable(_insurers);
+  populateInsurerSelect();
+}
+
+function renderInsurerTable(list) {
+  const tb = document.getElementById('insurersTbody');
+  if (!list.length) {
+    tb.innerHTML = `<tr class="tbl-empty"><td colspan="6">등록된 보험사가 없습니다.</td></tr>`;
+    return;
+  }
+  tb.innerHTML = list.map((ins, i) => `
+    <tr>
+      <td style="color:var(--gray-500)">${i+1}</td>
+      <td><strong>${esc(ins.name)}</strong></td>
+      <td><code style="background:var(--gray-100);padding:2px 6px;border-radius:4px">${esc(ins.code)}</code></td>
+      <td>${(ins.products || []).filter(p=>p.is_active).length}개</td>
+      <td><span class="badge ${ins.is_active ? 'badge-on' : 'badge-off'}">${ins.is_active ? '활성' : '비활성'}</span></td>
+      <td>
+        <div class="action-row">
+          <button class="btn-sm btn-outline" onclick="openEditInsurer(${ins.id})">수정</button>
+          <button class="btn-sm btn-danger" onclick="deleteInsurer(${ins.id}, '${esc(ins.name)}')">삭제</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function createInsurer() {
+  const name = v('ins_name'), code = v('ins_code'), logo_url = v('ins_logo') || null;
+  if (!name || !code) { toast('보험사명과 코드는 필수입니다.', 'error'); return; }
+  try {
+    await apiPost('/insurers/', { name, code, logo_url });
+    toast(`"${name}" 보험사 추가 완료`, 'success');
+    clearFields(['ins_name','ins_code','ins_logo']);
+    loadInsurers();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+function openEditInsurer(id) {
+  const ins = _insurers.find(i => i.id === id);
+  if (!ins) return;
+  document.getElementById('edit_ins_id').value   = ins.id;
+  document.getElementById('edit_ins_name').value = ins.name;
+  document.getElementById('edit_ins_code').value = ins.code;
+  document.getElementById('edit_ins_logo').value = ins.logo_url || '';
+  document.getElementById('edit_ins_active').value = String(ins.is_active);
+  openModal('editInsurerModal');
+}
+
+async function saveInsurer() {
+  const id       = +document.getElementById('edit_ins_id').value;
+  const name     = document.getElementById('edit_ins_name').value.trim();
+  const logo_url = document.getElementById('edit_ins_logo').value.trim() || null;
+  const is_active = document.getElementById('edit_ins_active').value === 'true';
+  try {
+    await apiPatch(`/insurers/${id}`, { name, logo_url, is_active });
+    toast('보험사 수정 완료', 'success');
+    closeModal('editInsurerModal');
+    loadInsurers();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function deleteInsurer(id, name) {
+  if (!confirm(`"${name}" 보험사 및 하위 상품을 모두 삭제합니다. 계속할까요?`)) return;
+  try {
+    await apiDelete(`/insurers/${id}`);
+    toast(`"${name}" 삭제 완료`, 'success');
+    loadInsurers();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ═══ 보험 상품 ═══════════════════════════════════════
+
+function populateInsurerSelect() {
+  const sel = document.getElementById('prod_insurer_id');
+  const active = _insurers.filter(i => i.is_active);
+  sel.innerHTML = active.map(i => `<option value="${i.id}">${esc(i.name)}</option>`).join('');
+}
+
+async function loadAllProducts() {
+  if (!_insurers.length) await loadInsurers();
+  const wrap = document.getElementById('productsPerInsurer');
+  wrap.innerHTML = '';
+
+  for (const ins of _insurers.filter(i => i.is_active)) {
+    const products = await apiGet(`/insurers/${ins.id}/products?include_inactive=true`);
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-header">
+        <h2>${esc(ins.name)}</h2>
+        <span style="font-size:0.82rem;color:var(--gray-500)">${products.length}개 상품</span>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>#</th><th>상품명</th><th>코드</th><th>유형</th><th>설명</th><th>상태</th><th>작업</th></tr></thead>
+          <tbody>
+            ${products.length ? products.map((p,i) => `
+              <tr>
+                <td style="color:var(--gray-500)">${i+1}</td>
+                <td><strong>${esc(p.name)}</strong></td>
+                <td><code style="background:var(--gray-100);padding:2px 6px;border-radius:4px">${esc(p.product_code)}</code></td>
+                <td>${esc(p.product_type)}</td>
+                <td style="color:var(--gray-500);font-size:0.82rem">${esc(p.description||'')}</td>
+                <td><span class="badge ${p.is_active?'badge-on':'badge-off'}">${p.is_active?'활성':'비활성'}</span></td>
+                <td>
+                  <div class="action-row">
+                    <button class="btn-sm btn-outline" onclick="openEditProduct(${ins.id}, ${p.id})">수정</button>
+                    <button class="btn-sm btn-danger" onclick="deleteProduct(${ins.id}, ${p.id}, '${esc(p.name)}')">삭제</button>
+                  </div>
+                </td>
+              </tr>
+            `).join('') : `<tr class="tbl-empty"><td colspan="7">상품 없음</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    `;
+    wrap.appendChild(card);
+  }
+}
+
+async function createProduct() {
+  const insurer_id   = +v('prod_insurer_id');
+  const name         = v('prod_name');
+  const product_code = v('prod_code');
+  const product_type = v('prod_type');
+  const description  = v('prod_desc') || null;
+  if (!insurer_id || !name || !product_code) { toast('보험사, 상품명, 코드는 필수입니다.', 'error'); return; }
+  try {
+    await apiPost(`/insurers/${insurer_id}/products`, { name, product_code, product_type, description });
+    toast(`"${name}" 상품 추가 완료`, 'success');
+    clearFields(['prod_name','prod_code','prod_desc']);
+    loadAllProducts();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+let _editProdData = null;
+
+async function openEditProduct(insurerId, productId) {
+  const res = await apiGet(`/insurers/${insurerId}/products?include_inactive=true`);
+  const p = res.find(x => x.id === productId);
+  if (!p) return;
+  _editProdData = { insurerId, productId };
+  document.getElementById('edit_prod_id').value     = productId;
+  document.getElementById('edit_prod_ins_id').value = insurerId;
+  document.getElementById('edit_prod_name').value   = p.name;
+  document.getElementById('edit_prod_code').value   = p.product_code;
+  document.getElementById('edit_prod_type').value   = p.product_type;
+  document.getElementById('edit_prod_desc').value   = p.description || '';
+  document.getElementById('edit_prod_active').value = String(p.is_active);
+  openModal('editProductModal');
+}
+
+async function saveProduct() {
+  const insurerId  = +document.getElementById('edit_prod_ins_id').value;
+  const productId  = +document.getElementById('edit_prod_id').value;
+  const name         = document.getElementById('edit_prod_name').value.trim();
+  const product_code = document.getElementById('edit_prod_code').value.trim();
+  const product_type = document.getElementById('edit_prod_type').value;
+  const description  = document.getElementById('edit_prod_desc').value.trim() || null;
+  const is_active    = document.getElementById('edit_prod_active').value === 'true';
+  try {
+    await apiPatch(`/insurers/${insurerId}/products/${productId}`, { name, product_code, product_type, description, is_active });
+    toast('상품 수정 완료', 'success');
+    closeModal('editProductModal');
+    loadAllProducts();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function deleteProduct(insurerId, productId, name) {
+  if (!confirm(`"${name}" 상품을 삭제합니다. 계속할까요?`)) return;
+  try {
+    await apiDelete(`/insurers/${insurerId}/products/${productId}`);
+    toast(`"${name}" 삭제 완료`, 'success');
+    loadAllProducts();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ─── API helpers ─────────────────────────────────
+function headers() { return { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` }; }
+
+async function apiGet(path) {
+  const res = await fetch(API + path, { headers: headers() });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || 'API 오류');
+  return data;
+}
+async function apiPost(path, body) {
+  const res = await fetch(API + path, { method: 'POST', headers: headers(), body: JSON.stringify(body) });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || 'API 오류');
+  return data;
+}
+async function apiPatch(path, body) {
+  const res = await fetch(API + path, { method: 'PATCH', headers: headers(), body: JSON.stringify(body) });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || 'API 오류');
+  return data;
+}
+async function apiDelete(path) {
+  const res = await fetch(API + path, { method: 'DELETE', headers: headers() });
+  if (!res.ok && res.status !== 204) { const d = await res.json().catch(()=>({})); throw new Error(d.detail||'삭제 실패'); }
+}
+
+// ─── Modal helpers ────────────────────────────────
+function openModal(id)  { document.getElementById(id).classList.remove('hidden'); }
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+// ─── Util ─────────────────────────────────────────
+function v(id) { return document.getElementById(id).value.trim(); }
+function esc(s) { return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function clearFields(ids) { ids.forEach(id => document.getElementById(id).value = ''); }
+
+function toast(msg, type='info') {
+  const wrap = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+</script>
+</body>
+</html>

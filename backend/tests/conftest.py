@@ -18,6 +18,9 @@ async def test_db():
     # 모든 모델 임포트 — Base.metadata에 테이블 등록 보장
     import app.models.waitlist          # noqa: F401
     import app.models.analysis_result   # noqa: F401
+    import app.models.user              # noqa: F401
+    import app.models.insurer           # noqa: F401
+    import app.models.user_policy       # noqa: F401
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
