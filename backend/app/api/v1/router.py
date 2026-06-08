@@ -4,7 +4,7 @@ from app.api.v1 import (
     endpoints_result, endpoints_waitlist, endpoints_prompts,
     endpoints_auth, endpoints_user_policies, endpoints_insurers,
     endpoints_history, endpoints_bootstrap, endpoints_admin,
-    endpoints_kakao,
+    endpoints_kakao, endpoints_mydata,
 )
 
 api_router = APIRouter()
@@ -21,3 +21,4 @@ api_router.include_router(endpoints_history.router,         prefix="/my/analyses
 api_router.include_router(endpoints_bootstrap.router,       prefix="/admin/bootstrap", tags=["bootstrap"])
 api_router.include_router(endpoints_admin.router,           prefix="/admin",           tags=["admin"])
 api_router.include_router(endpoints_kakao.router,           prefix="/kakao",            tags=["kakao"])
+api_router.include_router(endpoints_mydata.router,          prefix="/mydata",           tags=["mydata"])

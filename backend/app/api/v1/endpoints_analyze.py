@@ -7,6 +7,7 @@ from app.schemas.analysis import AnalyzeRequest, AnalyzeResponse
 from app.services.rag.pipeline import run_rag_pipeline
 from app.models.analysis_result import AnalysisResult
 from app.models.user_policy import UserPolicy, PolicyStatus
+from app.models.mydata_policy import UserMydataPolicy
 from app.core.security import get_optional_user
 
 router = APIRouter()
@@ -18,29 +19,45 @@ async def analyze_coverage(
     db: AsyncSession = Depends(get_db),
     current_user=Depends(get_optional_user),
 ):
-    """파싱된 의료 문서 + (선택) JWT → 공개 약관 + 개인 보험증권 통합 RAG → 보상 분석.
+    """파싱된 의료 문서 + (선택) JWT → 공개 약관 + 개인 보험증권 + 마이데이터 보험 통합 RAG.
 
-    - 비로그인: request.policy_ids 로 공개 약관만 검색
-    - 로그인:   공개 약관 + 사용자 업로드 보험증권(ready 상태) 함께 검색
+    검색 우선순위:
+    1. request.policy_ids       — 명시적으로 지정한 공개 약관
+    2. 마이데이터 연결 보험      — vector_policy_id 있는 보험 자동 포함
+    3. 업로드 보험증권           — 임베딩 완료된 개인 문서 자동 포함
     """
-    # 로그인 사용자의 임베딩 완료 보험증권 네임스페이스 수집
+    policy_ids    : list[str] = list(request.policy_ids)
     user_namespaces: list[str] = []
+
     if current_user:
-        rows = await db.execute(
+        # ── 마이데이터 연결 보험 policy_ids 추가 ────────────────────────────
+        mydata_rows = await db.execute(
+            select(UserMydataPolicy).where(
+                UserMydataPolicy.user_id == current_user.id,
+                UserMydataPolicy.is_active == True,
+                UserMydataPolicy.status == "정상",
+                UserMydataPolicy.vector_policy_id.isnot(None),
+            )
+        )
+        for mp in mydata_rows.scalars().all():
+            if mp.vector_policy_id and mp.vector_policy_id not in policy_ids:
+                policy_ids.append(mp.vector_policy_id)
+
+        # ── 업로드 보험증권 네임스페이스 수집 ───────────────────────────────
+        upload_rows = await db.execute(
             select(UserPolicy).where(
                 UserPolicy.user_id == current_user.id,
                 UserPolicy.status == PolicyStatus.ready,
             )
         )
-        user_namespaces = [p.vector_namespace for p in rows.scalars().all()]
+        user_namespaces = [p.vector_namespace for p in upload_rows.scalars().all()]
 
     result = await run_rag_pipeline(
         parsed_doc=request.parsed,
-        policy_ids=request.policy_ids,
+        policy_ids=policy_ids,
         user_namespaces=user_namespaces,
     )
 
-    # 결과 DB 저장
     row = AnalysisResult(
         session_id       = result.session_id,
         user_id          = current_user.id if current_user else None,

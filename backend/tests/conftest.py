@@ -22,6 +22,7 @@ async def test_db():
     import app.models.insurer           # noqa: F401
     import app.models.user_policy       # noqa: F401
     import app.models.kakao_session     # noqa: F401
+    import app.models.mydata_policy     # noqa: F401
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

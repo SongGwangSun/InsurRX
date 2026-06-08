@@ -220,6 +220,7 @@
   <!-- 주 탭 -->
   <div class="main-tabs">
     <button class="main-tab-btn active" id="mtAnalyze"  onclick="switchMainTab('analyze')">🔍 보상 분석</button>
+    <button class="main-tab-btn"        id="mtMydata"   onclick="switchMainTab('mydata')">🔗 마이데이터</button>
     <button class="main-tab-btn"        id="mtPolicies" onclick="switchMainTab('policies')">📄 내 보험증권</button>
     <button class="main-tab-btn"        id="mtHistory"  onclick="switchMainTab('history')">📋 분석 히스토리</button>
     <button class="main-tab-btn"        id="mtAccount"  onclick="switchMainTab('account')">⚙️ 계정 설정</button>
@@ -293,6 +294,80 @@
     <div id="analysisResult" style="display:none">
       <div id="resultCard"></div>
       <button class="btn-sm btn-outline" style="margin-top:.5rem" onclick="resetAnalyze()">다시 분석하기</button>
+    </div>
+
+  </div>
+
+  <!-- ═══ TAB: 마이데이터 ═════════════════════════════════════════════ -->
+  <div class="tab-content" id="tabMydata">
+
+    <!-- 연결 전 안내 -->
+    <div id="mydataConnectSection">
+      <div class="card" style="max-width:560px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem">
+          <div style="font-size:2.5rem">🏦</div>
+          <div>
+            <h3 style="margin:0">금융 마이데이터로 내 보험 자동 연결</h3>
+            <p style="margin:.25rem 0 0;font-size:.82rem;color:var(--gray-500)">가입한 보험이 자동으로 분석에 활용됩니다.</p>
+          </div>
+        </div>
+        <div style="background:var(--gray-50);border-radius:10px;padding:1rem;margin-bottom:1.25rem;font-size:.85rem;line-height:1.8">
+          <strong>연결 후 제공되는 기능:</strong><br>
+          ✅ 가입 보험 자동 인식 — 처방전 업로드만으로 즉시 분석<br>
+          ✅ AI가 내 보험 약관을 정확히 검색<br>
+          ✅ 미청구 보험금 자동 발굴
+        </div>
+        <div class="form-group">
+          <label>이름</label>
+          <input type="text" id="mdName" placeholder="홍길동" />
+        </div>
+        <div class="form-group">
+          <label>생년월일 (8자리)</label>
+          <input type="text" id="mdBirth" placeholder="19901231" maxlength="8" />
+        </div>
+        <div style="background:#EFF6FF;border-radius:8px;padding:.75rem 1rem;font-size:.8rem;color:#1E40AF;margin-bottom:1rem">
+          🔒 입력 정보는 보험 계약 조회에만 사용되며 서버에 저장되지 않습니다.
+        </div>
+        <button class="upload-btn" id="mdConnectBtn" onclick="connectMydata()" style="width:100%">
+          마이데이터 연결하기
+        </button>
+        <div style="font-size:.8rem;color:var(--red);margin-top:.5rem" id="mdError"></div>
+      </div>
+    </div>
+
+    <!-- 연결 완료 후 보험 목록 -->
+    <div id="mydataPoliciesSection" style="display:none">
+      <div class="section-header">
+        <h2>연결된 보험 계약</h2>
+        <div style="display:flex;gap:8px">
+          <button class="btn-sm btn-outline" onclick="loadMydataPolicies()">새로고침</button>
+          <button class="btn-sm btn-danger-sm" onclick="disconnectAll()"
+                  style="padding:7px 14px;border-radius:8px;font-size:.82rem;font-weight:600;border:1.5px solid #FCA5A5;color:var(--red);background:transparent;cursor:pointer">연결 해제</button>
+        </div>
+      </div>
+
+      <div style="background:#DCFCE7;border-radius:10px;padding:.75rem 1rem;font-size:.85rem;color:#166534;margin-bottom:1rem;display:flex;align-items:center;gap:8px">
+        <span>✅</span>
+        <span id="mdRagNotice">마이데이터 연결 완료 — 보상 분석 시 내 보험이 자동으로 검색됩니다.</span>
+      </div>
+
+      <div class="policies-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>보험사</th><th>상품명</th><th>종류</th><th>월 보험료</th><th>보장 기간</th><th>상태</th><th>AI 분석</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="mydataBody"><tr class="empty-row"><td colspan="8">로딩 중...</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="card" style="background:var(--gray-50);margin-top:1rem">
+        <p style="font-size:.82rem;color:var(--gray-500);margin:0">
+          💡 <strong>AI 분석 가능</strong> 표시는 해당 보험의 약관 데이터가 등록되어 있어 더 정확한 분석이 가능함을 의미합니다.<br>
+          표시가 없는 보험도 연결 상태는 유지되며, 약관 등록 후 자동으로 활성화됩니다.
+        </p>
+      </div>
     </div>
 
   </div>
@@ -445,13 +520,14 @@ function enterDashboard() {
 
 // ── 주 탭 전환 ─────────────────────────────────────────
 function switchMainTab(name) {
-  ['analyze','policies','history','account'].forEach(t => {
+  ['analyze','mydata','policies','history','account'].forEach(t => {
     document.getElementById('tab' + cap(t)).classList.toggle('active', t === name);
     document.getElementById('mt'  + cap(t)).classList.toggle('active', t === name);
   });
   if (name === 'policies') loadPolicies();
   if (name === 'history')  loadHistory();
   if (name === 'account')  loadAccountInfo();
+  if (name === 'mydata')   loadMydataPolicies();
 }
 function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
@@ -838,6 +914,106 @@ async function deletePolicy(id, name) {
     const res = await fetch(`${API}/my/policies/${id}`, { method:'DELETE', headers:{ Authorization:`Bearer ${authToken}` } });
     if (!res.ok && res.status !== 204) throw new Error('삭제 실패');
     toast(`"${name}" 삭제 완료`, 'success'); await loadPolicies();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ══ 마이데이터 탭 ══════════════════════════════════════════
+
+async function loadMydataPolicies() {
+  try {
+    const res = await fetch(`${API}/mydata/policies`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+    if (!res.ok) return;
+    const list = await res.json();
+    if (list.length === 0) {
+      document.getElementById('mydataConnectSection').style.display = '';
+      document.getElementById('mydataPoliciesSection').style.display = 'none';
+    } else {
+      document.getElementById('mydataConnectSection').style.display = 'none';
+      document.getElementById('mydataPoliciesSection').style.display = '';
+      renderMydataPolicies(list);
+    }
+  } catch {}
+}
+
+async function connectMydata() {
+  const name  = v('mdName');
+  const birth = v('mdBirth').replace(/\D/g, '');
+  const errEl = document.getElementById('mdError');
+  if (!name) { errEl.textContent = '이름을 입력하세요.'; return; }
+  if (birth.length !== 8) { errEl.textContent = '생년월일을 8자리로 입력하세요. (예: 19901231)'; return; }
+  errEl.textContent = '';
+
+  const btn = document.getElementById('mdConnectBtn');
+  btn.disabled = true; btn.textContent = '조회 중...';
+
+  try {
+    const res  = await fetch(`${API}/mydata/connect`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
+      body: JSON.stringify({ name, birth_date: birth }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || '연결 실패');
+
+    document.getElementById('mydataConnectSection').style.display = 'none';
+    document.getElementById('mydataPoliciesSection').style.display = '';
+    renderMydataPolicies(data.policies);
+
+    const ragCnt = data.policies.filter(p => p.has_rag_data).length;
+    document.getElementById('mdRagNotice').textContent =
+      `마이데이터 연결 완료 — ${data.connected_count}개 보험 (이 중 ${ragCnt}개 AI 분석 즉시 가능)`;
+    toast(data.message, 'success');
+  } catch(e) {
+    errEl.textContent = e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = '마이데이터 연결하기';
+  }
+}
+
+function renderMydataPolicies(list) {
+  const tb = document.getElementById('mydataBody');
+  tb.innerHTML = list.map(p => `
+    <tr>
+      <td style="font-weight:600">${esc(p.org_name)}</td>
+      <td>${esc(p.insurance_name)}</td>
+      <td><span class="badge" style="background:var(--gray-100);color:var(--gray-700)">${esc(p.product_type)}</span></td>
+      <td style="font-size:.85rem">₩${(p.premium||0).toLocaleString()}</td>
+      <td style="font-size:.78rem;color:var(--gray-500)">${p.coverage_start||'-'} ~ ${p.coverage_end||'-'}</td>
+      <td>
+        <span class="badge ${p.status==='정상'?'badge-ready':'badge-failed'}">${esc(p.status)}</span>
+      </td>
+      <td style="text-align:center">
+        ${p.has_rag_data
+          ? '<span style="color:var(--green);font-weight:700" title="약관 데이터 있음">✅ 가능</span>'
+          : '<span style="color:var(--gray-300)" title="약관 데이터 없음">–</span>'}
+      </td>
+      <td><button class="del-btn" onclick="disconnectOne(${p.id})" title="연결 해제">🗑</button></td>
+    </tr>
+  `).join('');
+}
+
+async function disconnectOne(id) {
+  if (!confirm('이 보험 연결을 해제할까요?')) return;
+  try {
+    await fetch(`${API}/mydata/policies/${id}`, {
+      method: 'DELETE', headers: { Authorization: `Bearer ${authToken}` },
+    });
+    toast('연결 해제 완료', 'success');
+    loadMydataPolicies();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function disconnectAll() {
+  if (!confirm('모든 마이데이터 보험 연결을 해제할까요?\n분석 시 해당 보험이 자동 포함되지 않습니다.')) return;
+  try {
+    await fetch(`${API}/mydata/disconnect`, {
+      method: 'DELETE', headers: { Authorization: `Bearer ${authToken}` },
+    });
+    toast('마이데이터 연결이 해제되었습니다.', 'info');
+    document.getElementById('mydataConnectSection').style.display = '';
+    document.getElementById('mydataPoliciesSection').style.display = 'none';
   } catch(e) { toast(e.message, 'error'); }
 }
 
