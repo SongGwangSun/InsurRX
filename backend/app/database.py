@@ -23,21 +23,27 @@ async def create_tables():
 
 async def run_migrations():
     """기존 테이블에 신규 컬럼을 안전하게 추가 (idempotent)."""
-    survey_columns = [
-        ("usage_intent", "VARCHAR(64)"),
-        ("paid_intent",  "VARCHAR(64)"),
-        ("price_range",  "VARCHAR(32)"),
-        ("feedback",     "TEXT"),
+    migrations = [
+        # table,                 column,             type
+        ("waitlist",             "usage_intent",     "VARCHAR(64)"),
+        ("waitlist",             "paid_intent",      "VARCHAR(64)"),
+        ("waitlist",             "price_range",      "VARCHAR(32)"),
+        ("waitlist",             "feedback",         "TEXT"),
+        ("insurance_products",   "vector_policy_id", "VARCHAR(100)"),
+        ("analysis_results",     "user_id",          "INTEGER"),
     ]
     async with engine.begin() as conn:
         from sqlalchemy import text
-        dialect = engine.dialect.name  # 'postgresql' or 'sqlite'
-        for col, col_type in survey_columns:
+        dialect = engine.dialect.name
+        for table, col, col_type in migrations:
             if dialect == "postgresql":
-                sql = f"ALTER TABLE waitlist ADD COLUMN IF NOT EXISTS {col} {col_type}"
-                await conn.execute(text(sql))
-            else:  # sqlite — IF NOT EXISTS 미지원, 오류 무시
+                await conn.execute(text(
+                    f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {col} {col_type}"
+                ))
+            else:
                 try:
-                    await conn.execute(text(f"ALTER TABLE waitlist ADD COLUMN {col} {col_type}"))
+                    await conn.execute(text(
+                        f"ALTER TABLE {table} ADD COLUMN {col} {col_type}"
+                    ))
                 except Exception:
                     pass

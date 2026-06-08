@@ -31,6 +31,7 @@ class ProductCreate(BaseModel):
     product_code: str
     product_type: str
     description: Optional[str] = None
+    vector_policy_id: Optional[str] = None   # Pinecone policy_id
 
 
 class ProductUpdate(BaseModel):
@@ -38,6 +39,7 @@ class ProductUpdate(BaseModel):
     product_code: Optional[str] = None
     product_type: Optional[str] = None
     description: Optional[str] = None
+    vector_policy_id: Optional[str] = None
     is_active: Optional[bool] = None
 
 
@@ -48,6 +50,7 @@ class ProductResponse(BaseModel):
     product_code: str
     product_type: str
     description: Optional[str]
+    vector_policy_id: Optional[str]
     is_active: bool
     created_at: datetime
 

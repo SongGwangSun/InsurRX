@@ -16,47 +16,61 @@ logger = logging.getLogger(__name__)
 ICD_PATTERN  = re.compile(r'\b([A-Z]\d{2}(?:\.\d{1,2})?)\b')
 DATE_PATTERN = re.compile(r'(\d{4}[-./년]\s*\d{1,2}[-./월]\s*\d{1,2})')
 
-# 진단명: "진단명:", "상병명:", "병명:" 뒤 한글 텍스트
+# 진단명: 레이블 뒤 한글 텍스트 (상병/진단/병명 등)
 DIAGNOSIS_PATTERN = re.compile(
-    r'(?:진단명|상병명|병명|진단)\s*[:：]\s*([가-힣a-zA-Z()\s·,]+)',
+    r'(?:진단명|상병명|상병|병명|진단)\s*[:：]\s*([가-힣a-zA-Z()\s·,·]+?)(?:\n|$|[0-9])',
     re.IGNORECASE
 )
 
-# 진료과: "진료과:", "과:" 뒤 한글
+# ICD 코드 바로 뒤에 오는 진단명 (예: "J06.9 급성상기도감염") — 같은 줄만 허용
+ICD_WITH_NAME_PATTERN = re.compile(
+    r'[A-Z]\d{2}(?:\.\d{1,2})?[^\S\n]+([가-힣]{2,}(?:[^\S\n]*[가-힣]+){0,2})'
+)
+
+# 진료과
 DEPT_PATTERN = re.compile(
     r'(?:진료과|진료\s*과목|과)\s*[:：]\s*([가-힣]+(?:과|과목)?)',
     re.IGNORECASE
 )
 
-# 병원명: 줄 중 의원/병원/클리닉/의료원/센터로 끝나는 패턴
+# 병원명: 첫 줄 중 의원/병원 등으로 끝나는 이름
 HOSPITAL_PATTERN = re.compile(
-    r'^([가-힣a-zA-Z0-9\s]+(?:의원|병원|클리닉|의료원|보건소|약국|센터|외래))',
+    r'^([가-힣a-zA-Z0-9\s·]+(?:의원|병원|클리닉|의료원|보건소|약국|센터|외래|한의원))',
     re.MULTILINE
 )
 
-# 총 진료비: 본인부담금, 합계, 총진료비 뒤 숫자(콤마 포함)
-AMOUNT_PATTERN = re.compile(
-    r'(?:본인부담금|합계|총\s*진료비|환자부담금|실부담금|납부금액)\s*[:：]?\s*'
-    r'[₩\\\s]*([0-9,]+)\s*원?',
+# ── 총액 패턴 (우선순위 순) ──────────────────────────────────────────────────
+# 1순위: 본인부담금 (실제 환자 납부액 = 실손 청구 기준)
+PATIENT_AMOUNT_PATTERN = re.compile(
+    r'(?:본인부담금|환자부담금|실부담금|본인일부부담금|납부금액|수납금액|청구금액)\s*[:：]?\s*'
+    r'[₩\\]?\s*([0-9,]+)\s*원?',
+    re.IGNORECASE
+)
+# 2순위: 총 진료비 합계
+TOTAL_AMOUNT_PATTERN = re.compile(
+    r'(?:합계|총\s*진료비|총액|진료비\s*합계)\s*[:：]?\s*'
+    r'[₩\\]?\s*([0-9,]+)\s*원?',
     re.IGNORECASE
 )
 
-# 약품: mg/mL/정/캡슐/시럽/크림 등 포함 줄
-DRUG_LINE_PATTERN = re.compile(
-    r'.+?(?:mg|mL|㎎|정|캡슐|시럽|크림|연고|겔|액|패치|주사|점안|안약|좌약).+'
-    r'|.+?(?:mg|mL|㎎|정|캡슐|시럽|크림|연고|겔|액|패치|주사|점안|안약|좌약)',
-    re.IGNORECASE
-)
-# 용량: "500mg", "10mL"
-DOSAGE_PATTERN = re.compile(r'(\d+(?:\.\d+)?)\s*(?:mg|mL|㎎|mcg|g)\b', re.IGNORECASE)
-# 복용 일수: "5일", "3일분"
-DAYS_PATTERN   = re.compile(r'(\d+)\s*일(?:분|치)?')
-# 비급여 여부
-NON_BENEFIT_KEYWORDS = ['비급여', '비보험', '급여외', '100%']
-
-# 일반적인 의약품 키워드 (약품 라인 감지에만 사용)
+# 약품 패턴
 DRUG_KEYWORDS = ('mg', 'mL', '㎎', '정', '캡슐', '시럽', '크림', '연고',
                  '겔', '액', '패치', '주사', '점안', '안약', '좌약')
+# 약품 줄에서 제외할 키워드 (금액·레이블 등 오인 방지)
+DRUG_EXCLUDE_KW = ('금액', '합계', '부담금', '납부', '수납', '청구', '영수', '원정',
+                   '진료비', '처방', '성명', '주민', '생년', '병원', '의원', '약국')
+DOSAGE_PATTERN  = re.compile(r'(\d+(?:\.\d+)?)\s*(?:mg|mL|㎎|mcg|g)\b', re.IGNORECASE)
+DAYS_PATTERN    = re.compile(r'(\d+)\s*일(?:분|치)?')
+NON_BENEFIT_KW  = ['비급여', '비보험', '급여외', '100%']
+
+# 흔한 진료과 목록 (레이블 없을 때 직접 탐색)
+COMMON_DEPTS = [
+    '내과', '외과', '정형외과', '신경외과', '소아과', '소아청소년과',
+    '피부과', '안과', '이비인후과', '산부인과', '비뇨기과', '정신건강의학과',
+    '신경과', '재활의학과', '마취통증의학과', '응급의학과', '가정의학과',
+    '치과', '한의원', '한방과',
+]
+
 
 # ── Stage 1: 정규식 추출 ───────────────────────────────────────────────────────
 
@@ -69,14 +83,24 @@ def _extract_date(text: str) -> str | None:
     m = DATE_PATTERN.findall(text)
     if not m:
         return None
-    # 년/월/일 한글을 - 로 정규화
     return re.sub(r'[년월]\s*', '-', m[0]).replace('일', '').strip()
 
 
 def _extract_diagnosis(text: str) -> str | None:
+    # 레이블 뒤 진단명
     m = DIAGNOSIS_PATTERN.search(text)
     if m:
-        return m.group(1).strip()
+        val = m.group(1).strip().rstrip('·,·')
+        if val:
+            return val
+
+    # ICD 코드 + 한글 진단명 패턴
+    m2 = ICD_WITH_NAME_PATTERN.search(text)
+    if m2:
+        val = m2.group(1).strip()
+        if len(val) >= 2:
+            return val
+
     return None
 
 
@@ -84,25 +108,18 @@ def _extract_department(text: str) -> str | None:
     m = DEPT_PATTERN.search(text)
     if m:
         dept = m.group(1).strip()
-        return dept if len(dept) <= 12 else None   # 너무 길면 오추출
-    # 일반 진료과명 직접 탐색
-    common_depts = [
-        '내과', '외과', '정형외과', '신경외과', '소아과', '소아청소년과',
-        '피부과', '안과', '이비인후과', '산부인과', '비뇨기과', '정신건강의학과',
-        '신경과', '재활의학과', '마취통증의학과', '응급의학과', '가정의학과',
-        '치과', '한의원', '한방과',
-    ]
-    for dept in common_depts:
+        return dept if len(dept) <= 12 else None
+    for dept in COMMON_DEPTS:
         if dept in text:
             return dept
     return None
 
 
 def _extract_hospital(text: str) -> str | None:
-    # 첫 몇 줄에서 병원명 탐색 (OCR 상단에 보통 위치)
-    for line in text.split('\n')[:15]:
+    lines = text.split('\n')[:20]   # 상단 20줄 탐색 (여유 확대)
+    for line in lines:
         line = line.strip()
-        if not line or len(line) > 40:
+        if not line or len(line) > 50:
             continue
         m = HOSPITAL_PATTERN.match(line)
         if m:
@@ -111,61 +128,57 @@ def _extract_hospital(text: str) -> str | None:
 
 
 def _extract_amount(text: str) -> int | None:
-    matches = AMOUNT_PATTERN.findall(text)
-    if not matches:
-        return None
-    # 가장 큰 금액을 총액으로 선택 (공제 전 기준)
-    amounts = []
-    for raw in matches:
-        try:
-            amounts.append(int(raw.replace(',', '')))
-        except ValueError:
-            pass
-    return max(amounts) if amounts else None
+    """본인부담금 우선 → 없으면 합계 금액 반환."""
+    def _parse_amounts(pattern: re.Pattern) -> list[int]:
+        out = []
+        for raw in pattern.findall(text):
+            try:
+                out.append(int(raw.replace(',', '')))
+            except ValueError:
+                pass
+        return out
+
+    # 1순위: 본인부담금
+    patient_amts = _parse_amounts(PATIENT_AMOUNT_PATTERN)
+    if patient_amts:
+        # 여러 개면 가장 큰 값 (세목 합계)
+        return max(patient_amts)
+
+    # 2순위: 총 진료비
+    total_amts = _parse_amounts(TOTAL_AMOUNT_PATTERN)
+    if total_amts:
+        return max(total_amts)
+
+    return None
 
 
 def _extract_drugs(text: str) -> list[ParsedDrug]:
-    drugs = []
-    seen = set()
-
+    drugs, seen = [], set()
     for line in text.split('\n'):
-        line_stripped = line.strip()
-        if not line_stripped:
+        line = line.strip()
+        if not line or not any(kw in line for kw in DRUG_KEYWORDS):
             continue
-        if not any(kw in line_stripped for kw in DRUG_KEYWORDS):
+        if any(ex in line for ex in DRUG_EXCLUDE_KW):
             continue
-        if len(line_stripped) > 80 or len(line_stripped) < 4:
+        if len(line) > 80 or len(line) < 4:
             continue
-
-        name = line_stripped
-        if name in seen:
+        if line in seen:
             continue
-        seen.add(name)
+        seen.add(line)
 
-        # 용량 추출
-        dosage_m = DOSAGE_PATTERN.search(name)
-        dosage = dosage_m.group(0) if dosage_m else None
-
-        # 복용 일수 추출
-        days_m = DAYS_PATTERN.search(name)
-        days = int(days_m.group(1)) if days_m else None
-
-        # 비급여 여부
-        is_nonbenefit = any(kw in name for kw in NON_BENEFIT_KEYWORDS)
-
+        dosage_m = DOSAGE_PATTERN.search(line)
+        days_m   = DAYS_PATTERN.search(line)
         drugs.append(ParsedDrug(
-            name=name,
-            dosage=dosage,
-            days=days,
-            is_nonbenefit=is_nonbenefit,
+            name=line,
+            dosage=dosage_m.group(0) if dosage_m else None,
+            days=int(days_m.group(1)) if days_m else None,
+            is_nonbenefit=any(kw in line for kw in NON_BENEFIT_KW),
             confidence=0.85,
         ))
-
     return drugs
 
 
 def _regex_parse(text: str) -> ParsedDocument:
-    """정규식만으로 ParsedDocument를 구성합니다."""
     return ParsedDocument(
         hospital=_extract_hospital(text),
         department=_extract_department(text),
@@ -193,16 +206,14 @@ from app.services.prompt_service import get_prompt as _get_prompt
 
 
 async def _llm_parse(text: str) -> dict:
-    """GPT-4o로 구조화 추출합니다."""
     try:
         from openai import AsyncOpenAI
         import re as _re
         from app.core.config import settings
 
         client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
-        # 텍스트가 너무 길면 앞 2000자만 사용 (토큰 절약)
         snippet = text[:2000]
-        prompt = _get_prompt("ocr_llm_parse").format(ocr_text=snippet)
+        prompt  = _get_prompt("ocr_llm_parse").format(ocr_text=snippet)
         resp = await client.chat.completions.create(
             model="gpt-4o-mini",
             max_tokens=800,
@@ -210,7 +221,6 @@ async def _llm_parse(text: str) -> dict:
             messages=[{"role": "user", "content": prompt}],
         )
         raw = resp.choices[0].message.content.strip()
-        # ```json ... ``` 블록 제거
         raw = _re.sub(r'^```(?:json)?\s*', '', raw)
         raw = _re.sub(r'\s*```$', '', raw)
         return json.loads(raw)
@@ -220,7 +230,6 @@ async def _llm_parse(text: str) -> dict:
 
 
 def _merge_with_llm(base: ParsedDocument, llm: dict) -> ParsedDocument:
-    """정규식 결과와 LLM 결과를 병합합니다 — 정규식 우선, LLM은 빈 칸만 채움."""
     drugs = base.drugs
     if not drugs and llm.get("drugs"):
         drugs = [
@@ -231,46 +240,35 @@ def _merge_with_llm(base: ParsedDocument, llm: dict) -> ParsedDocument:
                 is_nonbenefit=d.get("is_nonbenefit", False),
                 confidence=0.75,
             )
-            for d in llm["drugs"]
-            if d.get("name")
+            for d in llm["drugs"] if d.get("name")
         ]
-
     return ParsedDocument(
-        hospital        = base.hospital         or llm.get("hospital"),
-        department      = base.department        or llm.get("department"),
-        icd_code        = base.icd_code          or llm.get("icd_code"),
-        diagnosis       = base.diagnosis         or llm.get("diagnosis"),
-        prescription_date = base.prescription_date or llm.get("prescription_date"),
-        total_amount    = base.total_amount      or llm.get("total_amount"),
-        drugs           = drugs,
+        hospital          = base.hospital          or llm.get("hospital"),
+        department        = base.department         or llm.get("department"),
+        icd_code          = base.icd_code           or llm.get("icd_code"),
+        diagnosis         = base.diagnosis          or llm.get("diagnosis"),
+        prescription_date = base.prescription_date  or llm.get("prescription_date"),
+        total_amount      = base.total_amount       or llm.get("total_amount"),
+        drugs             = drugs,
     )
 
 
 # ── 공개 인터페이스 ────────────────────────────────────────────────────────────
 
 def parse_medical_document(raw_text: str) -> ParsedDocument:
-    """
-    동기 파서 — Stage 1(정규식)만 실행합니다.
-    테스트 및 Clova OCR 미사용 환경에서 사용합니다.
-    """
+    """동기 파서 — Stage 1(정규식)만 실행."""
     if not raw_text:
         return ParsedDocument()
     return _regex_parse(raw_text)
 
 
 async def parse_medical_document_async(raw_text: str) -> ParsedDocument:
-    """
-    비동기 파서 — Stage 1(정규식) + Stage 2(LLM 폴백)를 실행합니다.
-    실제 업로드 엔드포인트에서 사용합니다.
-    """
+    """비동기 파서 — Stage 1(정규식) + Stage 2(LLM 폴백)."""
     if not raw_text:
         return ParsedDocument()
-
     doc = _regex_parse(raw_text)
-
     if _needs_llm_fallback(doc):
         logger.info("LLM 폴백 파서 실행 (누락 필드 보완)")
         llm_result = await _llm_parse(raw_text)
         doc = _merge_with_llm(doc, llm_result)
-
     return doc

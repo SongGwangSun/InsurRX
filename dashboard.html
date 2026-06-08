@@ -219,8 +219,9 @@
 
   <!-- 주 탭 -->
   <div class="main-tabs">
-    <button class="main-tab-btn active" id="mtAnalyze" onclick="switchMainTab('analyze')">🔍 보상 분석</button>
-    <button class="main-tab-btn" id="mtPolicies" onclick="switchMainTab('policies')">📄 내 보험증권</button>
+    <button class="main-tab-btn active" id="mtAnalyze"  onclick="switchMainTab('analyze')">🔍 보상 분석</button>
+    <button class="main-tab-btn"        id="mtPolicies" onclick="switchMainTab('policies')">📄 내 보험증권</button>
+    <button class="main-tab-btn"        id="mtHistory"  onclick="switchMainTab('history')">📋 분석 히스토리</button>
   </div>
 
   <!-- ═══ TAB: 보상 분석 ══════════════════════════════════════════════ -->
@@ -328,6 +329,27 @@
     </div>
 
   </div>
+
+  <!-- ═══ TAB: 분석 히스토리 ══════════════════════════════════════════════ -->
+  <div class="tab-content" id="tabHistory">
+
+    <div class="section-header" style="margin-bottom:1rem">
+      <h2>과거 분석 결과</h2>
+      <button class="btn-sm btn-outline" onclick="loadHistory()">새로고침</button>
+    </div>
+    <div class="policies-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>분석일</th><th>결과</th><th>예상 지급액</th><th>신뢰도</th><th>요약</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="historyBody"><tr class="empty-row"><td colspan="7">로딩 중...</td></tr></tbody>
+      </table>
+    </div>
+
+  </div>
+
 </div>
 
 <!-- 미로그인 -->
@@ -369,11 +391,12 @@ function enterDashboard() {
 
 // ── 주 탭 전환 ─────────────────────────────────────────
 function switchMainTab(name) {
-  ['analyze','policies'].forEach(t => {
+  ['analyze','policies','history'].forEach(t => {
     document.getElementById('tab' + cap(t)).classList.toggle('active', t === name);
-    document.getElementById('mt' + cap(t)).classList.toggle('active', t === name);
+    document.getElementById('mt'  + cap(t)).classList.toggle('active', t === name);
   });
   if (name === 'policies') loadPolicies();
+  if (name === 'history')  loadHistory();
 }
 function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
@@ -595,21 +618,79 @@ async function loadPublicPolicies() {
     const res = await fetch(`${API}/insurers/`);
     const insurers = await res.json();
     const sel = document.getElementById('publicPolicySelect');
-    // 제품 코드를 policy_id로 사용 (Pinecone 메타데이터 policy_id 필드와 매핑)
     insurers.forEach(ins => {
       if (!ins.products?.length) return;
       const grp = document.createElement('optgroup');
       grp.label = ins.name;
       ins.products.forEach(p => {
+        // vector_policy_id 있는 상품만 표시 (Pinecone에 실제 데이터 있는 것만)
+        if (!p.vector_policy_id) return;
         const opt = document.createElement('option');
-        // 공개 약관 policy_id는 data/policies/raw/*.json의 policy_id 값과 일치해야 함
-        opt.value = ins.code + '-' + p.product_code.toLowerCase();
-        opt.textContent = `${p.name}`;
+        opt.value = p.vector_policy_id;   // Pinecone policy_id와 정확히 일치
+        opt.textContent = p.name;
         grp.appendChild(opt);
       });
-      sel.appendChild(grp);
+      if (grp.childElementCount > 0) sel.appendChild(grp);
     });
   } catch {}
+}
+
+// ══ 분석 히스토리 ════════════════════════════════════════
+async function loadHistory() {
+  document.getElementById('historyBody').innerHTML = `<tr class="empty-row"><td colspan="7">로딩 중...</td></tr>`;
+  try {
+    const res = await fetch(`${API}/my/analyses/`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+    if (res.status === 401) { logout(); return; }
+    const list = await res.json();
+    renderHistory(list);
+  } catch {
+    document.getElementById('historyBody').innerHTML =
+      `<tr class="empty-row"><td colspan="7">불러오기 실패</td></tr>`;
+  }
+}
+
+function renderHistory(list) {
+  const tb = document.getElementById('historyBody');
+  if (!list.length) {
+    tb.innerHTML = `<tr class="empty-row"><td colspan="7">분석 기록이 없습니다. 보상 분석 탭에서 시작해 보세요.</td></tr>`;
+    return;
+  }
+  tb.innerHTML = list.map((h, i) => `
+    <tr>
+      <td style="color:var(--gray-500)">${i+1}</td>
+      <td style="font-size:.82rem;color:var(--gray-500)">${fmtDate(h.created_at)}</td>
+      <td>
+        <span class="badge ${h.is_claimable ? 'badge-ready' : 'badge-failed'}">
+          ${h.is_claimable ? '✔ 청구 가능' : '✘ 어려움'}
+        </span>
+      </td>
+      <td style="font-weight:700;color:var(--teal)">
+        ${h.is_claimable ? '₩' + h.estimated_payout.toLocaleString() : '-'}
+      </td>
+      <td style="font-size:.82rem">${Math.round((h.confidence||0)*100)}%</td>
+      <td style="font-size:.8rem;color:var(--gray-500);max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+        ${esc(h.llm_summary)}
+      </td>
+      <td>
+        <button class="del-btn" onclick="deleteHistory('${h.session_id}')" title="삭제">🗑</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function deleteHistory(sessionId) {
+  if (!confirm('이 분석 기록을 삭제할까요?')) return;
+  try {
+    const res = await fetch(`${API}/my/analyses/${sessionId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+    if (!res.ok && res.status !== 204) throw new Error('삭제 실패');
+    toast('삭제 완료', 'success');
+    await loadHistory();
+  } catch(e) { toast(e.message, 'error'); }
 }
 
 // ══ 보험증권 탭 ════════════════════════════════════════════

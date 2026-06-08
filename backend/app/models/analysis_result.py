@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Boolean, Integer, Float, JSON, DateTime, func
+from sqlalchemy import Column, String, Boolean, Integer, Float, JSON, DateTime, func, ForeignKey
 from app.database import Base
 
 
@@ -7,10 +7,11 @@ class AnalysisResult(Base):
     __tablename__ = "analysis_results"
 
     session_id      = Column(String(36), primary_key=True)
+    user_id         = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     is_claimable    = Column(Boolean,    nullable=False)
     estimated_payout= Column(Integer,    nullable=False)
-    breakdown       = Column(JSON,       nullable=False)   # dict
-    coverage_items  = Column(JSON,       nullable=False)   # list[CoverageItem]
+    breakdown       = Column(JSON,       nullable=False)
+    coverage_items  = Column(JSON,       nullable=False)
     confidence      = Column(Float,      nullable=False)
     llm_summary     = Column(String,     nullable=False)
     created_at      = Column(DateTime(timezone=True), server_default=func.now())

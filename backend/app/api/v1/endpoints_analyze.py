@@ -43,6 +43,7 @@ async def analyze_coverage(
     # 결과 DB 저장
     row = AnalysisResult(
         session_id       = result.session_id,
+        user_id          = current_user.id if current_user else None,
         is_claimable     = result.is_claimable,
         estimated_payout = result.estimated_payout,
         breakdown        = result.breakdown,
