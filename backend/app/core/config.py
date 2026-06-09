@@ -35,7 +35,9 @@ class Settings(BaseSettings):
     IMAGE_RETENTION_SECONDS: int = 30
 
     JWT_ALGORITHM: str = "HS256"
-    JWT_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7일
+    JWT_EXPIRE_MINUTES: int = 60              # 1시간 (액세스 토큰)
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 30       # 로그인 유지 선택 시
+    REFRESH_TOKEN_SHORT_DAYS: int = 1         # 로그인 유지 미선택 시
 
     class Config:
         env_file = ".env"

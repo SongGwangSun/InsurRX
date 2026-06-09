@@ -82,7 +82,21 @@ OCR + RAG로 **3초 이내** 실손/정액 보상 여부 및 예상 지급액 �
 - [x] response_builder — basicCard/simpleText/quickReplies 포맷 빌더
 - [x] 랜딩페이지: 히어로 CTA 카카오 채팅 직링크 + 웹 대시보드 병렬 버튼
 
-### 테스트 **55/55 통과** ✅ (2026-06-08)
+### 자동 로그인 / 로그인 이력 ✅ (2026-06-09)
+- [x] `RefreshToken` 모델 — SHA-256 해시 저장, 만료일, 폐기 플래그
+- [x] `LoginHistory` 모델 — user_id, email, IP, User-Agent, 기기유형, success/failed
+- [x] `POST /api/v1/auth/refresh` — Refresh Token rotation → 새 Access Token
+- [x] `POST /api/v1/auth/logout` — Refresh Token 서버 폐기
+- [x] `GET  /api/v1/auth/login-history` — 최근 20건 로그인 이력 조회
+- [x] Access Token 60분 / Refresh Token 30일(유지 체크) · 1일(미체크)
+- [x] 프론트엔드: "로그인 상태 유지" 체크박스, `apiFetch()` 401 자동 갱신, 계정 탭 이력 카드
+
+### UX 개선 ✅ (2026-06-09)
+- [x] **온보딩 플로우** — 회원가입 후 보험증권 등록 3단계 모달 (가입완료→증권등록→분석시작), 등록 완료 시 보상 분석 탭으로 자동 이동, "나중에" 시 내 보험증권 탭으로 이동
+- [x] **모바일 햄버거 메뉴** — 767px 이하에서 탭바 숨김, 좌측 상단 햄버거 버튼, 슬라이드 드로어, 오버레이 클릭 닫기
+- [x] 모바일 현재 탭 레이블 표시, 반응형 업로드 폼
+
+### 테스트 **63/63 통과** ✅ (2026-06-09)
 - [x] `tests/test_api.py` — health check, analyze, 파일 형식 검증
 - [x] `tests/test_rag.py` — RAG 파이프라인 단위 테스트
 - [x] `tests/test_waitlist.py` — waitlist 등록 및 중복 처리

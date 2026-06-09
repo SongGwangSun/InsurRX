@@ -166,13 +166,68 @@
     .toast-error   { background:#FEE2E2;color:#991B1B; }
     .toast-info    { background:#DBEAFE;color:#1E40AF; }
     @keyframes slideIn { from { transform:translateX(60px);opacity:0; } to { transform:translateX(0);opacity:1; } }
+
+    /* HAMBURGER BUTTON */
+    .hamburger-btn { display:none;flex-direction:column;justify-content:center;gap:5px;width:40px;height:40px;background:transparent;border:none;cursor:pointer;border-radius:8px;padding:8px;flex-shrink:0; }
+    .hamburger-btn span { display:block;width:100%;height:2px;background:var(--gray-700);border-radius:2px;transition:all .25s; }
+    .hamburger-btn.open span:nth-child(1) { transform:translateY(7px) rotate(45deg); }
+    .hamburger-btn.open span:nth-child(2) { opacity:0;transform:scaleX(0); }
+    .hamburger-btn.open span:nth-child(3) { transform:translateY(-7px) rotate(-45deg); }
+
+    /* MOBILE NAV DRAWER */
+    .mobile-nav-overlay { display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:240; }
+    .mobile-nav-overlay.open { display:block; }
+    .mobile-nav { position:fixed;top:0;left:-290px;width:280px;height:100dvh;background:var(--white);z-index:250;transition:left .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;box-shadow:4px 0 32px rgba(0,0,0,.14); }
+    .mobile-nav.open { left:0; }
+    .mobile-nav-header { display:flex;align-items:center;justify-content:space-between;padding:0 1.25rem;height:64px;border-bottom:1px solid var(--gray-200);flex-shrink:0; }
+    .mobile-nav-title  { font-size:1.1rem;font-weight:800;color:var(--blue); }
+    .mobile-nav-close  { width:36px;height:36px;border:none;background:var(--gray-100);border-radius:8px;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;color:var(--gray-700); }
+    .mobile-nav-menu   { display:flex;flex-direction:column;padding:.5rem 0;flex:1;overflow-y:auto; }
+    .mobile-nav-item   { display:flex;align-items:center;gap:.75rem;padding:14px 1.5rem;font-size:.95rem;font-weight:600;color:var(--gray-700);background:transparent;border:none;cursor:pointer;text-align:left;transition:background .15s,color .15s;width:100%; }
+    .mobile-nav-item:hover  { background:var(--gray-50); }
+    .mobile-nav-item.active { background:#EFF6FF;color:var(--blue); }
+    .mobile-nav-footer { padding:1rem 1.5rem;border-top:1px solid var(--gray-200); }
+    .mobile-nav-user   { font-size:.82rem;color:var(--gray-500);margin-bottom:.75rem; }
+
+    /* CURRENT TAB LABEL (mobile breadcrumb) */
+    .current-tab-label { display:none;font-size:.92rem;font-weight:700;color:var(--gray-700);padding:.5rem 0;margin-bottom:.5rem; }
+
+    /* ONBOARDING OVERLAY */
+    .onboard-steps { display:flex;align-items:center;gap:.3rem;margin-bottom:1.75rem; }
+    .onboard-step-dot { width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;flex-shrink:0;transition:all .3s; }
+    .onboard-step-dot.done    { background:#DCFCE7;color:#166534; }
+    .onboard-step-dot.active  { background:var(--blue);color:var(--white);box-shadow:0 0 0 4px #DBEAFE; }
+    .onboard-step-dot.pending { background:var(--gray-100);color:var(--gray-400); }
+    .onboard-step-line { flex:1;height:2px;background:var(--gray-200);border-radius:99px; }
+    .onboard-step-line.done { background:#DCFCE7; }
+    .onboard-step-label { font-size:.72rem;color:var(--gray-500);text-align:center;margin-top:4px; }
+
+    /* RESPONSIVE */
+    @media (max-width:767px) {
+      .hamburger-btn { display:flex; }
+      .main-tabs { display:none; }
+      .current-tab-label { display:block; }
+      .page-wrap { padding:80px 1rem 3rem; }
+      .welcome-banner { padding:1.25rem;gap:.5rem; }
+      .welcome-banner h1 { font-size:1.15rem; }
+      .welcome-banner p  { font-size:.82rem; }
+      .step { font-size:.68rem;padding:8px 3px; }
+      .nav-right .nav-user { display:none; }
+      .upload-row { flex-direction:column; }
+      .upload-row select,.upload-row input[type=file] { min-width:unset;width:100%; }
+    }
   </style>
 </head>
 <body>
 
 <!-- NAV -->
 <nav>
-  <a href="index.html" class="logo">Insur<span>RX</span></a>
+  <div style="display:flex;align-items:center;gap:.5rem">
+    <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMobileNav()" aria-label="메뉴 열기" style="display:none">
+      <span></span><span></span><span></span>
+    </button>
+    <a href="index.html" class="logo">Insur<span>RX</span></a>
+  </div>
   <div class="nav-right">
     <span class="nav-user" id="navUserName"></span>
     <a href="admin.html" class="btn-sm btn-outline" id="adminLink" style="display:none">관리자</a>
@@ -180,6 +235,76 @@
     <button class="btn-sm btn-primary" id="loginNavBtn" onclick="showAuth()">로그인 / 회원가입</button>
   </div>
 </nav>
+
+<!-- MOBILE NAV DRAWER -->
+<div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="closeMobileNav()"></div>
+<div class="mobile-nav" id="mobileNav">
+  <div class="mobile-nav-header">
+    <span class="mobile-nav-title">Insur<span style="color:var(--teal)">RX</span></span>
+    <button class="mobile-nav-close" onclick="closeMobileNav()">✕</button>
+  </div>
+  <div class="mobile-nav-menu">
+    <button class="mobile-nav-item active" id="mobAnalyze"  onclick="switchMainTab('analyze')">🔍 보상 분석</button>
+    <button class="mobile-nav-item"        id="mobMydata"   onclick="switchMainTab('mydata')">🔗 마이데이터</button>
+    <button class="mobile-nav-item"        id="mobPolicies" onclick="switchMainTab('policies')">📄 내 보험증권</button>
+    <button class="mobile-nav-item"        id="mobHistory"  onclick="switchMainTab('history')">📋 분석 히스토리</button>
+    <button class="mobile-nav-item"        id="mobAccount"  onclick="switchMainTab('account')">⚙️ 계정 설정</button>
+  </div>
+  <div class="mobile-nav-footer">
+    <div class="mobile-nav-user" id="mobileNavUser"></div>
+    <button class="btn-sm btn-outline" style="width:100%;justify-content:center" onclick="logout()">로그아웃</button>
+  </div>
+</div>
+
+<!-- ONBOARDING OVERLAY -->
+<div class="overlay hidden" id="onboardingOverlay">
+  <div class="modal" style="max-width:480px">
+    <!-- 진행 단계 -->
+    <div class="onboard-steps">
+      <div style="text-align:center;flex:0 0 auto">
+        <div class="onboard-step-dot done">✓</div>
+        <div class="onboard-step-label">가입 완료</div>
+      </div>
+      <div class="onboard-step-line done"></div>
+      <div style="text-align:center;flex:0 0 auto">
+        <div class="onboard-step-dot active">2</div>
+        <div class="onboard-step-label">증권 등록</div>
+      </div>
+      <div class="onboard-step-line"></div>
+      <div style="text-align:center;flex:0 0 auto">
+        <div class="onboard-step-dot pending">3</div>
+        <div class="onboard-step-label">분석 시작</div>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-bottom:1.5rem">
+      <div style="font-size:2.5rem;margin-bottom:.5rem">📄</div>
+      <h2 style="font-size:1.3rem">내 보험증권을 등록하세요</h2>
+      <p class="sub" style="margin-top:.4rem">등록된 증권 기준으로 AI가 보상 여부를 더 정확하게 분석해드려요.<br>PDF, JPG, PNG 모두 지원합니다.</p>
+    </div>
+
+    <div class="form-group">
+      <label>보험 상품 선택 <span style="font-weight:400;color:var(--gray-400)">(선택사항)</span></label>
+      <select id="onboardProductSelect" style="width:100%;padding:10px 14px;border:1.5px solid var(--gray-200);border-radius:9px;font-size:.9rem;background:var(--white);outline:none">
+        <option value="">상품 선택...</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>보험증권 파일</label>
+      <input type="file" id="onboardPolicyFile" accept=".pdf,.jpg,.jpeg,.png,.webp"
+             style="width:100%;padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:9px;font-size:.875rem;background:var(--white)" />
+    </div>
+
+    <div id="onboardProgress" style="display:none;margin-bottom:1rem">
+      <div class="progress-bar-wrap"><div class="progress-bar" id="onboardProgressBar" style="width:0%"></div></div>
+      <div class="progress-text" id="onboardProgressText">업로드 중...</div>
+    </div>
+
+    <button class="btn-full" id="onboardUploadBtn" onclick="uploadOnboardPolicy()">보험증권 등록하기</button>
+    <button onclick="skipOnboarding()" style="width:100%;padding:11px;margin-top:.75rem;border-radius:10px;border:1.5px solid var(--gray-200);background:transparent;font-size:.9rem;font-weight:600;color:var(--gray-500);cursor:pointer">나중에 추가할게요 →</button>
+    <p style="font-size:.75rem;color:var(--gray-300);text-align:center;margin-top:.75rem">언제든 "내 보험증권" 탭에서 추가할 수 있어요.</p>
+  </div>
+</div>
 
 <!-- AUTH MODAL -->
 <div class="overlay hidden" id="authOverlay">
@@ -193,6 +318,10 @@
     <div id="loginForm">
       <div class="form-group"><label>이메일</label><input type="email" id="loginEmail" placeholder="example@email.com" /></div>
       <div class="form-group"><label>비밀번호</label><input type="password" id="loginPw" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')doLogin()" /></div>
+      <label style="display:flex;align-items:center;gap:.5rem;font-size:.875rem;color:var(--gray-600);margin-bottom:.75rem;cursor:pointer">
+        <input type="checkbox" id="rememberMe" style="width:16px;height:16px;accent-color:var(--primary)" />
+        로그인 상태 유지 (30일)
+      </label>
       <button class="btn-full" onclick="doLogin()" id="loginBtn">로그인</button>
       <div class="error-msg" id="loginErr"></div>
     </div>
@@ -217,7 +346,7 @@
     </div>
   </div>
 
-  <!-- 주 탭 -->
+  <!-- 주 탭 (데스크톱) / 현재 탭 레이블 (모바일) -->
   <div class="main-tabs">
     <button class="main-tab-btn active" id="mtAnalyze"  onclick="switchMainTab('analyze')">🔍 보상 분석</button>
     <button class="main-tab-btn"        id="mtMydata"   onclick="switchMainTab('mydata')">🔗 마이데이터</button>
@@ -225,6 +354,7 @@
     <button class="main-tab-btn"        id="mtHistory"  onclick="switchMainTab('history')">📋 분석 히스토리</button>
     <button class="main-tab-btn"        id="mtAccount"  onclick="switchMainTab('account')">⚙️ 계정 설정</button>
   </div>
+  <div class="current-tab-label" id="currentTabLabel">🔍 보상 분석</div>
 
   <!-- ═══ TAB: 보상 분석 ══════════════════════════════════════════════ -->
   <div class="tab-content active" id="tabAnalyze">
@@ -476,6 +606,15 @@
         </div>
       </div>
 
+      <!-- 로그인 이력 -->
+      <div class="card">
+        <h3>로그인 이력</h3>
+        <p style="font-size:.82rem;color:var(--gray-500);margin-bottom:.75rem">최근 20건의 로그인 기록입니다.</p>
+        <div id="loginHistoryList" style="font-size:.82rem">
+          <div style="color:var(--gray-400);text-align:center;padding:1rem">불러오는 중...</div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -493,14 +632,23 @@
 
 <script>
 const API = 'https://magnificent-celebration-production-2dd9.up.railway.app/api/v1';
-let authToken   = localStorage.getItem('insurrx_token');
-let currentUser = JSON.parse(localStorage.getItem('insurrx_user') || 'null');
-let _parsedDoc  = null;   // OCR 결과 임시 저장
+let authToken    = localStorage.getItem('insurrx_token');
+let refreshToken = localStorage.getItem('insurrx_refresh_token');
+let currentUser  = JSON.parse(localStorage.getItem('insurrx_user') || 'null');
+let _parsedDoc   = null;   // OCR 결과 임시 저장
 
 // ── 초기화 ────────────────────────────────────────────
-window.onload = () => {
-  if (authToken && currentUser) enterDashboard();
-  else document.getElementById('guestContent').style.display = '';
+window.onload = async () => {
+  if (authToken && currentUser) {
+    enterDashboard();
+  } else if (refreshToken) {
+    // 액세스 토큰 없이 refresh token만 있을 때 자동 로그인 시도
+    const ok = await tryRefreshToken();
+    if (ok) enterDashboard();
+    else document.getElementById('guestContent').style.display = '';
+  } else {
+    document.getElementById('guestContent').style.display = '';
+  }
 };
 
 function enterDashboard() {
@@ -509,27 +657,49 @@ function enterDashboard() {
   document.getElementById('authOverlay').classList.add('hidden');
   document.getElementById('loginNavBtn').style.display = 'none';
   document.getElementById('logoutBtn').style.display = '';
+  document.getElementById('hamburgerBtn').style.display = '';   // CSS가 모바일에서만 flex로 보임
   document.getElementById('navUserName').textContent = currentUser.name + '님';
+  document.getElementById('mobileNavUser').textContent = currentUser.email;
   if (currentUser.is_admin) document.getElementById('adminLink').style.display = '';
   document.getElementById('welcomeName').textContent = `안녕하세요, ${currentUser.name}님!`;
-  const cnt = document.getElementById('welcomeSub');
-  cnt.textContent = '업로드한 보험증권을 기반으로 AI가 보상 여부를 분석합니다.';
+  document.getElementById('welcomeSub').textContent = '업로드한 보험증권을 기반으로 AI가 보상 여부를 분석합니다.';
   loadProductOptions();
   loadPublicPolicies();
 }
 
 // ── 주 탭 전환 ─────────────────────────────────────────
+const _tabLabels = { analyze:'🔍 보상 분석', mydata:'🔗 마이데이터', policies:'📄 내 보험증권', history:'📋 분석 히스토리', account:'⚙️ 계정 설정' };
+
 function switchMainTab(name) {
   ['analyze','mydata','policies','history','account'].forEach(t => {
     document.getElementById('tab' + cap(t)).classList.toggle('active', t === name);
     document.getElementById('mt'  + cap(t)).classList.toggle('active', t === name);
+    const mob = document.getElementById('mob' + cap(t));
+    if (mob) mob.classList.toggle('active', t === name);
   });
+  const lbl = document.getElementById('currentTabLabel');
+  if (lbl) lbl.textContent = _tabLabels[name] || '';
+  closeMobileNav();
   if (name === 'policies') loadPolicies();
   if (name === 'history')  loadHistory();
   if (name === 'account')  loadAccountInfo();
   if (name === 'mydata')   loadMydataPolicies();
 }
 function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+// ── 모바일 햄버거 메뉴 ──────────────────────────────────
+function toggleMobileNav() {
+  const nav = document.getElementById('mobileNav');
+  const isOpen = nav.classList.contains('open');
+  nav.classList.toggle('open', !isOpen);
+  document.getElementById('mobileNavOverlay').classList.toggle('open', !isOpen);
+  document.getElementById('hamburgerBtn').classList.toggle('open', !isOpen);
+}
+function closeMobileNav() {
+  document.getElementById('mobileNav').classList.remove('open');
+  document.getElementById('mobileNavOverlay').classList.remove('open');
+  document.getElementById('hamburgerBtn').classList.remove('open');
+}
 
 // ── AUTH 모달 ─────────────────────────────────────────
 function showAuth() { document.getElementById('authOverlay').classList.remove('hidden'); }
@@ -550,8 +720,10 @@ async function doLogin() {
   const btn = document.getElementById('loginBtn');
   btn.disabled = true; btn.textContent = '로그인 중...';
   try {
+    const remember = document.getElementById('rememberMe').checked;
     const form = new FormData(); form.append('username', email); form.append('password', pw);
-    const res  = await fetch(`${API}/auth/login`, { method: 'POST', body: form });
+    const url  = `${API}/auth/login?remember_me=${remember}`;
+    const res  = await fetch(url, { method: 'POST', body: form });
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || '로그인 실패');
     saveAuth(data); enterDashboard(); toast('로그인 되었습니다.', 'success');
@@ -572,18 +744,75 @@ async function doRegister() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || '회원가입 실패');
     saveAuth(data); enterDashboard(); toast(`${data.user.name}님, 환영합니다!`, 'success');
+    showOnboarding();
   } catch(e) { errEl.textContent = e.message; }
   finally { btn.disabled = false; btn.textContent = '회원가입'; }
 }
 
 function saveAuth(data) {
-  authToken = data.access_token; currentUser = data.user;
+  authToken = data.access_token;
+  currentUser = data.user;
   localStorage.setItem('insurrx_token', authToken);
   localStorage.setItem('insurrx_user', JSON.stringify(currentUser));
+  if (data.refresh_token) {
+    refreshToken = data.refresh_token;
+    localStorage.setItem('insurrx_refresh_token', refreshToken);
+  }
 }
-function logout() {
-  authToken = null; currentUser = null;
-  localStorage.removeItem('insurrx_token'); localStorage.removeItem('insurrx_user');
+
+async function tryRefreshToken() {
+  const rt = localStorage.getItem('insurrx_refresh_token');
+  if (!rt) return false;
+  try {
+    const res  = await fetch(`${API}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: rt }),
+    });
+    if (!res.ok) {
+      localStorage.removeItem('insurrx_refresh_token');
+      return false;
+    }
+    const data = await res.json();
+    saveAuth(data);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function apiFetch(url, options = {}) {
+  options.headers = options.headers || {};
+  if (authToken) options.headers['Authorization'] = `Bearer ${authToken}`;
+  let res = await fetch(url, options);
+  if (res.status === 401) {
+    const ok = await tryRefreshToken();
+    if (ok) {
+      options.headers['Authorization'] = `Bearer ${authToken}`;
+      res = await fetch(url, options);
+    } else {
+      logout();
+      throw new Error('세션이 만료되었습니다. 다시 로그인해주세요.');
+    }
+  }
+  return res;
+}
+
+async function logout() {
+  const rt = localStorage.getItem('insurrx_refresh_token');
+  if (rt) {
+    try {
+      await fetch(`${API}/auth/logout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: rt }),
+      });
+    } catch { /* ignore */ }
+  }
+  authToken = null; currentUser = null; refreshToken = null;
+  localStorage.removeItem('insurrx_token');
+  localStorage.removeItem('insurrx_user');
+  localStorage.removeItem('insurrx_refresh_token');
   location.reload();
 }
 
@@ -770,10 +999,7 @@ async function loadPublicPolicies() {
 async function loadHistory() {
   document.getElementById('historyBody').innerHTML = `<tr class="empty-row"><td colspan="7">로딩 중...</td></tr>`;
   try {
-    const res = await fetch(`${API}/my/analyses/`, {
-      headers: { Authorization: `Bearer ${authToken}` },
-    });
-    if (res.status === 401) { logout(); return; }
+    const res  = await apiFetch(`${API}/my/analyses/`);
     const list = await res.json();
     renderHistory(list);
   } catch {
@@ -814,10 +1040,7 @@ function renderHistory(list) {
 async function deleteHistory(sessionId) {
   if (!confirm('이 분석 기록을 삭제할까요?')) return;
   try {
-    const res = await fetch(`${API}/my/analyses/${sessionId}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${authToken}` },
-    });
+    const res = await apiFetch(`${API}/my/analyses/${sessionId}`, { method: 'DELETE' });
     if (!res.ok && res.status !== 204) throw new Error('삭제 실패');
     toast('삭제 완료', 'success');
     await loadHistory();
@@ -829,18 +1052,22 @@ async function loadProductOptions() {
   try {
     const res = await fetch(`${API}/insurers/`);
     const insurers = await res.json();
-    const sel = document.getElementById('productSelect');
-    sel.innerHTML = '<option value="">보험 상품 선택 (선택사항)</option>';
-    insurers.forEach(ins => {
-      if (!ins.products?.length) return;
-      const grp = document.createElement('optgroup');
-      grp.label = ins.name;
-      ins.products.forEach(p => {
-        const opt = document.createElement('option');
-        opt.value = p.id; opt.textContent = `${p.name} (${p.product_code})`;
-        grp.appendChild(opt);
+    const targets = ['productSelect', 'onboardProductSelect'];
+    targets.forEach(selId => {
+      const sel = document.getElementById(selId);
+      if (!sel) return;
+      sel.innerHTML = '<option value="">보험 상품 선택 (선택사항)</option>';
+      insurers.forEach(ins => {
+        if (!ins.products?.length) return;
+        const grp = document.createElement('optgroup');
+        grp.label = ins.name;
+        ins.products.forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p.id; opt.textContent = `${p.name} (${p.product_code})`;
+          grp.appendChild(opt);
+        });
+        sel.appendChild(grp);
       });
-      sel.appendChild(grp);
     });
   } catch {}
 }
@@ -857,7 +1084,7 @@ async function uploadPolicy() {
   btn.disabled = true;
   showProg(30, '파일 업로드 중...');
   try {
-    const res  = await fetch(`${API}/my/policies/upload`, { method:'POST', headers:{ Authorization:`Bearer ${authToken}` }, body: form });
+    const res  = await apiFetch(`${API}/my/policies/upload`, { method:'POST', body: form });
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || '업로드 실패');
     showProg(80, '임베딩 처리 중 (백그라운드)...');
@@ -880,8 +1107,7 @@ function hideProg() { document.getElementById('uploadProgress').style.display = 
 
 async function loadPolicies() {
   try {
-    const res = await fetch(`${API}/my/policies/`, { headers:{ Authorization:`Bearer ${authToken}` } });
-    if (res.status === 401) { logout(); return; }
+    const res = await apiFetch(`${API}/my/policies/`);
     renderPolicies(await res.json());
   } catch { document.getElementById('policiesBody').innerHTML = `<tr class="empty-row"><td colspan="6">불러오기 실패</td></tr>`; }
 }
@@ -911,7 +1137,7 @@ function statusBadge(s) {
 async function deletePolicy(id, name) {
   if (!confirm(`"${name}" 을(를) 삭제합니다. 벡터 DB에서도 제거됩니다.`)) return;
   try {
-    const res = await fetch(`${API}/my/policies/${id}`, { method:'DELETE', headers:{ Authorization:`Bearer ${authToken}` } });
+    const res = await apiFetch(`${API}/my/policies/${id}`, { method:'DELETE' });
     if (!res.ok && res.status !== 204) throw new Error('삭제 실패');
     toast(`"${name}" 삭제 완료`, 'success'); await loadPolicies();
   } catch(e) { toast(e.message, 'error'); }
@@ -1017,22 +1243,93 @@ async function disconnectAll() {
   } catch(e) { toast(e.message, 'error'); }
 }
 
+// ══ 온보딩 ════════════════════════════════════════════════
+function showOnboarding() {
+  document.getElementById('onboardingOverlay').classList.remove('hidden');
+  // 진행 상태 초기화
+  document.getElementById('onboardProgress').style.display = 'none';
+  document.getElementById('onboardProgressBar').style.width = '0%';
+  document.getElementById('onboardPolicyFile').value = '';
+}
+
+function skipOnboarding() {
+  document.getElementById('onboardingOverlay').classList.add('hidden');
+  switchMainTab('policies');  // 증권 탭으로 이동하여 나중에 추가 유도
+}
+
+async function uploadOnboardPolicy() {
+  const file = document.getElementById('onboardPolicyFile').files[0];
+  if (!file) { toast('파일을 선택해 주세요.', 'error'); return; }
+  const productId = document.getElementById('onboardProductSelect').value;
+  const form = new FormData();
+  form.append('file', file);
+  if (productId) form.append('product_id', productId);
+  const btn = document.getElementById('onboardUploadBtn');
+  btn.disabled = true; btn.textContent = '업로드 중...';
+  const progEl  = document.getElementById('onboardProgress');
+  const progBar = document.getElementById('onboardProgressBar');
+  const progTxt = document.getElementById('onboardProgressText');
+  progEl.style.display = ''; progBar.style.width = '30%'; progTxt.textContent = '파일 업로드 중...';
+  try {
+    const res  = await apiFetch(`${API}/my/policies/upload`, { method:'POST', body: form });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || '업로드 실패');
+    progBar.style.width = '100%'; progTxt.textContent = '등록 완료! 분석 화면으로 이동합니다.';
+    toast(`"${data.original_name}" 등록 완료!`, 'success');
+    setTimeout(() => {
+      document.getElementById('onboardingOverlay').classList.add('hidden');
+      switchMainTab('analyze');
+    }, 1200);
+  } catch(e) {
+    progEl.style.display = 'none';
+    toast(e.message, 'error');
+  } finally { btn.disabled = false; btn.textContent = '보험증권 등록하기'; }
+}
+
 // ══ 계정 설정 탭 ══════════════════════════════════════════
 function loadAccountInfo() {
   if (!currentUser) return;
-  document.getElementById('accName').value    = currentUser.name;
+  document.getElementById('accName').value          = currentUser.name;
   document.getElementById('accEmail').textContent   = currentUser.email;
   document.getElementById('accRole').textContent    = currentUser.is_admin ? '👑 관리자' : '일반 회원';
   document.getElementById('accCreated').textContent = fmtDate(currentUser.created_at);
+  loadLoginHistory();
+}
+
+async function loadLoginHistory() {
+  const el = document.getElementById('loginHistoryList');
+  try {
+    const res  = await apiFetch(`${API}/auth/login-history`);
+    const list = await res.json();
+    if (!list.length) { el.innerHTML = '<div style="color:var(--gray-400);text-align:center;padding:1rem">로그인 이력이 없습니다.</div>'; return; }
+    el.innerHTML = list.map(h => {
+      const ok     = h.status === 'success';
+      const badge  = ok
+        ? '<span style="background:#dcfce7;color:#16a34a;padding:2px 8px;border-radius:99px;font-weight:600">성공</span>'
+        : '<span style="background:#fee2e2;color:#dc2626;padding:2px 8px;border-radius:99px;font-weight:600">실패</span>';
+      const device = h.device_type || 'Unknown';
+      const ip     = h.ip_address  || '-';
+      const dt     = new Date(h.created_at).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid var(--gray-100)">
+        <div>
+          <div style="font-weight:500">${dt}</div>
+          <div style="color:var(--gray-400);margin-top:2px">${device} · IP: ${ip}</div>
+        </div>
+        <div>${badge}</div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = `<div style="color:var(--red);text-align:center;padding:1rem">${e.message}</div>`;
+  }
 }
 
 async function saveProfile() {
   const name = v('accName');
   if (!name) { setMsg('profileMsg', '이름을 입력하세요.', false); return; }
   try {
-    const res  = await fetch(`${API}/auth/me`, {
+    const res  = await apiFetch(`${API}/auth/me`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name }),
     });
     const data = await res.json();
@@ -1053,9 +1350,9 @@ async function doChangePassword() {
   if (nw.length < 6)     { setMsg('pwMsg', '새 비밀번호는 6자 이상이어야 합니다.', false); return; }
   if (nw !== nw2)        { setMsg('pwMsg', '새 비밀번호가 일치하지 않습니다.', false); return; }
   try {
-    const res  = await fetch(`${API}/auth/me/change-password`, {
+    const res  = await apiFetch(`${API}/auth/me/change-password`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ current_password: cur, new_password: nw }),
     });
     const data = await res.json();
@@ -1082,7 +1379,7 @@ function startPollIfNeeded(policies) {
   if (pending.length === 0) { clearInterval(_pollTimer); _pollTimer = null; return; }
   if (_pollTimer) return;   // 이미 폴링 중
   _pollTimer = setInterval(async () => {
-    const res  = await fetch(`${API}/my/policies/`, { headers: { Authorization: `Bearer ${authToken}` } });
+    const res  = await apiFetch(`${API}/my/policies/`);
     if (!res.ok) { clearInterval(_pollTimer); _pollTimer = null; return; }
     const list = await res.json();
     renderPolicies(list);
