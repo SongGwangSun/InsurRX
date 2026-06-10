@@ -154,6 +154,7 @@
     .del-btn { background:none;border:none;cursor:pointer;color:var(--gray-300);font-size:1.1rem;padding:4px 6px;border-radius:6px;transition:color .2s,background .2s; }
     .del-btn:hover { color:var(--red);background:#FEE2E2; }
     .empty-row td { text-align:center;color:var(--gray-300);padding:2.5rem;font-size:.875rem; }
+    .history-year-divider td { background:var(--gray-50);color:var(--gray-400);font-size:.78rem;font-weight:700;letter-spacing:.08em;padding:6px 14px;border-top:1px solid var(--gray-100); }
 
     /* SPINNER */
     .spinner { display:inline-block;width:20px;height:20px;border:2.5px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px; }
@@ -405,6 +406,36 @@
         <h4>OCR 추출 결과 — 분석에 사용할 정보입니다</h4>
         <div class="ocr-fields" id="ocrFields"></div>
       </div>
+
+      <!-- OCR 인식 불충분 시 직접 입력 -->
+      <div id="ocrManualInput" style="display:none;margin-bottom:1rem">
+        <div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:10px;padding:.85rem 1rem;margin-bottom:.85rem;font-size:.83rem;color:#92400E">
+          ⚠️ 주요 정보(진단명·상병코드)가 인식되지 않았습니다.<br>아래에 직접 입력하면 더 정확한 분석이 가능합니다.
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem">
+          <div>
+            <label style="font-size:.75rem;font-weight:600;color:var(--gray-600);display:block;margin-bottom:3px">진단명 / 상병명 <span style="color:var(--red)">*</span></label>
+            <input id="manualDiagnosis" type="text" placeholder="예: 급성 상기도 감염" oninput="onManualInput()"
+              style="width:100%;padding:.45rem .7rem;border:1px solid var(--gray-300);border-radius:7px;font-size:.85rem">
+          </div>
+          <div>
+            <label style="font-size:.75rem;font-weight:600;color:var(--gray-600);display:block;margin-bottom:3px">상병코드 (ICD)</label>
+            <input id="manualIcd" type="text" placeholder="예: J06.9" oninput="onManualInput()"
+              style="width:100%;padding:.45rem .7rem;border:1px solid var(--gray-300);border-radius:7px;font-size:.85rem">
+          </div>
+          <div>
+            <label style="font-size:.75rem;font-weight:600;color:var(--gray-600);display:block;margin-bottom:3px">총 진료비 (원)</label>
+            <input id="manualAmount" type="number" placeholder="예: 15000" oninput="onManualInput()"
+              style="width:100%;padding:.45rem .7rem;border:1px solid var(--gray-300);border-radius:7px;font-size:.85rem">
+          </div>
+          <div>
+            <label style="font-size:.75rem;font-weight:600;color:var(--gray-600);display:block;margin-bottom:3px">병원명</label>
+            <input id="manualHospital" type="text" placeholder="예: 연세이비인후과의원" oninput="onManualInput()"
+              style="width:100%;padding:.45rem .7rem;border:1px solid var(--gray-300);border-radius:7px;font-size:.85rem">
+          </div>
+        </div>
+      </div>
+
       <button class="btn-full" style="max-width:300px" onclick="runAnalysis()" id="runAnalysisBtn">
         AI 보상 분석 시작
       </button>
@@ -884,6 +915,44 @@ function renderOcrResult(parsed) {
       <div class="value ${f.value ? '' : 'empty'}">${f.value || '인식 불가'}</div>
     </div>
   `).join('');
+
+  const keyMissing = !parsed.diagnosis && !parsed.icd_code;
+  const manualDiv  = document.getElementById('ocrManualInput');
+  const btn        = document.getElementById('runAnalysisBtn');
+  if (keyMissing) {
+    manualDiv.style.display = '';
+    btn.disabled = true;
+    btn.style.opacity = '.45';
+    btn.textContent = '진단명을 입력해야 분석 가능합니다';
+  } else {
+    manualDiv.style.display = 'none';
+    btn.disabled = false;
+    btn.style.opacity = '';
+    btn.textContent = 'AI 보상 분석 시작';
+  }
+}
+
+function onManualInput() {
+  const diagnosis = document.getElementById('manualDiagnosis').value.trim();
+  const icd       = document.getElementById('manualIcd').value.trim();
+  const amount    = document.getElementById('manualAmount').value.trim();
+  const hospital  = document.getElementById('manualHospital').value.trim();
+  const btn = document.getElementById('runAnalysisBtn');
+  if (diagnosis) {
+    if (_parsedDoc) {
+      _parsedDoc.diagnosis     = diagnosis || _parsedDoc.diagnosis;
+      _parsedDoc.icd_code      = icd       || _parsedDoc.icd_code;
+      _parsedDoc.hospital      = hospital  || _parsedDoc.hospital;
+      _parsedDoc.total_amount  = amount ? parseInt(amount, 10) : _parsedDoc.total_amount;
+    }
+    btn.disabled = false;
+    btn.style.opacity = '';
+    btn.textContent = 'AI 보상 분석 시작';
+  } else {
+    btn.disabled = true;
+    btn.style.opacity = '.45';
+    btn.textContent = '진단명을 입력해야 분석 가능합니다';
+  }
 }
 
 async function runAnalysis() {
@@ -970,6 +1039,12 @@ function resetAnalyze() {
   document.getElementById('analysisLoading').style.display = 'none';
   document.getElementById('analysisResult').style.display = 'none';
   document.getElementById('analyzeFileInput').value = '';
+  document.getElementById('ocrManualInput').style.display = 'none';
+  ['manualDiagnosis','manualIcd','manualAmount','manualHospital'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  const btn = document.getElementById('runAnalysisBtn');
+  btn.disabled = false; btn.style.opacity = ''; btn.textContent = 'AI 보상 분석 시작';
 }
 
 // ══ 공개 약관 선택 로드 ════════════════════════════════════
@@ -1014,10 +1089,20 @@ function renderHistory(list) {
     tb.innerHTML = `<tr class="empty-row"><td colspan="7">분석 기록이 없습니다. 보상 분석 탭에서 시작해 보세요.</td></tr>`;
     return;
   }
-  tb.innerHTML = list.map((h, i) => `
+  let html = '';
+  let lastYear = null;
+  let seq = 0;
+  list.forEach(h => {
+    const year = h.created_at ? new Date(h.created_at).getFullYear() : null;
+    if (year && year !== lastYear) {
+      html += `<tr class="history-year-divider"><td colspan="7">${year}년</td></tr>`;
+      lastYear = year;
+    }
+    seq++;
+    html += `
     <tr>
-      <td style="color:var(--gray-500)">${i+1}</td>
-      <td style="font-size:.82rem;color:var(--gray-500)">${fmtDate(h.created_at)}</td>
+      <td style="color:var(--gray-500)">${seq}</td>
+      <td style="font-size:.82rem;color:var(--gray-500)">${fmtMonthDay(h.created_at)}</td>
       <td>
         <span class="badge ${h.is_claimable ? 'badge-ready' : 'badge-failed'}">
           ${h.is_claimable ? '✔ 청구 가능' : '✘ 어려움'}
@@ -1033,8 +1118,9 @@ function renderHistory(list) {
       <td>
         <button class="del-btn" onclick="deleteHistory('${h.session_id}')" title="삭제">🗑</button>
       </td>
-    </tr>
-  `).join('');
+    </tr>`;
+  });
+  tb.innerHTML = html;
 }
 
 async function deleteHistory(sessionId) {
@@ -1394,6 +1480,7 @@ function startPollIfNeeded(policies) {
 // ── 유틸 ──────────────────────────────────────────────────
 function v(id) { return document.getElementById(id).value.trim(); }
 function fmtDate(iso) { if (!iso) return '-'; const d = new Date(iso); return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`; }
+function fmtMonthDay(iso) { if (!iso) return '-'; const d = new Date(iso); return `${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`; }
 function esc(s) { return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function toast(msg, type='info') { const w=document.getElementById('toastWrap'),el=document.createElement('div');el.className=`toast toast-${type}`;el.textContent=msg;w.appendChild(el);setTimeout(()=>el.remove(),3500); }
 </script>
