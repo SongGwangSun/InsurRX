@@ -155,6 +155,15 @@
     .del-btn:hover { color:var(--red);background:#FEE2E2; }
     .empty-row td { text-align:center;color:var(--gray-300);padding:2.5rem;font-size:.875rem; }
     .history-year-divider td { background:var(--gray-50);color:var(--gray-400);font-size:.78rem;font-weight:700;letter-spacing:.08em;padding:6px 14px;border-top:1px solid var(--gray-100); }
+    .history-row { cursor:pointer;transition:background .15s; }
+    .history-row:hover { background:#F8FAFC; }
+    .history-row:active { background:#EFF6FF; }
+    .hist-detail-row { display:flex;justify-content:space-between;align-items:flex-start;padding:.55rem 0;border-bottom:1px solid var(--gray-100); }
+    .hist-detail-row:last-child { border-bottom:none; }
+    .hist-detail-label { font-size:.78rem;color:var(--gray-500);font-weight:600;min-width:80px; }
+    .hist-detail-value { font-size:.88rem;font-weight:700;color:var(--gray-900);text-align:right;flex:1; }
+    .hist-result-icon { font-size:2rem;text-align:center;margin-bottom:.5rem; }
+    .hist-summary-box { background:var(--gray-50);border-radius:8px;padding:.75rem 1rem;font-size:.83rem;color:var(--gray-700);line-height:1.65;margin:1rem 0; }
 
     /* SPINNER */
     .spinner { display:inline-block;width:20px;height:20px;border:2.5px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px; }
@@ -333,6 +342,20 @@
       <div class="form-group"><label>비밀번호 확인</label><input type="password" id="regPw2" placeholder="비밀번호 재입력" onkeydown="if(event.key==='Enter')doRegister()" /></div>
       <button class="btn-full" onclick="doRegister()" id="registerBtn">회원가입</button>
       <div class="error-msg" id="registerErr"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 히스토리 상세 모달 -->
+<div class="overlay hidden" id="histDetailOverlay" onclick="closeHistDetail(event)">
+  <div class="modal" style="max-width:400px;padding:2rem 1.75rem" onclick="event.stopPropagation()">
+    <div class="hist-result-icon" id="hdIcon"></div>
+    <div id="hdRows"></div>
+    <div class="hist-summary-box" id="hdSummary" style="display:none"></div>
+    <div style="display:flex;gap:.6rem;margin-top:1.2rem">
+      <button class="btn-sm btn-outline" style="flex:1" onclick="closeHistDetail()">닫기</button>
+      <button class="del-btn" style="padding:6px 14px;border:1px solid #FEE2E2;border-radius:8px;color:var(--red);font-size:.83rem;font-weight:600"
+        id="hdDelBtn">삭제</button>
     </div>
   </div>
 </div>
@@ -578,10 +601,10 @@
       <table>
         <thead>
           <tr>
-            <th>#</th><th>분석일</th><th>결과</th><th>예상 지급액</th><th>신뢰도</th><th>요약</th><th></th>
+            <th>#</th><th>분석일</th><th>결과</th><th>예상 지급액</th><th>신뢰도</th><th></th>
           </tr>
         </thead>
-        <tbody id="historyBody"><tr class="empty-row"><td colspan="7">로딩 중...</td></tr></tbody>
+        <tbody id="historyBody"><tr class="empty-row"><td colspan="6">로딩 중...</td></tr></tbody>
       </table>
     </div>
 
@@ -1071,22 +1094,24 @@ async function loadPublicPolicies() {
 }
 
 // ══ 분석 히스토리 ════════════════════════════════════════
+let _historyList = [];
+
 async function loadHistory() {
-  document.getElementById('historyBody').innerHTML = `<tr class="empty-row"><td colspan="7">로딩 중...</td></tr>`;
+  document.getElementById('historyBody').innerHTML = `<tr class="empty-row"><td colspan="6">로딩 중...</td></tr>`;
   try {
     const res  = await apiFetch(`${API}/my/analyses/`);
-    const list = await res.json();
-    renderHistory(list);
+    _historyList = await res.json();
+    renderHistory(_historyList);
   } catch {
     document.getElementById('historyBody').innerHTML =
-      `<tr class="empty-row"><td colspan="7">불러오기 실패</td></tr>`;
+      `<tr class="empty-row"><td colspan="6">불러오기 실패</td></tr>`;
   }
 }
 
 function renderHistory(list) {
   const tb = document.getElementById('historyBody');
   if (!list.length) {
-    tb.innerHTML = `<tr class="empty-row"><td colspan="7">분석 기록이 없습니다. 보상 분석 탭에서 시작해 보세요.</td></tr>`;
+    tb.innerHTML = `<tr class="empty-row"><td colspan="6">분석 기록이 없습니다. 보상 분석 탭에서 시작해 보세요.</td></tr>`;
     return;
   }
   let html = '';
@@ -1095,32 +1120,67 @@ function renderHistory(list) {
   list.forEach(h => {
     const year = h.created_at ? new Date(h.created_at).getFullYear() : null;
     if (year && year !== lastYear) {
-      html += `<tr class="history-year-divider"><td colspan="7">${year}년</td></tr>`;
+      html += `<tr class="history-year-divider"><td colspan="6">${year}년</td></tr>`;
       lastYear = year;
     }
     seq++;
+    const icon = h.is_claimable ? '✅' : '❌';
     html += `
-    <tr>
+    <tr class="history-row" onclick="showHistDetail('${h.session_id}')">
       <td style="color:var(--gray-500)">${seq}</td>
       <td style="font-size:.82rem;color:var(--gray-500)">${fmtMonthDay(h.created_at)}</td>
-      <td>
-        <span class="badge ${h.is_claimable ? 'badge-ready' : 'badge-failed'}">
-          ${h.is_claimable ? '✔ 청구 가능' : '✘ 어려움'}
-        </span>
-      </td>
+      <td style="font-size:1.2rem;text-align:center">${icon}</td>
       <td style="font-weight:700;color:var(--teal)">
         ${h.is_claimable ? '₩' + h.estimated_payout.toLocaleString() : '-'}
       </td>
       <td style="font-size:.82rem">${Math.round((h.confidence||0)*100)}%</td>
-      <td style="font-size:.8rem;color:var(--gray-500);max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-        ${esc(h.llm_summary)}
-      </td>
       <td>
-        <button class="del-btn" onclick="deleteHistory('${h.session_id}')" title="삭제">🗑</button>
+        <button class="del-btn" onclick="event.stopPropagation();deleteHistory('${h.session_id}')" title="삭제">🗑</button>
       </td>
     </tr>`;
   });
   tb.innerHTML = html;
+}
+
+function showHistDetail(sessionId) {
+  const h = _historyList.find(x => x.session_id === sessionId);
+  if (!h) return;
+  const icon = h.is_claimable ? '✅' : '❌';
+  document.getElementById('hdIcon').textContent = icon;
+  document.getElementById('hdRows').innerHTML = `
+    <div class="hist-detail-row">
+      <span class="hist-detail-label">분석일</span>
+      <span class="hist-detail-value">${fmtDate(h.created_at)}</span>
+    </div>
+    <div class="hist-detail-row">
+      <span class="hist-detail-label">결과</span>
+      <span class="hist-detail-value" style="color:${h.is_claimable ? 'var(--teal)' : 'var(--red)'}">
+        ${h.is_claimable ? '청구 가능' : '청구 어려움'}
+      </span>
+    </div>
+    <div class="hist-detail-row">
+      <span class="hist-detail-label">예상 지급액</span>
+      <span class="hist-detail-value">${h.is_claimable ? '₩' + h.estimated_payout.toLocaleString() : '-'}</span>
+    </div>
+    <div class="hist-detail-row">
+      <span class="hist-detail-label">신뢰도</span>
+      <span class="hist-detail-value">${Math.round((h.confidence||0)*100)}%</span>
+    </div>
+  `;
+  const summaryBox = document.getElementById('hdSummary');
+  if (h.llm_summary) {
+    summaryBox.textContent = h.llm_summary;
+    summaryBox.style.display = '';
+  } else {
+    summaryBox.style.display = 'none';
+  }
+  document.getElementById('hdDelBtn').onclick = () => { closeHistDetail(); deleteHistory(sessionId); };
+  document.getElementById('histDetailOverlay').classList.remove('hidden');
+}
+
+function closeHistDetail(e) {
+  if (e && e.target !== document.getElementById('histDetailOverlay')) return;
+  document.getElementById('histDetailOverlay').classList.add('hidden');
 }
 
 async function deleteHistory(sessionId) {
