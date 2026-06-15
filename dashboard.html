@@ -457,7 +457,7 @@
       <!-- OCR 인식 불충분 시 직접 입력 -->
       <div id="ocrManualInput" style="display:none;margin-bottom:1rem">
         <div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:10px;padding:.85rem 1rem;margin-bottom:.85rem;font-size:.83rem;color:#92400E">
-          ⚠️ 주요 정보(진단명·상병코드)가 인식되지 않았습니다.<br>아래에 직접 입력하면 더 정확한 분석이 가능합니다.
+          ⚠️ 주요 정보(진단명·상병코드)가 인식되지 않았습니다.<br>아래에 직접 입력하거나, <b>📷 다른 사진 선택</b>으로 더 선명한 사진을 올려 다시 시도하세요.
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem">
           <div>
@@ -483,9 +483,15 @@
         </div>
       </div>
 
-      <button class="btn-full" style="max-width:300px" onclick="runAnalysis()" id="runAnalysisBtn">
-        AI 보상 분석 시작
-      </button>
+      <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center">
+        <button class="btn-full" style="max-width:300px;margin:0" onclick="runAnalysis()" id="runAnalysisBtn">
+          AI 보상 분석 시작
+        </button>
+        <button onclick="reselectPhoto()" id="reselectBtn"
+          style="padding:10px 18px;border-radius:9px;font-size:.875rem;font-weight:600;border:1.5px solid var(--gray-300);background:var(--white);color:var(--gray-700);cursor:pointer;white-space:nowrap">
+          📷 다른 사진 선택
+        </button>
+      </div>
     </div>
 
     <!-- Step 4: 분석 중 -->
@@ -1150,6 +1156,12 @@ function renderAnalysisResult(data) {
       ${items.length ? `<div class="coverage-list"><h4>약관 조항별 검토</h4>${itemsHtml}</div>` : ''}
     </div>
   `;
+}
+
+// OCR 결과가 불충분할 때: 수기 입력 대신 다른 사진을 다시 선택
+function reselectPhoto() {
+  resetAnalyze();
+  document.getElementById('analyzeFileInput').click();
 }
 
 function resetAnalyze() {
