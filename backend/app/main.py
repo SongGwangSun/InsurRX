@@ -15,6 +15,7 @@ import app.models.kakao_session     # noqa: F401
 import app.models.mydata_policy     # noqa: F401
 import app.models.refresh_token     # noqa: F401
 import app.models.login_history     # noqa: F401
+import app.models.password_reset_token  # noqa: F401
 from app.services import prompt_service
 
 _log = logging.getLogger(__name__)

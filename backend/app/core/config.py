@@ -30,6 +30,8 @@ class Settings(BaseSettings):
         "null",                    # file:// 로 열었을 때
         # 프로덕션 도메인
         "https://songgwangsun.github.io",
+        "https://song2nes.com",
+        "https://www.song2nes.com",
         "https://magnificent-celebration-production-2dd9.up.railway.app",
     ]
     IMAGE_RETENTION_SECONDS: int = 30
@@ -38,6 +40,12 @@ class Settings(BaseSettings):
     JWT_EXPIRE_MINUTES: int = 60              # 1시간 (액세스 토큰)
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30       # 로그인 유지 선택 시
     REFRESH_TOKEN_SHORT_DAYS: int = 1         # 로그인 유지 미선택 시
+
+    # 비밀번호 재설정 메일 (Resend)
+    RESEND_API_KEY: str = ""                                  # 비어 있으면 메일 미발송(개발 모드: 링크 로그 출력)
+    MAIL_FROM: str = "InsurRX <onboarding@resend.dev>"        # 도메인 인증 후 noreply@song2nes.com 으로 교체
+    FRONTEND_URL: str = "https://song2nes.com"               # 재설정 링크 베이스
+    RESET_TOKEN_EXPIRE_MINUTES: int = 30
 
     class Config:
         env_file = ".env"

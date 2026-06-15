@@ -48,6 +48,17 @@ class PasswordChange(BaseModel):
     new_password: str
 
 
+class ForgotPasswordRequest(BaseModel):
+    """재설정 메일 발송 요청 (1단계)."""
+    email: EmailStr
+
+
+class PasswordResetConfirm(BaseModel):
+    """메일 링크 토큰으로 새 비밀번호 설정 (2단계)."""
+    token: str
+    new_password: str
+
+
 class LoginHistoryResponse(BaseModel):
     id: int
     ip_address: Optional[str]

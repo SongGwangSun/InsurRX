@@ -103,6 +103,63 @@ async def revoke_refresh_token(raw_token: str, db: AsyncSession) -> bool:
     return False
 
 
+async def revoke_all_refresh_tokens(user_id: int, db: AsyncSession) -> None:
+    from app.models.refresh_token import RefreshToken
+
+    result = await db.execute(
+        select(RefreshToken).where(
+            RefreshToken.user_id == user_id,
+            RefreshToken.is_revoked == False,
+        )
+    )
+    for rt in result.scalars().all():
+        rt.is_revoked = True
+    await db.commit()
+
+
+# ── 비밀번호 재설정 토큰 ──────────────────────────────────────────────────────
+
+async def issue_password_reset_token(user_id: int, db: AsyncSession) -> str:
+    """1회용 재설정 토큰 발급. 원문 반환(메일 링크용), DB엔 해시만 저장."""
+    from app.models.password_reset_token import PasswordResetToken
+
+    raw = secrets.token_urlsafe(32)
+    prt = PasswordResetToken(
+        user_id=user_id,
+        token_hash=_hash_token(raw),
+        expires_at=datetime.now(timezone.utc) + timedelta(minutes=settings.RESET_TOKEN_EXPIRE_MINUTES),
+    )
+    db.add(prt)
+    await db.commit()
+    return raw
+
+
+async def consume_password_reset_token(raw_token: str, db: AsyncSession):
+    """검증 후 사용 처리하고 대상 User 반환. 유효하지 않으면 None."""
+    from app.models.password_reset_token import PasswordResetToken
+    from app.models.user import User
+
+    result = await db.execute(
+        select(PasswordResetToken).where(
+            PasswordResetToken.token_hash == _hash_token(raw_token),
+            PasswordResetToken.is_used == False,
+            PasswordResetToken.expires_at > datetime.now(timezone.utc),
+        )
+    )
+    prt = result.scalar_one_or_none()
+    if not prt:
+        return None
+
+    user_result = await db.execute(select(User).where(User.id == prt.user_id))
+    user = user_result.scalar_one_or_none()
+    if not user or not user.is_active:
+        return None
+
+    prt.is_used = True
+    await db.commit()
+    return user
+
+
 # ── User Agent 파싱 ──────────────────────────────────────────────────────────
 
 def detect_device(user_agent: Optional[str]) -> str:

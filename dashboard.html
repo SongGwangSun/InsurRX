@@ -334,6 +334,30 @@
       </label>
       <button class="btn-full" onclick="doLogin()" id="loginBtn">로그인</button>
       <div class="error-msg" id="loginErr"></div>
+      <div style="text-align:center;margin-top:.85rem">
+        <a href="javascript:void(0)" onclick="showReset()" style="font-size:.82rem;color:var(--gray-500);text-decoration:underline">비밀번호를 잊으셨나요?</a>
+      </div>
+    </div>
+    <!-- 1단계: 재설정 메일 요청 -->
+    <div id="resetForm" style="display:none">
+      <p class="sub" style="margin-bottom:1rem">가입하신 <b>이메일</b>로 비밀번호 재설정 링크를 보내드립니다.</p>
+      <div class="form-group"><label>가입 이메일</label><input type="email" id="resetEmail" placeholder="example@email.com" onkeydown="if(event.key==='Enter')doForgotPassword()" /></div>
+      <button class="btn-full" onclick="doForgotPassword()" id="resetBtn">재설정 링크 받기</button>
+      <div class="error-msg" id="resetErr"></div>
+      <div id="resetSent" style="display:none;margin-top:.85rem;font-size:.85rem;color:var(--gray-600);background:var(--gray-50);padding:.75rem;border-radius:8px">
+        ✉️ 입력하신 이메일이 가입되어 있다면 재설정 링크를 보냈습니다. 메일함을 확인해주세요. (스팸함도 확인)
+      </div>
+      <div style="text-align:center;margin-top:.85rem">
+        <a href="javascript:void(0)" onclick="switchTab('login')" style="font-size:.82rem;color:var(--gray-500);text-decoration:underline">로그인으로 돌아가기</a>
+      </div>
+    </div>
+    <!-- 2단계: 메일 링크(?reset_token=)로 진입 시 새 비밀번호 설정 -->
+    <div id="newPwForm" style="display:none">
+      <p class="sub" style="margin-bottom:1rem">새 비밀번호를 설정하세요.</p>
+      <div class="form-group"><label>새 비밀번호 (6자 이상)</label><input type="password" id="newPw" placeholder="새 비밀번호" /></div>
+      <div class="form-group"><label>새 비밀번호 확인</label><input type="password" id="newPw2" placeholder="새 비밀번호 재입력" onkeydown="if(event.key==='Enter')doSetNewPassword()" /></div>
+      <button class="btn-full" onclick="doSetNewPassword()" id="newPwBtn">비밀번호 변경</button>
+      <div class="error-msg" id="newPwErr"></div>
     </div>
     <div id="registerForm" style="display:none">
       <div class="form-group"><label>이름</label><input type="text" id="regName" placeholder="홍길동" /></div>
@@ -693,6 +717,12 @@ let _parsedDoc   = null;   // OCR 결과 임시 저장
 
 // ── 초기화 ────────────────────────────────────────────
 window.onload = async () => {
+  // 메일 재설정 링크(?reset_token=)로 진입한 경우: 새 비밀번호 설정 화면 우선 표시
+  if (new URLSearchParams(location.search).get('reset_token')) {
+    document.getElementById('guestContent').style.display = '';
+    showNewPassword();
+    return;
+  }
   if (authToken && currentUser) {
     enterDashboard();
   } else if (refreshToken) {
@@ -762,10 +792,79 @@ function switchTab(tab) {
   const isL = tab === 'login';
   document.getElementById('loginForm').style.display = isL ? '' : 'none';
   document.getElementById('registerForm').style.display = isL ? 'none' : '';
+  document.getElementById('resetForm').style.display = 'none';
+  document.getElementById('newPwForm').style.display = 'none';
+  document.getElementById('resetSent').style.display = 'none';
   document.getElementById('tabLogin').classList.toggle('active', isL);
   document.getElementById('tabRegister').classList.toggle('active', !isL);
   document.getElementById('loginErr').textContent = '';
   document.getElementById('registerErr').textContent = '';
+  document.getElementById('resetErr').textContent = '';
+}
+
+function showReset() {
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('registerForm').style.display = 'none';
+  document.getElementById('newPwForm').style.display = 'none';
+  document.getElementById('resetForm').style.display = '';
+  document.getElementById('resetSent').style.display = 'none';
+  document.getElementById('tabLogin').classList.remove('active');
+  document.getElementById('tabRegister').classList.remove('active');
+  document.getElementById('resetErr').textContent = '';
+}
+
+// 메일 링크(?reset_token=)로 진입했을 때 새 비밀번호 설정 화면 표시
+function showNewPassword() {
+  showAuth();
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('registerForm').style.display = 'none';
+  document.getElementById('resetForm').style.display = 'none';
+  document.getElementById('newPwForm').style.display = '';
+  document.getElementById('tabLogin').classList.remove('active');
+  document.getElementById('tabRegister').classList.remove('active');
+}
+
+async function doForgotPassword() {
+  const email = v('resetEmail');
+  const errEl = document.getElementById('resetErr');
+  if (!email) { errEl.textContent = '이메일을 입력하세요.'; return; }
+  const btn = document.getElementById('resetBtn');
+  btn.disabled = true; btn.textContent = '전송 중...';
+  try {
+    const res  = await fetch(`${API}/auth/forgot-password`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || '요청 실패');
+    document.getElementById('resetSent').style.display = '';
+    errEl.textContent = '';
+  } catch(e) { errEl.textContent = e.message; }
+  finally { btn.disabled = false; btn.textContent = '재설정 링크 받기'; }
+}
+
+async function doSetNewPassword() {
+  const pw = v('newPw'), pw2 = v('newPw2');
+  const errEl = document.getElementById('newPwErr');
+  const token = new URLSearchParams(location.search).get('reset_token');
+  if (!token) { errEl.textContent = '재설정 토큰이 없습니다. 메일의 링크로 다시 접속해주세요.'; return; }
+  if (pw.length < 6) { errEl.textContent = '비밀번호는 6자 이상이어야 합니다.'; return; }
+  if (pw !== pw2)    { errEl.textContent = '비밀번호가 일치하지 않습니다.'; return; }
+  const btn = document.getElementById('newPwBtn');
+  btn.disabled = true; btn.textContent = '변경 중...';
+  try {
+    const res  = await fetch(`${API}/auth/reset-password`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, new_password: pw }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || '재설정 실패');
+    // URL에서 토큰 제거 후 로그인 폼으로 전환
+    history.replaceState(null, '', location.pathname);
+    switchTab('login');
+    toast('비밀번호가 변경되었습니다. 새 비밀번호로 로그인하세요.', 'success');
+  } catch(e) { errEl.textContent = e.message; }
+  finally { btn.disabled = false; btn.textContent = '비밀번호 변경'; }
 }
 
 async function doLogin() {

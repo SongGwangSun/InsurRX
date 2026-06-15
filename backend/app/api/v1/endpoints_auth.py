@@ -4,17 +4,21 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
 from app.database import get_db
+from app.core.config import settings
 from app.models.user import User
 from app.models.login_history import LoginHistory
 from app.schemas.user import (
     UserCreate, UserResponse, Token, UserUpdate, PasswordChange,
+    ForgotPasswordRequest, PasswordResetConfirm,
     RefreshRequest, LogoutRequest, LoginHistoryResponse,
 )
 from app.core.security import (
     hash_password, verify_password, create_access_token,
     get_current_user, issue_refresh_token, rotate_refresh_token,
-    revoke_refresh_token, record_login,
+    revoke_refresh_token, revoke_all_refresh_tokens, record_login,
+    issue_password_reset_token, consume_password_reset_token,
 )
+from app.services.email import send_email, build_reset_email
 
 router = APIRouter()
 
@@ -125,6 +129,57 @@ async def change_password(
     current_user.password_hash = hash_password(body.new_password)
     await db.commit()
     return {"message": "비밀번호가 변경되었습니다."}
+
+
+@router.post("/forgot-password", status_code=200)
+async def forgot_password(body: ForgotPasswordRequest, db: AsyncSession = Depends(get_db)):
+    """재설정 메일 발송 (1단계).
+
+    계정 존재 여부를 노출하지 않도록, 가입된 이메일이든 아니든 항상 동일한 200을 반환한다.
+    가입된 활성 계정일 때만 실제로 토큰을 만들어 메일을 보낸다.
+    """
+    result = await db.execute(select(User).where(User.email == body.email))
+    user = result.scalar_one_or_none()
+
+    if user and user.is_active:
+        raw = await issue_password_reset_token(user.id, db)
+        reset_url = f"{settings.FRONTEND_URL}/dashboard.html?reset_token={raw}"
+        subject, html = build_reset_email(user.name, reset_url)
+        await send_email(user.email, subject, html)
+        if not settings.RESEND_API_KEY:
+            # 개발 모드: 메일을 못 보내므로 링크를 로그로 남겨 수동 확인 가능하게 한다.
+            import logging
+            logging.getLogger(__name__).info("[DEV] 비밀번호 재설정 링크: %s", reset_url)
+
+    return {"message": "입력하신 이메일이 가입되어 있다면 재설정 링크를 보냈습니다."}
+
+
+@router.post("/reset-password", status_code=200)
+async def reset_password(
+    body: PasswordResetConfirm,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """메일 링크 토큰으로 새 비밀번호 설정 (2단계).
+
+    성공 시 토큰을 소비하고, 보안을 위해 기존 Refresh Token을 모두 폐기한다.
+    """
+    if len(body.new_password) < 6:
+        raise HTTPException(status_code=400, detail="새 비밀번호는 6자 이상이어야 합니다.")
+
+    user = await consume_password_reset_token(body.token, db)
+    if not user:
+        raise HTTPException(status_code=400, detail="유효하지 않거나 만료된 링크입니다. 다시 요청해주세요.")
+
+    user.password_hash = hash_password(body.new_password)
+    await db.commit()
+    await revoke_all_refresh_tokens(user.id, db)
+
+    ip = _client_ip(request)
+    ua = request.headers.get("User-Agent")
+    await record_login(db, status="password_reset", user_id=user.id, email=user.email, ip_address=ip, user_agent=ua)
+
+    return {"message": "비밀번호가 재설정되었습니다. 새 비밀번호로 로그인해주세요."}
 
 
 @router.get("/login-history", response_model=List[LoginHistoryResponse])

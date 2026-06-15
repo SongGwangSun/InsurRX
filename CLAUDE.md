@@ -91,6 +91,15 @@ OCR + RAG로 **3초 이내** 실손/정액 보상 여부 및 예상 지급액 �
 - [x] Access Token 60분 / Refresh Token 30일(유지 체크) · 1일(미체크)
 - [x] 프론트엔드: "로그인 상태 유지" 체크박스, `apiFetch()` 401 자동 갱신, 계정 탭 이력 카드
 
+### 비밀번호 재설정 (메일 링크) ✅ (2026-06-15)
+- [x] `PasswordResetToken` 모델 — SHA-256 1회용 토큰, 만료(기본 30분), is_used
+- [x] `POST /api/v1/auth/forgot-password` — 이메일로 재설정 링크 발송. 계정 존재 노출 방지(항상 200)
+- [x] `POST /api/v1/auth/reset-password` — 토큰 검증 후 새 비밀번호 설정 + Refresh Token 전부 폐기
+- [x] Resend 메일 발송 (`app/services/email.py`, httpx). `RESEND_API_KEY` 미설정 시 dev 모드(링크 로그 출력)
+- [x] 프론트엔드: 로그인 모달 "비밀번호를 잊으셨나요?" → 이메일 입력 / 메일 링크(`?reset_token=`) 진입 시 새 비밀번호 설정
+- [x] CORS 허용 도메인에 `song2nes.com` 추가 (커스텀 도메인 이전 대응)
+- [ ] **외부 작업**: Resend 가입 → API 키 발급 → `song2nes.com` 도메인 인증(SPF/DKIM) → `MAIL_FROM`을 `noreply@song2nes.com`으로 교체, Railway env에 `RESEND_API_KEY` 등록
+
 ### UX 개선 ✅ (2026-06-09)
 - [x] **온보딩 플로우** — 회원가입 후 보험증권 등록 3단계 모달 (가입완료→증권등록→분석시작), 등록 완료 시 보상 분석 탭으로 자동 이동, "나중에" 시 내 보험증권 탭으로 이동
 - [x] **모바일 햄버거 메뉴** — 767px 이하에서 탭바 숨김, 좌측 상단 햄버거 버튼, 슬라이드 드로어, 오버레이 클릭 닫기
