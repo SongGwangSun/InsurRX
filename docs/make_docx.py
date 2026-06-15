@@ -229,7 +229,7 @@ add_table(doc,
         ('서비스명',     'InsurRX (인슈알엑스)'),
         ('한 줄 정의',   '처방전 사진 한 장으로 내 보험 보상을 3초 안에 확인하는 AI 챗봇'),
         ('핵심 가치',    '미청구 보험금 자동 발굴 — 귀찮아서 포기했던 소액부터 찾아드립니다'),
-        ('서비스 URL',  'https://songgwangsun.github.io/InsurRX/'),
+        ('서비스 URL',  'https://song2nes.com/'),
         ('API URL',     'https://magnificent-celebration-production-2dd9.up.railway.app'),
         ('개발 과정',    '2026ICT AI 서비스 개발 과정'),
     ]

@@ -6,9 +6,9 @@
 [![Tests](https://img.shields.io/badge/tests-55%20passed-brightgreen)](backend/tests/)
 
 **서비스 링크**
-- 랜딩페이지: https://songgwangsun.github.io/InsurRX/
-- 사용자 대시보드: https://songgwangsun.github.io/InsurRX/dashboard.html
-- 관리자 패널: https://songgwangsun.github.io/InsurRX/admin.html
+- 랜딩페이지: https://song2nes.com/
+- 사용자 대시보드: https://song2nes.com/dashboard.html
+- 관리자 패널: https://song2nes.com/admin.html
 - API 서버: https://magnificent-celebration-production-2dd9.up.railway.app
 - 카카오톡 채널: https://pf.kakao.com/_xmxfjxjX
 
