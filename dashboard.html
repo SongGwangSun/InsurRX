@@ -454,6 +454,15 @@
         <div class="ocr-fields" id="ocrFields"></div>
       </div>
 
+      <!-- 마이데이터 진료내역 대조 -->
+      <div id="mydataVerifyBox" style="margin-bottom:1rem">
+        <button onclick="verifyWithMydata()" id="mydataVerifyBtn"
+          style="padding:9px 16px;border-radius:9px;font-size:.85rem;font-weight:600;border:1.5px solid var(--teal);background:#F0FDFA;color:#0F766E;cursor:pointer">
+          🔗 마이데이터로 진료내역 확인
+        </button>
+        <div id="mydataVerifyResult" style="display:none;margin-top:.7rem"></div>
+      </div>
+
       <!-- OCR 인식 불충분 시 직접 입력 -->
       <div id="ocrManualInput" style="display:none;margin-bottom:1rem">
         <div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:10px;padding:.85rem 1rem;margin-bottom:.85rem;font-size:.83rem;color:#92400E">
@@ -1027,6 +1036,7 @@ async function runOCR(file) {
 
 function renderOcrResult(parsed) {
   const fields = [
+    { label: '환자명',    value: parsed.patient_name },
     { label: '병원명',    value: parsed.hospital },
     { label: '진료과',    value: parsed.department },
     { label: '상병코드',  value: parsed.icd_code },
@@ -1158,6 +1168,52 @@ function renderAnalysisResult(data) {
   `;
 }
 
+// OCR 인식 정보로 의료 마이데이터 진료내역 대조 + 가입보험 자동 연결
+async function verifyWithMydata() {
+  if (!_parsedDoc) return;
+  const btn = document.getElementById('mydataVerifyBtn');
+  const box = document.getElementById('mydataVerifyResult');
+  const orig = btn.textContent;
+  btn.disabled = true; btn.textContent = '확인 중...';
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (authToken) headers.Authorization = `Bearer ${authToken}`;
+    const res = await fetch(`${API}/mydata/verify-treatment`, {
+      method: 'POST', headers,
+      body: JSON.stringify({
+        patient_name: _parsedDoc.patient_name || null,
+        hospital: _parsedDoc.hospital || null,
+        treatment_date: _parsedDoc.prescription_date || null,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || '확인 실패');
+
+    box.style.display = '';
+    if (data.verified) {
+      const t = data.treatment || {};
+      const sub = [t.patient_name, t.hospital, t.treatment_date].filter(Boolean).map(esc).join(' · ');
+      box.innerHTML = `
+        <div style="background:#DCFCE7;border:1px solid #86EFAC;border-radius:10px;padding:.8rem 1rem;font-size:.85rem;color:#166534">
+          ✅ ${esc(data.message)}
+          ${sub ? `<div style="margin-top:.3rem;color:#15803D;font-size:.8rem">진료내역: ${sub}</div>` : ''}
+          ${data.insurance_connected ? `<div style="margin-top:.45rem;font-weight:700">🔗 가입 보험 ${data.insurance_connected}건이 보상 분석에 자동 반영됩니다.</div>` : ''}
+        </div>`;
+      if (data.insurance_connected) toast(`마이데이터 가입 보험 ${data.insurance_connected}건 연결됨`, 'success');
+      btn.style.display = 'none';
+    } else {
+      box.innerHTML = `
+        <div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:10px;padding:.8rem 1rem;font-size:.85rem;color:#92400E">
+          ⚠️ ${esc(data.message)}
+        </div>`;
+    }
+  } catch(e) {
+    toast(e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = orig;
+  }
+}
+
 // OCR 결과가 불충분할 때: 수기 입력 대신 다른 사진을 다시 선택
 function reselectPhoto() {
   resetAnalyze();
@@ -1174,6 +1230,10 @@ function resetAnalyze() {
   document.getElementById('analysisResult').style.display = 'none';
   document.getElementById('analyzeFileInput').value = '';
   document.getElementById('ocrManualInput').style.display = 'none';
+  const mvBox = document.getElementById('mydataVerifyResult');
+  const mvBtn = document.getElementById('mydataVerifyBtn');
+  if (mvBox) { mvBox.style.display = 'none'; mvBox.innerHTML = ''; }
+  if (mvBtn) mvBtn.style.display = '';
   ['manualDiagnosis','manualIcd','manualAmount','manualHospital'].forEach(id => {
     document.getElementById(id).value = '';
   });

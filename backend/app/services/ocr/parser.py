@@ -27,6 +27,11 @@ ICD_WITH_NAME_PATTERN = re.compile(
     r'[A-Z]\d{2}(?:\.\d{1,2})?[^\S\n]+([가-힣]{2,}(?:[^\S\n]*[가-힣]+){0,2})'
 )
 
+# 환자 성명: 레이블 뒤 한글 이름 2~4자 (처방전/영수증의 '성명/환자명')
+PATIENT_NAME_PATTERN = re.compile(
+    r'(?:환자\s*성명|환자명|수\s*진\s*자|성\s*명|성명|이름)\s*[:：]?\s*([가-힣]{2,4})(?![가-힣])'
+)
+
 # 진료과
 DEPT_PATTERN = re.compile(
     r'(?:진료과|진료\s*과목|과)\s*[:：]\s*([가-힣]+(?:과|과목)?)',
@@ -101,6 +106,17 @@ def _extract_diagnosis(text: str) -> str | None:
         if len(val) >= 2:
             return val
 
+    return None
+
+
+_NAME_STOPWORDS = {"홍길동", "성명", "환자명", "수진자", "보호자", "발급", "병원", "의원", "약국"}
+
+
+def _extract_patient_name(text: str) -> str | None:
+    for m in PATIENT_NAME_PATTERN.finditer(text):
+        name = m.group(1).strip()
+        if name and name not in _NAME_STOPWORDS and not name.endswith(("과", "원", "국")):
+            return name
     return None
 
 
@@ -180,6 +196,7 @@ def _extract_drugs(text: str) -> list[ParsedDrug]:
 
 def _regex_parse(text: str) -> ParsedDocument:
     return ParsedDocument(
+        patient_name=_extract_patient_name(text),
         hospital=_extract_hospital(text),
         department=_extract_department(text),
         icd_code=_extract_icd(text),
@@ -243,6 +260,7 @@ def _merge_with_llm(base: ParsedDocument, llm: dict) -> ParsedDocument:
             for d in llm["drugs"] if d.get("name")
         ]
     return ParsedDocument(
+        patient_name      = base.patient_name       or llm.get("patient_name"),
         hospital          = base.hospital          or llm.get("hospital"),
         department        = base.department         or llm.get("department"),
         icd_code          = base.icd_code           or llm.get("icd_code"),

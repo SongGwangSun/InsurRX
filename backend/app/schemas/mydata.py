@@ -32,3 +32,26 @@ class MydataConnectResult(BaseModel):
     connected_count: int
     policies: List[MydataPolicyResponse]
     message: str
+
+
+class TreatmentVerifyRequest(BaseModel):
+    """OCR로 인식한 의료 정보로 의료 마이데이터 진료내역을 대조 요청."""
+    patient_name: Optional[str] = None
+    hospital: Optional[str] = None
+    treatment_date: Optional[str] = None   # 조제일/처방일 YYYY-MM-DD
+    birth_date: Optional[str] = None        # 있으면 금융 마이데이터 연동에 사용
+
+
+class TreatmentRecord(BaseModel):
+    patient_name: str
+    hospital: str
+    treatment_date: Optional[str] = None
+    source: str
+
+
+class TreatmentVerifyResult(BaseModel):
+    verified: bool
+    message: str
+    treatment: Optional[TreatmentRecord] = None
+    insurance_connected: int = 0           # 자동 연결된 금융 마이데이터 보험 수
+    policies: List[MydataPolicyResponse] = []

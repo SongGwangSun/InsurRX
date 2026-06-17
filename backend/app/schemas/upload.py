@@ -11,6 +11,7 @@ class ParsedDrug(BaseModel):
 
 
 class ParsedDocument(BaseModel):
+    patient_name: Optional[str] = None
     hospital: Optional[str] = None
     department: Optional[str] = None
     icd_code: Optional[str] = None

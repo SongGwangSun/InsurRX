@@ -7,8 +7,11 @@ from typing import List
 from app.database import get_db
 from app.models.user import User
 from app.models.mydata_policy import UserMydataPolicy
-from app.schemas.mydata import MydataConsentRequest, MydataPolicyResponse, MydataConnectResult
-from app.core.security import get_current_user
+from app.schemas.mydata import (
+    MydataConsentRequest, MydataPolicyResponse, MydataConnectResult,
+    TreatmentVerifyRequest, TreatmentRecord, TreatmentVerifyResult,
+)
+from app.core.security import get_current_user, get_optional_user
 
 router = APIRouter()
 
@@ -128,6 +131,87 @@ async def disconnect_all(
         delete(UserMydataPolicy).where(UserMydataPolicy.user_id == current_user.id)
     )
     await db.commit()
+
+
+# ── 진료내역 대조 + 가입보험 자동 연결 ─────────────────────────────────────────
+
+@router.post("/verify-treatment", response_model=TreatmentVerifyResult)
+async def verify_treatment(
+    body: TreatmentVerifyRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_optional_user),
+):
+    """OCR로 인식한 환자·병원·조제일자로 의료 마이데이터 진료내역을 대조한다.
+
+    1) 의료 마이데이터에서 일치하는 진료/조제 내역 확인
+    2) (로그인 + 기존 연결 없음) 확인된 환자 신원으로 금융 마이데이터의
+       가입 보험을 자동 연결 → 이후 보상 분석에 자동 반영
+    """
+    from app.services.mydata.medical_provider import fetch_treatment
+    from app.services.mydata.provider import fetch_policies
+
+    found = await fetch_treatment(body.patient_name, body.hospital, body.treatment_date)
+    if not found["matched"]:
+        return TreatmentVerifyResult(verified=False, message=found["reason"])
+
+    rec = found["record"]
+    result = TreatmentVerifyResult(
+        verified=True,
+        message=f"의료 마이데이터에서 진료내역을 확인했습니다. ({rec['source']})",
+        treatment=TreatmentRecord(
+            patient_name=rec["patient_name"],
+            hospital=rec["hospital"],
+            treatment_date=rec.get("treatment_date"),
+            source=rec["source"],
+        ),
+    )
+
+    # 비로그인은 진료내역 확인까지만 (보험 저장 불가)
+    if current_user is None:
+        result.message += " 로그인하면 가입 보험을 자동 연결해 분석에 반영할 수 있습니다."
+        return result
+
+    # 이미 연결된 마이데이터 보험이 있으면 덮어쓰지 않고 그대로 반영
+    existing = (await db.execute(
+        select(UserMydataPolicy).where(
+            UserMydataPolicy.user_id == current_user.id,
+            UserMydataPolicy.is_active == True,
+        )
+    )).scalars().all()
+    if existing:
+        result.insurance_connected = len(existing)
+        result.policies = [_to_response(p) for p in existing]
+        result.message += f" 이미 연결된 가입 보험 {len(existing)}건이 분석에 반영됩니다."
+        return result
+
+    # 확인된 환자 신원(이름 + 마이데이터 생년월일)으로 금융 마이데이터 보험 조회
+    birth = body.birth_date or rec.get("birth_date")
+    try:
+        raw_policies = await fetch_policies(rec["patient_name"], birth)
+    except ValueError:
+        raw_policies = []
+
+    saved = []
+    for pol in raw_policies:
+        row = UserMydataPolicy(
+            user_id=current_user.id,
+            org_code=pol["org_code"], org_name=pol["org_name"],
+            policy_number=pol["policy_number"], insurance_name=pol["insurance_name"],
+            product_type=pol["product_type"], premium=pol.get("premium"),
+            coverage_start=pol.get("coverage_start"), coverage_end=pol.get("coverage_end"),
+            status=pol.get("status", "정상"), vector_policy_id=pol.get("vector_policy_id"),
+        )
+        db.add(row)
+        saved.append(row)
+    await db.commit()
+    for row in saved:
+        await db.refresh(row)
+
+    result.insurance_connected = len(saved)
+    result.policies = [_to_response(p) for p in saved]
+    if saved:
+        result.message += f" 가입 보험 {len(saved)}건을 분석에 자동 연결했습니다."
+    return result
 
 
 # ── 동기화 (재연결) ───────────────────────────────────────────────────────────────
