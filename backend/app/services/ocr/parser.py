@@ -4,12 +4,51 @@ OCR 원문 텍스트 → ParsedDocument 변환기
 Stage 1: 정규식 기반 고속 추출 (병원명, 진료과, 진단명, 총액, 약품)
 Stage 2: LLM 폴백 — 핵심 필드 누락 시 GPT-4o로 JSON 추출 (비동기)
 """
+import os
 import re
 import json
 import logging
 from app.schemas.upload import ParsedDocument, ParsedDrug
 
 logger = logging.getLogger(__name__)
+
+# ── 인식 키워드 사전 (편집 가능: ocr_keywords.json) ───────────────────────────
+
+_KEYWORDS_PATH = os.path.join(os.path.dirname(__file__), "ocr_keywords.json")
+
+_DEFAULT_KEYWORDS = {
+    "patient_name_labels": ["환자성명", "환자명", "수진자", "성명", "이름", "피보험자"],
+    "hospital_labels": ["요양기관명", "의료기관명", "의료기관", "병원명", "기관명", "병원정보"],
+    "hospital_suffixes": ["의원", "병원", "클리닉", "의료원", "보건소", "약국", "센터", "외래", "한의원", "치과"],
+    "department_labels": ["진료과목", "진료과", "진료부서", "과목"],
+    "diagnosis_labels": ["진단명", "상병명", "상병", "병명", "진단"],
+    "patient_amount_labels": ["본인부담금", "환자부담금", "실부담금", "본인일부부담금", "납부금액", "수납금액", "청구금액"],
+    "total_amount_labels": ["합계", "총진료비", "총액", "진료비합계"],
+    "name_stopwords": ["홍길동", "성명", "환자명", "수진자", "보호자", "발급", "병원", "의원", "약국", "주민", "번호", "구분", "등록", "정보", "생년"],
+}
+
+
+def _load_keywords() -> dict:
+    """ocr_keywords.json을 로드해 기본값 위에 병합. 실패 시 기본값."""
+    merged = {k: list(v) for k, v in _DEFAULT_KEYWORDS.items()}
+    try:
+        with open(_KEYWORDS_PATH, encoding="utf-8") as f:
+            data = json.load(f)
+        for k, v in data.items():
+            if isinstance(v, list):
+                merged[k] = v
+    except Exception as e:
+        logger.warning("ocr_keywords.json 로드 실패, 기본값 사용: %s", e)
+    return merged
+
+
+KW = _load_keywords()
+
+
+def _label_alt(labels) -> str:
+    """라벨 리스트 → 정규식 대안. 긴 라벨 우선 매칭, 라벨 글자 사이 공백 허용."""
+    parts = [r"\s*".join(re.escape(ch) for ch in lab) for lab in sorted(labels, key=len, reverse=True)]
+    return "(?:" + "|".join(parts) + ")"
 
 # ── 정규식 패턴 ────────────────────────────────────────────────────────────────
 
@@ -18,7 +57,7 @@ DATE_PATTERN = re.compile(r'(\d{4}[-./년]\s*\d{1,2}[-./월]\s*\d{1,2})')
 
 # 진단명: 레이블 뒤 한글 텍스트 (상병/진단/병명 등)
 DIAGNOSIS_PATTERN = re.compile(
-    r'(?:진단명|상병명|상병|병명|진단)\s*[:：]\s*([가-힣a-zA-Z()\s·,·]+?)(?:\n|$|[0-9])',
+    _label_alt(KW["diagnosis_labels"]) + r'\s*[:：]\s*([가-힣a-zA-Z()\s·,·]+?)(?:\n|$|[0-9])',
     re.IGNORECASE
 )
 
@@ -27,34 +66,39 @@ ICD_WITH_NAME_PATTERN = re.compile(
     r'[A-Z]\d{2}(?:\.\d{1,2})?[^\S\n]+([가-힣]{2,}(?:[^\S\n]*[가-힣]+){0,2})'
 )
 
-# 환자 성명: 레이블 뒤 한글 이름 2~4자 (처방전/영수증의 '성명/환자명')
+# 환자 성명: 레이블 뒤 한글 이름 2~4자 (글자 사이 공백 허용: '홍 길 동')
 PATIENT_NAME_PATTERN = re.compile(
-    r'(?:환자\s*성명|환자명|수\s*진\s*자|성\s*명|성명|이름)\s*[:：]?\s*([가-힣]{2,4})(?![가-힣])'
+    _label_alt(KW["patient_name_labels"]) + r'\s*[:：]?\s*([가-힣](?:\s?[가-힣]){1,3})(?![가-힣])'
 )
+# 환자 성명 라벨이 줄 끝에 있고 값이 다음 줄에 있는 경우 탐지용
+PATIENT_NAME_LABEL_EOL = re.compile(_label_alt(KW["patient_name_labels"]) + r'\s*[:：]?\s*$')
+NAME_TOKEN = re.compile(r'^([가-힣](?:\s?[가-힣]){1,3})(?![가-힣])')
 
 # 진료과
 DEPT_PATTERN = re.compile(
-    r'(?:진료과|진료\s*과목|과)\s*[:：]\s*([가-힣]+(?:과|과목)?)',
+    _label_alt(KW["department_labels"]) + r'\s*[:：]?\s*([가-힣]+(?:과|과목)?)',
     re.IGNORECASE
 )
 
-# 병원명: 첫 줄 중 의원/병원 등으로 끝나는 이름
-HOSPITAL_PATTERN = re.compile(
-    r'^([가-힣a-zA-Z0-9\s·]+(?:의원|병원|클리닉|의료원|보건소|약국|센터|외래|한의원))',
-    re.MULTILINE
+# 병원명 ① 라벨 기반 (요양기관명/병원명 등 뒤의 값)
+HOSPITAL_LABEL_PATTERN = re.compile(
+    _label_alt(KW["hospital_labels"]) + r'\s*[:：]?\s*([가-힣A-Za-z0-9()·\s]{2,40}?)(?:\n|$)'
 )
+# 병원명 ② 접미사 기반 (의원/병원 등으로 끝나는 이름 — 줄 어디에 있든)
+_HOSP_SUFFIX_ALT = "(?:" + "|".join(
+    re.escape(s) for s in sorted(KW["hospital_suffixes"], key=len, reverse=True)
+) + ")"
+HOSPITAL_SUFFIX_PATTERN = re.compile(r'([가-힣A-Za-z0-9()·]{1,30}?' + _HOSP_SUFFIX_ALT + ')')
 
 # ── 총액 패턴 (우선순위 순) ──────────────────────────────────────────────────
 # 1순위: 본인부담금 (실제 환자 납부액 = 실손 청구 기준)
 PATIENT_AMOUNT_PATTERN = re.compile(
-    r'(?:본인부담금|환자부담금|실부담금|본인일부부담금|납부금액|수납금액|청구금액)\s*[:：]?\s*'
-    r'[₩\\]?\s*([0-9,]+)\s*원?',
+    _label_alt(KW["patient_amount_labels"]) + r'\s*[:：]?\s*[₩\\]?\s*([0-9,]+)\s*원?',
     re.IGNORECASE
 )
 # 2순위: 총 진료비 합계
 TOTAL_AMOUNT_PATTERN = re.compile(
-    r'(?:합계|총\s*진료비|총액|진료비\s*합계)\s*[:：]?\s*'
-    r'[₩\\]?\s*([0-9,]+)\s*원?',
+    _label_alt(KW["total_amount_labels"]) + r'\s*[:：]?\s*[₩\\]?\s*([0-9,]+)\s*원?',
     re.IGNORECASE
 )
 
@@ -109,14 +153,32 @@ def _extract_diagnosis(text: str) -> str | None:
     return None
 
 
-_NAME_STOPWORDS = {"홍길동", "성명", "환자명", "수진자", "보호자", "발급", "병원", "의원", "약국"}
+_NAME_STOPWORDS = set(KW["name_stopwords"])
+
+
+def _valid_name(name: str) -> bool:
+    return (
+        2 <= len(name) <= 4
+        and name not in _NAME_STOPWORDS
+        and not name.endswith(("과", "원", "국", "목"))
+    )
 
 
 def _extract_patient_name(text: str) -> str | None:
+    # ① 같은 줄: 라벨 뒤 이름
     for m in PATIENT_NAME_PATTERN.finditer(text):
-        name = m.group(1).strip()
-        if name and name not in _NAME_STOPWORDS and not name.endswith(("과", "원", "국")):
+        name = re.sub(r"\s", "", m.group(1))
+        if _valid_name(name):
             return name
+    # ② 라벨이 줄 끝에 있고 이름이 다음 줄에 있는 경우
+    lines = [ln.strip() for ln in text.split("\n")]
+    for i in range(len(lines) - 1):
+        if PATIENT_NAME_LABEL_EOL.search(lines[i]):
+            tm = NAME_TOKEN.match(lines[i + 1])
+            if tm:
+                name = re.sub(r"\s", "", tm.group(1))
+                if _valid_name(name):
+                    return name
     return None
 
 
@@ -132,14 +194,26 @@ def _extract_department(text: str) -> str | None:
 
 
 def _extract_hospital(text: str) -> str | None:
-    lines = text.split('\n')[:20]   # 상단 20줄 탐색 (여유 확대)
-    for line in lines:
+    # ① 라벨 기반: 요양기관명/병원명 등 뒤의 값
+    m = HOSPITAL_LABEL_PATTERN.search(text)
+    if m:
+        val = m.group(1).strip().strip("·").strip()
+        if len(val) >= 2:
+            return val
+    # ② 접미사 기반: 의원/병원 등으로 끝나는 이름 (상단 25줄 우선)
+    for line in text.split("\n")[:25]:
         line = line.strip()
-        if not line or len(line) > 50:
+        if not line or len(line) > 60:
             continue
-        m = HOSPITAL_PATTERN.match(line)
-        if m:
-            return m.group(1).strip()
+        sm = HOSPITAL_SUFFIX_PATTERN.search(line)
+        if sm:
+            name = sm.group(1).strip()
+            # 라벨 접두어가 붙어 있으면 제거 (예: "병원명 서울병원")
+            for lab in KW["hospital_labels"]:
+                if name.startswith(lab):
+                    name = name[len(lab):].strip(" :：").strip()
+            if 2 <= len(name) <= 40:
+                return name
     return None
 
 
