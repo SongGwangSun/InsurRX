@@ -8,6 +8,7 @@ from app.models.user import User
 from app.models.user_policy import UserPolicy, PolicyStatus
 from app.schemas.user_policy import UserPolicyResponse, UserPolicyUploadResult
 from app.core.security import get_current_user
+from app.core.config import settings
 
 router = APIRouter()
 

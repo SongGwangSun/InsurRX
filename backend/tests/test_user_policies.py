@@ -112,3 +112,33 @@ async def test_cannot_access_other_user_policy():
                 headers={"Authorization": f"Bearer {token_b}"},
             )
     assert res.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_delete_ready_policy():
+    """임베딩 완료(ready) 보험증권 삭제 — Pinecone 정리 분기를 거쳐도 204."""
+    from sqlalchemy import update
+    from app.database import get_db
+    from app.models.user_policy import PolicyStatus, UserPolicy
+
+    token = await _register_and_token("ready@test.com")
+    headers = {"Authorization": f"Bearer {token}"}
+    with patch("app.services.user_policy_service.process_user_policy", new_callable=AsyncMock):
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
+            upload = await c.post(
+                "/api/v1/my/policies/upload",
+                headers=headers,
+                files={"file": ("policy.pdf", b"%PDF-1.4 fake", "application/pdf")},
+            )
+            policy_id = upload.json()["policy_id"]
+
+            gen = app.dependency_overrides[get_db]()
+            db = await gen.__anext__()
+            await db.execute(
+                update(UserPolicy).where(UserPolicy.id == policy_id).values(status=PolicyStatus.ready)
+            )
+            await db.commit()
+            await gen.aclose()
+
+            del_res = await c.delete(f"/api/v1/my/policies/{policy_id}", headers=headers)
+    assert del_res.status_code == 204
