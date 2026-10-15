@@ -73,3 +73,19 @@ async def test_run_rag_pipeline():
     assert result.estimated_payout == 18500
     assert result.confidence == 0.92
     assert len(result.coverage_items) == 1
+
+
+@pytest.mark.asyncio
+async def test_run_rag_pipeline_records_trace():
+    doc = ParsedDocument(icd_code="J06.9", total_amount=28500)
+    with patch("app.services.rag.pipeline.get_query_embedding", new_callable=AsyncMock) as mock_embed, \
+         patch("app.services.rag.pipeline.retrieve_relevant_clauses", new_callable=AsyncMock) as mock_retrieve, \
+         patch("app.services.rag.pipeline.run_coverage_chain", new_callable=AsyncMock) as mock_chain:
+        mock_embed.return_value = [0.1] * 1536
+        mock_retrieve.return_value = []
+        mock_chain.return_value = MOCK_LLM_RESULT
+        result = await run_rag_pipeline(doc, policy_ids=[])
+
+    assert result.llm_model
+    assert result.prompt_version and len(result.prompt_version) == 12
+    assert result.latency_ms is not None and result.latency_ms >= 0

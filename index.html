@@ -1028,6 +1028,23 @@
     }
     .ana-actions { display: flex; gap: 10px; margin-top: 6px; }
 
+    /* 산정 근거 고지 + 차이 발생 시 안내 */
+    .payout-notice {
+      font-size: 0.78rem; color: #92400E; background: #FFFBEB;
+      border: 1px solid #FDE68A; border-radius: 10px;
+      padding: 10px 14px; line-height: 1.6; margin-bottom: 12px;
+    }
+    .payout-guide {
+      border: 1px solid #E2E8F0; border-radius: 10px;
+      background: #FFFFFF; margin-bottom: 12px; font-size: 0.8rem; color: #334155;
+    }
+    .payout-guide summary {
+      cursor: pointer; padding: 10px 14px; font-weight: 700; color: #1D4ED8;
+    }
+    .payout-guide ol { margin: 0; padding: 0 14px 12px 32px; line-height: 1.7; }
+    .payout-guide li { margin-bottom: 6px; }
+    .payout-guide li ul { padding-left: 16px; margin-top: 2px; color: #64748B; }
+
     /* ── RESPONSIVE ────────────────────────────────────── */
     @media (max-width: 680px) {
       .before-after { grid-template-columns: 1fr; }
@@ -2112,6 +2129,41 @@
     }
   }
 
+  // 산정 근거 고지 + 실제 결과와 차이 날 때 안내 (웹·대시보드·카카오 공통 문구)
+  function payoutNoticeHtml() {
+    return `
+      <div class="payout-notice">
+        ⚠️ 이 금액은 약관과 영수증을 바탕으로 AI가 계산한 <b>추정치</b>입니다.
+        최종 지급 여부와 금액은 <b>보험사 심사</b>로 결정됩니다.
+        실손보험은 가입 시기(1~4세대)에 따라 공제액과 자기부담률이 달라 실제 금액과 차이가 날 수 있습니다.
+      </div>
+      <details class="payout-guide">
+        <summary>실제 지급 결과가 예상과 다르다면?</summary>
+        <ol>
+          <li><b>차이 원인 확인</b>
+            <ul>
+              <li>실손 가입 시기(세대)별 공제액·자기부담률 차이</li>
+              <li>비급여 항목 포함 여부</li>
+              <li>다른 보험과의 중복 보장(비례 보상)</li>
+              <li>청구 서류 누락</li>
+            </ul>
+          </li>
+          <li><b>보험사에 재심사 요청</b>
+            <ul>
+              <li>보험사 고객센터에 지급 산출 내역을 요청하세요</li>
+              <li>진료비 영수증, 진료비 세부내역서, 처방전(약제비), 필요 시 진단서를 보완해 다시 청구할 수 있습니다</li>
+            </ul>
+          </li>
+          <li><b>해결되지 않으면 분쟁조정 신청</b>
+            <ul>
+              <li>금융감독원 ☎ 1332 / e-금융민원센터(www.fcsc.kr)</li>
+              <li>보험금 청구권은 3년이 지나면 소멸하니 기한에 유의하세요</li>
+            </ul>
+          </li>
+        </ol>
+      </details>`;
+  }
+
   function renderAnalysisResult(data) {
     const claimable = data.is_claimable;
     const payout    = data.estimated_payout || 0;
@@ -2156,6 +2208,8 @@
       });
       html += '</div>';
     }
+
+    html += payoutNoticeHtml();
 
     html += `<div class="ana-actions">
       <button class="btn-ghost" onclick="ocrReset()">처음부터</button>

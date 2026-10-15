@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 from app.schemas.upload import ParsedDocument
 
 
@@ -25,3 +25,7 @@ class AnalyzeResponse(BaseModel):
     coverage_items: List[CoverageItem]
     confidence: float
     llm_summary: str
+    # 추적 정보 — 같은 입력의 결과가 달라졌을 때 원인 확인용
+    llm_model: Optional[str] = None
+    prompt_version: Optional[str] = None
+    latency_ms: Optional[int] = None

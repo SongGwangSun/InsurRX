@@ -32,5 +32,8 @@ async def get_result(
         coverage_items   = [CoverageItem(**item) for item in row.coverage_items],
         confidence       = row.confidence,
         llm_summary      = row.llm_summary,
+        llm_model        = row.llm_model,
+        prompt_version   = row.prompt_version,
+        latency_ms       = row.latency_ms,
         created_at       = row.created_at.isoformat(),
     )

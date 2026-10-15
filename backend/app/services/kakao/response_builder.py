@@ -12,6 +12,8 @@ def qr_block(label: str, block_id: str) -> dict:
     return {"label": label, "action": "block", "blockId": block_id, "messageText": label}
 
 BACK_QR    = [qr("🏠 처음으로", "처음으로")]
+
+DISCLAIMER = "※ AI 추정치이며, 최종 지급 여부·금액은 보험사 심사로 결정됩니다."
 CANCEL_QR  = [qr("✖ 취소", "취소"), qr("🏠 처음으로", "처음으로")]
 
 
@@ -114,11 +116,10 @@ def result_card(result: dict) -> dict:
     confidence= int((result.get("confidence", 0)) * 100)
 
     if is_ok:
-        title = f"✅ 보험금 청구 가능 — ₩{payout:,}"
-        desc  = f"{summary}\n\n신뢰도: {confidence}%"
+        title = f"✅ 보험금 청구 가능 — 예상 ₩{payout:,}"
     else:
         title = "❌ 보험금 청구가 어렵습니다"
-        desc  = f"{summary}\n\n신뢰도: {confidence}%"
+    desc = f"{summary}\n\n신뢰도: {confidence}%\n{DISCLAIMER}"
 
     # 약관별 세부 항목 (최대 3개)
     items = result.get("coverage_items", [])[:3]
@@ -137,9 +138,30 @@ def result_card(result: dict) -> dict:
             msg_btn("🔄 다시 분석하기",  "보험금 분석"),
         ],
         quick_replies=[
+            qr("❓ 결과가 다를 때", "결과가 다를 때"),
             qr("🔄 다시 분석", "보험금 분석"),
             qr("🏠 처음으로",  "처음으로"),
         ],
+    )
+
+
+# ── 실제 결과와 차이 날 때 안내 ────────────────────────────────────────────────
+
+def payout_dispute_guide() -> dict:
+    return text(
+        "📌 실제 지급 결과가 예상과 다를 때\n\n"
+        "1️⃣ 차이 원인 확인\n"
+        "· 실손 가입 시기(1~4세대)별 공제액·자기부담률\n"
+        "· 비급여 항목 포함 여부\n"
+        "· 다른 보험과의 중복 보장(비례 보상)\n"
+        "· 청구 서류 누락\n\n"
+        "2️⃣ 보험사에 재심사 요청\n"
+        "· 고객센터에 지급 산출 내역 요청\n"
+        "· 진료비 영수증·세부내역서·처방전(약제비)·필요 시 진단서 보완 후 재청구\n\n"
+        "3️⃣ 해결되지 않으면 분쟁조정 신청\n"
+        "· 금융감독원 ☎ 1332 / e-금융민원센터(www.fcsc.kr)\n"
+        "· 보험금 청구권은 3년이 지나면 소멸합니다",
+        quick_replies=[qr("🔄 다시 분석", "보험금 분석"), *BACK_QR],
     )
 
 

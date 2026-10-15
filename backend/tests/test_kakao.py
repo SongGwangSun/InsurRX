@@ -82,3 +82,21 @@ async def test_policy_selection_without_image():
     output = data["template"]["outputs"][0]
     assert "simpleText" in output
     assert "사진" in output["simpleText"]["text"]
+
+
+@pytest.mark.asyncio
+async def test_payout_dispute_guide():
+    data = await _skill("결과가 다를 때")
+    text = data["template"]["outputs"][0]["simpleText"]["text"]
+    assert "재심사" in text
+    assert "1332" in text
+
+
+def test_result_card_has_disclaimer_and_guide_reply():
+    from app.services.kakao import response_builder as rb
+    data = rb.result_card({"is_claimable": True, "estimated_payout": 18500,
+                           "llm_summary": "청구 가능", "confidence": 0.9})
+    desc = data["template"]["outputs"][0]["basicCard"]["description"]
+    assert "보험사 심사" in desc
+    labels = [q["messageText"] for q in data["template"]["quickReplies"]]
+    assert "결과가 다를 때" in labels

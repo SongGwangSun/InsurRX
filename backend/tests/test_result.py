@@ -5,6 +5,8 @@ GET /api/v1/result/{session_id} 테스트
 - 없는 session_id → 404
 - 저장된 created_at 포함 확인
 """
+import uuid
+
 import pytest
 from httpx import AsyncClient, ASGITransport
 from unittest.mock import AsyncMock, patch
@@ -104,3 +106,29 @@ async def test_result_coverage_items_structure():
     assert "is_covered" in item
     assert "reason" in item
     assert "citation" in item
+
+
+@pytest.mark.asyncio
+async def test_result_keeps_trace_fields():
+    """분석 결과에 모델명·프롬프트 버전·처리 시간이 저장되고 조회된다."""
+    traced = MOCK_RESPONSE.model_copy(update={
+        "session_id": str(uuid.uuid4()),
+        "llm_model": "gpt-4o",
+        "prompt_version": "abc123def456",
+        "latency_ms": 2100,
+    })
+    with patch(
+        "app.api.v1.endpoints_analyze.run_rag_pipeline",
+        new_callable=AsyncMock,
+        return_value=traced,
+    ):
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            await client.post("/api/v1/analyze/", json=ANALYZE_PAYLOAD)
+            result_resp = await client.get(f"/api/v1/result/{traced.session_id}")
+
+    data = result_resp.json()
+    assert data["llm_model"] == "gpt-4o"
+    assert data["prompt_version"] == "abc123def456"
+    assert data["latency_ms"] == 2100

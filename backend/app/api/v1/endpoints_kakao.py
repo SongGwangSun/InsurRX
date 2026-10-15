@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.database import get_db, AsyncSessionLocal
+from app.models.analysis_result import AnalysisResult
 from app.models.kakao_session import KakaoSession, KakaoState
 from app.services.kakao import response_builder as rb
 
@@ -103,6 +104,19 @@ async def _run_analysis(kakao_uid: str, image_url: str, policy_ids: list[str]):
                 "coverage_items":   [c.model_dump() for c in analysis.coverage_items],
                 "breakdown":        analysis.breakdown,
             }
+            db.add(AnalysisResult(
+                session_id       = analysis.session_id,
+                is_claimable     = analysis.is_claimable,
+                estimated_payout = analysis.estimated_payout,
+                breakdown        = analysis.breakdown,
+                coverage_items   = [c.model_dump() for c in analysis.coverage_items],
+                confidence       = analysis.confidence,
+                llm_summary      = analysis.llm_summary,
+                llm_model        = analysis.llm_model,
+                prompt_version   = analysis.prompt_version,
+                latency_ms       = analysis.latency_ms,
+                channel          = "kakao",
+            ))
             session.state = KakaoState.done
 
         except Exception as e:
@@ -209,6 +223,10 @@ async def kakao_skill(
             "최근 분석 결과가 없습니다.",
             quick_replies=[rb.qr("📊 보험금 분석", "보험금 분석"), *rb.BACK_QR],
         )
+
+    # ── 7-1) 실제 결과와 차이 날 때 안내 ────────────────────────────────────────
+    if utterance in ("결과가 다를 때", "이의 신청", "이의신청", "결과가 달라요"):
+        return rb.payout_dispute_guide()
 
     # ── 8) 도움말 ─────────────────────────────────────────────────────────────
     if utterance in ("도움말", "help", "?", "사용법", "사용방법"):

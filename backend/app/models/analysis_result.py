@@ -14,4 +14,9 @@ class AnalysisResult(Base):
     coverage_items  = Column(JSON,       nullable=False)
     confidence      = Column(Float,      nullable=False)
     llm_summary     = Column(String,     nullable=False)
+    # 추적 정보
+    llm_model       = Column(String(64), nullable=True)
+    prompt_version  = Column(String(32), nullable=True)
+    latency_ms      = Column(Integer,    nullable=True)
+    channel         = Column(String(16), nullable=True)   # web / kakao
     created_at      = Column(DateTime(timezone=True), server_default=func.now())

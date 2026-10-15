@@ -67,6 +67,10 @@ async def analyze_coverage(
         coverage_items   = [item.model_dump() for item in result.coverage_items],
         confidence       = result.confidence,
         llm_summary      = result.llm_summary,
+        llm_model        = result.llm_model,
+        prompt_version   = result.prompt_version,
+        latency_ms       = result.latency_ms,
+        channel          = "web",
     )
     db.add(row)
     await db.commit()

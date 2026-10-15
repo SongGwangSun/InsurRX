@@ -1,10 +1,11 @@
+import time
 import uuid
 from app.schemas.upload import ParsedDocument
 from app.schemas.analysis import AnalyzeResponse, CoverageItem
 from app.services.rag.retriever import retrieve_relevant_clauses
 from app.services.rag.embedder import get_query_embedding
 
-from ai.rag.chain import run_coverage_chain
+from ai.rag.chain import current_model_name, current_prompt_version, run_coverage_chain
 
 
 async def run_rag_pipeline(
@@ -17,6 +18,7 @@ async def run_rag_pipeline(
     2. Vector DB에서 관련 약관 조항 검색
     3. LangChain + Claude로 보상 여부 및 예상 금액 추론
     """
+    started = time.perf_counter()
     query = _build_query(parsed_doc)
     embedding = await get_query_embedding(query)
     clauses = await retrieve_relevant_clauses(embedding, policy_ids, user_namespaces)
@@ -34,6 +36,9 @@ async def run_rag_pipeline(
         coverage_items=[CoverageItem(**item) for item in result["coverage_items"]],
         confidence=result["confidence"],
         llm_summary=result["llm_summary"],
+        llm_model=current_model_name(),
+        prompt_version=current_prompt_version(),
+        latency_ms=int((time.perf_counter() - started) * 1000),
     )
 
 
