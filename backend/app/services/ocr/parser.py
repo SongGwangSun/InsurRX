@@ -4,10 +4,11 @@ OCR 원문 텍스트 → ParsedDocument 변환기
 Stage 1: 정규식 기반 고속 추출 (병원명, 진료과, 진단명, 총액, 약품)
 Stage 2: LLM 폴백 — 핵심 필드 누락 시 GPT-4o로 JSON 추출 (비동기)
 """
-import os
-import re
 import json
 import logging
+import os
+import re
+
 from app.schemas.upload import ParsedDocument, ParsedDrug
 
 logger = logging.getLogger(__name__)
@@ -37,7 +38,7 @@ def _load_keywords() -> dict:
         for k, v in data.items():
             if isinstance(v, list):
                 merged[k] = v
-    except Exception as e:
+    except (OSError, ValueError, AttributeError) as e:
         logger.warning("ocr_keywords.json 로드 실패, 기본값 사용: %s", e)
     return merged
 
@@ -73,6 +74,8 @@ PATIENT_NAME_PATTERN = re.compile(
 # 환자 성명 라벨이 줄 끝에 있고 값이 다음 줄에 있는 경우 탐지용
 PATIENT_NAME_LABEL_EOL = re.compile(_label_alt(KW["patient_name_labels"]) + r'\s*[:：]?\s*$')
 NAME_TOKEN = re.compile(r'^([가-힣](?:\s?[가-힣]){1,3})(?![가-힣])')
+# 세로쓰기 탐지용: 한 줄에 한글 한 글자만 있는 줄
+SINGLE_HANGUL = re.compile(r'^[가-힣]$')
 
 # 진료과
 DEPT_PATTERN = re.compile(
@@ -139,7 +142,7 @@ def _extract_diagnosis(text: str) -> str | None:
     # 레이블 뒤 진단명
     m = DIAGNOSIS_PATTERN.search(text)
     if m:
-        val = m.group(1).strip().rstrip('·,·')
+        val = m.group(1).strip().rstrip('·,')
         if val:
             return val
 
@@ -179,6 +182,44 @@ def _extract_patient_name(text: str) -> str | None:
                 name = re.sub(r"\s", "", tm.group(1))
                 if _valid_name(name):
                     return name
+    # ③ 세로쓰기: 가로 인식이 모두 실패한 경우에만 세로 배치 탐지
+    #    OCR이 세로 항목 사이에 빈 줄을 끼워 넣는 경우가 잦아 빈 줄은 제거하고 넘긴다
+    return _extract_patient_name_vertical([ln for ln in lines if ln])
+
+
+def _extract_patient_name_vertical(lines: list[str]) -> str | None:
+    """세로쓰기 폴백 — 이름(또는 라벨+이름) 글자가 한 줄에 한 글자씩 배치된 경우.
+
+    지원 형태:
+      (a) 라벨은 가로, 값만 세로     → '환자성명' / '홍' / '길' / '동'
+      (b) 라벨까지 세로              → '환' / '자' / '명' / '홍' / '길' / '동'
+    """
+    labels = sorted(KW["patient_name_labels"], key=len, reverse=True)
+    n = len(lines)
+    i = 0
+    while i < n:
+        # 한글 한 글자 줄이 연속으로 이어지는 구간(run)을 찾는다
+        if SINGLE_HANGUL.match(lines[i]):
+            j = i
+            while j < n and SINGLE_HANGUL.match(lines[j]):
+                j += 1
+            run = "".join(lines[i:j])  # 예: '홍길동' 또는 '환자명홍길동'
+
+            # (a) 바로 앞 줄이 이름 라벨이면 run 전체가 이름
+            prev = re.sub(r"\s", "", lines[i - 1]) if i > 0 else ""
+            if prev in labels and _valid_name(run):
+                return run
+
+            # (b) run 자체가 라벨로 시작하면 라벨을 떼어낸 나머지가 이름
+            for lab in labels:
+                if run.startswith(lab):
+                    cand = run[len(lab):]
+                    if _valid_name(cand):
+                        return cand
+
+            i = j
+        else:
+            i += 1
     return None
 
 
@@ -298,8 +339,10 @@ from app.services.prompt_service import get_prompt as _get_prompt
 
 async def _llm_parse(text: str) -> dict:
     try:
-        from openai import AsyncOpenAI
         import re as _re
+
+        from openai import AsyncOpenAI
+
         from app.core.config import settings
 
         client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
@@ -315,7 +358,7 @@ async def _llm_parse(text: str) -> dict:
         raw = _re.sub(r'^```(?:json)?\s*', '', raw)
         raw = _re.sub(r'\s*```$', '', raw)
         return json.loads(raw)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 — 폴백 경로: 어떤 실패든 정규식 결과만 사용
         logger.warning("LLM 파서 폴백 실패: %s", e)
         return {}
 
@@ -364,3 +407,4 @@ async def parse_medical_document_async(raw_text: str) -> ParsedDocument:
         llm_result = await _llm_parse(raw_text)
         doc = _merge_with_llm(doc, llm_result)
     return doc
+

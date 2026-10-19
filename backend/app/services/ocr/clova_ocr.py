@@ -9,7 +9,9 @@ Clova OCR 대신 OpenAI GPT-4o Vision을 사용합니다.
 
 import base64
 import logging
+
 from openai import AsyncOpenAI
+
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -25,7 +27,8 @@ _OCR_PROMPT = """\
 2. 줄바꿈과 들여쓰기를 원문과 최대한 동일하게 유지
 3. 상병코드(예: J06.9 급성상기도감염), 약품명(예: 아목시실린 500mg), 금액은 특히 정확하게 추출
 4. 도장·서명·스탬프 영역의 글자도 포함
-5. 추가 설명, 해석, 요약 없이 추출된 텍스트만 출력
+5. 세로쓰기(글자가 위→아래로 배치)된 항목은 위에서 아래 순서대로 각 글자를 한 줄에 하나씩 출력. 특히 환자 성명이 세로로 적혀 있으면 라벨과 이름 글자를 순서대로 빠짐없이 출력
+6. 추가 설명, 해석, 요약 없이 추출된 텍스트만 출력
 """
 
 
