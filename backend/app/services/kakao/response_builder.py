@@ -52,14 +52,15 @@ def msg_btn(label: str, msg: str) -> dict:
 def main_menu() -> dict:
     return card(
         title="👋 안녕하세요! InsurRX입니다",
-        desc="처방전·영수증 사진 한 장으로 보험금 청구 여부를\nAI가 1분 안에 알려드립니다.",
+        desc="처방전·영수증·약봉투 사진으로 보험금 청구 여부를\nAI가 1분 안에 알려드립니다.\n내 보험증권을 등록하면 더 정확해져요.",
         buttons=[
             msg_btn("📊 보험금 분석 시작", "보험금 분석"),
-            msg_btn("📋 최근 분석 결과",  "최근 결과"),
+            msg_btn("📂 내 보험 관리",    "내 보험"),
             web_btn("💻 대시보드 열기",   DASHBOARD_URL),
         ],
         quick_replies=[
             qr("📊 보험금 분석", "보험금 분석"),
+            qr("📂 내 보험",    "내 보험"),
             qr("📋 최근 결과",  "최근 결과"),
             qr("❓ 도움말",    "도움말"),
         ],
@@ -70,9 +71,10 @@ def main_menu() -> dict:
 
 def request_image() -> dict:
     return text(
-        "📷 처방전 또는 진료비 영수증 사진을 전송해 주세요.\n\n"
-        "• 갤러리에서 선택하거나 카메라로 직접 촬영하세요\n"
-        "• 금액·상병코드가 잘 보이게 촬영해 주세요",
+        "📷 처방전·진료비 영수증·약봉투 사진을 전송해 주세요.\n\n"
+        "• 여러 장을 한 번에 보내면 하나로 합쳐 분석합니다 (최대 5장)\n"
+        "  예) 처방전 + 약봉투\n"
+        "• 금액·상병코드·약품명이 잘 보이게 촬영해 주세요",
         quick_replies=CANCEL_QR,
     )
 
@@ -86,15 +88,17 @@ POLICY_OPTIONS = [
     ("AXA 치아보험",   "axa-dental-2501"),
 ]
 
-def select_policy() -> dict:
-    qrs = [qr(f"{'✅' if i==0 else '⬜'} {name}", f"약관선택:{pid}")
-           for i, (name, pid) in enumerate(POLICY_OPTIONS)]
+def select_policy(image_count: int = 1, has_own: bool = False) -> dict:
+    qrs = [qr("📂 내 보험으로", "약관선택:mine")] if has_own else []
+    qrs += [qr(f"⬜ {name}", f"약관선택:{pid}") for name, pid in POLICY_OPTIONS]
     qrs += [qr("🔍 전체 검색", "약관선택:all"), *CANCEL_QR]
-    return text(
-        "📑 어떤 보험 약관으로 확인할까요?\n"
-        "(복수 선택 없이 가장 관련 있는 보험 하나를 선택해 주세요)",
-        quick_replies=qrs,
+    head = f"📥 사진 {image_count}장을 받았습니다.\n\n" if image_count > 1 else ""
+    guide = (
+        "등록하신 내 보험은 어떤 약관을 골라도 함께 확인합니다."
+        if has_own else
+        "(복수 선택 없이 가장 관련 있는 보험 하나를 선택해 주세요)"
     )
+    return text(f"{head}📑 어떤 보험 약관으로 확인할까요?\n{guide}", quick_replies=qrs)
 
 
 # ── 처리 중 ────────────────────────────────────────────────────────────────────
@@ -108,6 +112,13 @@ def processing_notice() -> dict:
 
 
 # ── 분석 결과 카드 ────────────────────────────────────────────────────────────
+
+PILL_ENVELOPE_NOTICE = (
+    "💊 약봉투만으로 분석했어요\n\n"
+    "약봉투에는 보통 진단명·상병코드가 없어 정확도가 낮을 수 있습니다.\n"
+    "실손보험 약제비 청구에는 약제비 영수증(약제비 계산서)과 처방전이 필요하니 함께 챙겨 주세요."
+)
+
 
 def result_card(result: dict) -> dict:
     is_ok     = result.get("is_claimable", False)
@@ -130,7 +141,7 @@ def result_card(result: dict) -> dict:
         )
         desc = f"{desc}\n\n{detail}"
 
-    return card(
+    resp = card(
         title=title,
         desc=desc,
         buttons=[
@@ -142,6 +153,113 @@ def result_card(result: dict) -> dict:
             qr("🔄 다시 분석", "보험금 분석"),
             qr("🏠 처음으로",  "처음으로"),
         ],
+    )
+    if result.get("doc_types") == ["pill_envelope"]:
+        resp["template"]["outputs"].append({"simpleText": {"text": PILL_ENVELOPE_NOTICE}})
+    return resp
+
+
+# ── 내 보험 관리 ──────────────────────────────────────────────────────────────
+
+MY_INSURANCE_QR = [
+    qr("📄 증권 등록", "보험증권 등록"),
+    qr("📑 약관 연결", "약관 연결"),
+    qr("🔗 계정 연결", "계정 연결"),
+    qr("🏠 처음으로", "처음으로"),
+]
+
+_STATUS_ICON = {"ready": "✅", "pending": "⏳", "processing": "⏳", "failed": "⚠️"}
+
+
+def my_insurance(policies: list[dict], linked_web: bool) -> dict:
+    """policies: [{"name": str, "status": str}] (최신순)"""
+    if policies:
+        rows = "\n".join(
+            f"{_STATUS_ICON.get(p['status'], '•')} {p['name']}" for p in policies[:10]
+        )
+        body = f"📂 등록된 내 보험 ({len(policies)}건)\n\n{rows}\n\n✅ 사용 가능  ⏳ 처리 중  ⚠️ 실패"
+    else:
+        body = (
+            "📂 아직 등록된 보험이 없습니다.\n\n"
+            "• 증권 등록: 보험증권 사진을 보내면 AI가 읽어 둡니다\n"
+            "• 약관 연결: 가입한 보험 상품을 골라 공개 약관을 연결합니다"
+        )
+    if linked_web:
+        body += "\n\n🔗 웹 계정과 연결되어 있습니다."
+    return text(body, quick_replies=MY_INSURANCE_QR)
+
+
+def request_policy_image() -> dict:
+    return text(
+        "📄 보험증권 사진을 전송해 주세요.\n\n"
+        "• 여러 장이면 한 번에 선택해 보내 주세요 (최대 10장)\n"
+        "• 보험사·상품명·담보(특약)·가입금액이 보이는 면이 중요합니다\n"
+        "• 주민번호·전화번호는 저장 전에 자동으로 가려집니다\n\n"
+        "📚 약관(수십 쪽)은 사진 대신 '약관 연결'로 상품을 고르거나\n"
+        "대시보드에서 PDF로 올려 주세요.",
+        quick_replies=CANCEL_QR,
+    )
+
+
+def policy_registering(image_count: int) -> dict:
+    return text(
+        f"📥 보험증권 사진 {image_count}장을 받았습니다.\n\n"
+        "AI가 내용을 읽어 등록하고 있어요 (약 30초~1분).\n"
+        "'내 보험'에서 처리 상태를 확인할 수 있습니다.",
+        quick_replies=[
+            qr("📂 내 보험", "내 보험"),
+            qr("📄 더 등록", "보험증권 등록"),
+            qr("📊 보험금 분석", "보험금 분석"),
+        ],
+    )
+
+
+def select_insurer(insurers: list[tuple[int, str]]) -> dict:
+    if not insurers:
+        return text("등록된 보험사가 없습니다.", quick_replies=MY_INSURANCE_QR)
+    qrs = [qr(name, f"보험사:{iid}") for iid, name in insurers[:9]] + [qr("✖ 취소", "내 보험")]
+    return text("🏢 가입한 보험사를 선택해 주세요.", quick_replies=qrs)
+
+
+def select_product(insurer_name: str, products: list[tuple[int, str]]) -> dict:
+    if not products:
+        return text(f"{insurer_name}에 등록된 상품이 없습니다.", quick_replies=MY_INSURANCE_QR)
+    qrs = [qr(name[:14], f"상품연결:{pid}") for pid, name in products[:9]] + [qr("✖ 취소", "내 보험")]
+    listing = "\n".join(f"• {name}" for _, name in products[:9])
+    return text(f"📑 {insurer_name} — 가입한 상품을 선택해 주세요.\n\n{listing}", quick_replies=qrs)
+
+
+def product_linked(name: str, has_terms: bool, already: bool = False) -> dict:
+    msg = f"✅ '{name}' 약관이 {'이미 ' if already else ''}연결되어 있습니다."
+    if not has_terms:
+        msg += "\n\n⚠️ 이 상품은 아직 약관 데이터가 준비되지 않아 분석에는 반영되지 않습니다. 보험증권 사진을 함께 등록해 주세요."
+    return text(msg, quick_replies=MY_INSURANCE_QR)
+
+
+def link_guide() -> dict:
+    return card(
+        title="🔗 웹 계정과 연결하기",
+        desc=(
+            "1️⃣ 대시보드에 로그인 → '계정' 탭\n"
+            "2️⃣ '카카오톡 연결 코드 발급' 클릭\n"
+            "3️⃣ 여기에 '연결 코드' 형식으로 입력\n"
+            "   예) 연결 AB3K9QXZ\n\n"
+            "카톡에서 등록한 보험은 웹 계정으로 옮겨집니다."
+        ),
+        buttons=[web_btn("💻 대시보드 열기", DASHBOARD_URL)],
+        quick_replies=MY_INSURANCE_QR,
+    )
+
+
+def link_result(ok: bool, name: str = "") -> dict:
+    if ok:
+        return text(
+            f"🔗 {name}님 웹 계정과 연결되었습니다.\n이제 웹과 카톡에서 같은 내 보험을 사용합니다.",
+            quick_replies=MY_INSURANCE_QR,
+        )
+    return text(
+        "⚠️ 연결 코드가 올바르지 않거나 만료되었습니다.\n대시보드에서 새 코드를 발급해 주세요 (10분 유효).",
+        quick_replies=MY_INSURANCE_QR,
     )
 
 
@@ -172,17 +290,19 @@ def help_card() -> dict:
         title="❓ InsurRX 사용 가이드",
         desc=(
             "1️⃣ '보험금 분석'을 누르세요\n"
-            "2️⃣ 처방전·영수증 사진을 전송하세요\n"
+            "2️⃣ 처방전·영수증·약봉투 사진을 전송하세요\n"
             "3️⃣ 보험 종류를 선택하세요\n"
             "4️⃣ AI 분석 결과를 확인하세요\n\n"
-            "💡 더 정확한 분석을 원하시면\n"
-            "대시보드에서 내 보험증권을 직접 등록해 보세요!"
+            "💡 '내 보험'에서 보험증권 사진을 등록하거나\n"
+            "가입 상품 약관을 연결하면 더 정확해져요!"
         ),
         buttons=[
-            web_btn("💻 대시보드에서 보험증권 등록", DASHBOARD_URL),
+            msg_btn("📂 내 보험 관리", "내 보험"),
+            web_btn("💻 대시보드에서 PDF 등록", DASHBOARD_URL),
         ],
         quick_replies=[
             qr("📊 보험금 분석", "보험금 분석"),
+            qr("📂 내 보험",    "내 보험"),
             qr("🏠 처음으로",   "처음으로"),
         ],
     )
@@ -201,6 +321,7 @@ def fallback() -> dict:
         "죄송합니다, 이해하지 못했어요. 😅\n아래 버튼으로 시작해 주세요.",
         quick_replies=[
             qr("📊 보험금 분석", "보험금 분석"),
+            qr("📂 내 보험",    "내 보험"),
             qr("❓ 도움말",    "도움말"),
             qr("🏠 처음으로",  "처음으로"),
         ],

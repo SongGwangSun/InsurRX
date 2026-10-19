@@ -116,7 +116,10 @@ async def delete_user_policy(
         raise HTTPException(404, detail="보험증권을 찾을 수 없습니다.")
 
     # Pinecone 네임스페이스 삭제 (선택적)
-    if policy.status == PolicyStatus.ready and settings.PINECONE_API_KEY:
+    # 빈 네임스페이스(약관만 연결한 항목)는 공개 약관 기본 네임스페이스이므로 절대 삭제하지 않는다
+    from app.services.user_policy_service import is_user_namespace
+    if (policy.status == PolicyStatus.ready and settings.PINECONE_API_KEY
+            and is_user_namespace(policy.vector_namespace)):
         try:
             from pinecone import Pinecone
             pc = Pinecone(api_key=settings.PINECONE_API_KEY)

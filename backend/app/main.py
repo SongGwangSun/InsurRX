@@ -12,6 +12,7 @@ import app.models.user              # noqa: F401
 import app.models.insurer           # noqa: F401
 import app.models.user_policy       # noqa: F401
 import app.models.kakao_session     # noqa: F401
+import app.models.kakao_link_code   # noqa: F401
 import app.models.mydata_policy     # noqa: F401
 import app.models.refresh_token     # noqa: F401
 import app.models.login_history     # noqa: F401

@@ -35,7 +35,9 @@ async def run_migrations():
         ("analysis_results",     "prompt_version",   "VARCHAR(32)"),
         ("analysis_results",     "latency_ms",       "INTEGER"),
         ("analysis_results",     "channel",          "VARCHAR(16)"),
-        # kakao_sessions는 create_tables()가 신규 테이블로 자동 생성
+        ("kakao_sessions",       "user_id",          "INTEGER"),
+        ("kakao_sessions",       "image_urls",       "JSON"),
+        # kakao_link_codes는 create_tables()가 신규 테이블로 자동 생성
     ]
     async with engine.begin() as conn:
         from sqlalchemy import text

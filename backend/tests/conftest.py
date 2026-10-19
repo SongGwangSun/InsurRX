@@ -22,6 +22,7 @@ async def test_db():
     import app.models.insurer           # noqa: F401
     import app.models.user_policy       # noqa: F401
     import app.models.kakao_session     # noqa: F401
+    import app.models.kakao_link_code   # noqa: F401
     import app.models.mydata_policy     # noqa: F401
 
     async with engine.begin() as conn:

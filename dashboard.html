@@ -704,6 +704,18 @@
         <div style="font-size:.82rem;margin-top:.5rem" id="pwMsg"></div>
       </div>
 
+      <!-- 카카오톡 연결 -->
+      <div class="card">
+        <h3>💬 카카오톡 연결</h3>
+        <p>카카오톡 챗봇에서 등록한 보험증권·분석 이력을 이 계정으로 합치고, 웹에서 등록한 보험을 카톡 분석에도 사용합니다.</p>
+        <div style="font-size:.85rem;margin-bottom:.75rem" id="kakaoLinkStatus"></div>
+        <button class="upload-btn" id="kakaoLinkBtn" onclick="issueKakaoLinkCode()">카카오톡 연결 코드 발급</button>
+        <div id="kakaoLinkCodeBox" style="display:none;margin-top:.75rem;font-size:.85rem">
+          카카오톡 InsurRX 채널에 아래처럼 입력하세요 (<span id="kakaoLinkExpire"></span>분 유효)
+          <div id="kakaoLinkCode" style="margin-top:.5rem;font-size:1.25rem;font-weight:700;letter-spacing:.08em;padding:.6rem .8rem;background:var(--gray-50);border-radius:8px;user-select:all"></div>
+        </div>
+      </div>
+
       <!-- 계정 정보 -->
       <div class="card" style="background:var(--gray-50)">
         <h3>계정 정보</h3>
@@ -1666,6 +1678,33 @@ function loadAccountInfo() {
   document.getElementById('accRole').textContent    = currentUser.is_admin ? '👑 관리자' : '일반 회원';
   document.getElementById('accCreated').textContent = fmtDate(currentUser.created_at);
   loadLoginHistory();
+  loadKakaoLinkStatus();
+}
+
+async function loadKakaoLinkStatus() {
+  const el = document.getElementById('kakaoLinkStatus');
+  try {
+    const res  = await apiFetch(`${API}/auth/kakao-link`);
+    const data = await res.json();
+    el.innerHTML = data.linked
+      ? '<span style="color:#16a34a;font-weight:600">✅ 카카오톡과 연결되어 있습니다.</span>'
+      : '<span style="color:var(--gray-500)">아직 연결되지 않았습니다.</span>';
+  } catch { el.textContent = ''; }
+}
+
+async function issueKakaoLinkCode() {
+  const btn = document.getElementById('kakaoLinkBtn');
+  btn.disabled = true;
+  try {
+    const res = await apiFetch(`${API}/auth/kakao-link-code`, { method: 'POST' });
+    if (!res.ok) throw new Error('연결 코드 발급에 실패했습니다.');
+    const data = await res.json();
+    document.getElementById('kakaoLinkCode').textContent   = `연결 ${data.code}`;
+    document.getElementById('kakaoLinkExpire').textContent = data.expires_in_minutes;
+    document.getElementById('kakaoLinkCodeBox').style.display = 'block';
+  } catch(e) {
+    toast(e.message, 'error');
+  } finally { btn.disabled = false; }
 }
 
 async function loadLoginHistory() {

@@ -25,6 +25,9 @@ _DEFAULT_KEYWORDS = {
     "diagnosis_labels": ["진단명", "상병명", "상병", "병명", "진단"],
     "patient_amount_labels": ["본인부담금", "환자부담금", "실부담금", "본인일부부담금", "납부금액", "수납금액", "청구금액"],
     "total_amount_labels": ["합계", "총진료비", "총액", "진료비합계"],
+    "prescription_keywords": ["처방전", "처방의약품", "교부번호", "처방의료인", "조제시참고사항"],
+    "receipt_keywords": ["진료비영수증", "영수증", "진료비계산서", "계산서", "수납", "진찰료"],
+    "pill_envelope_keywords": ["약봉투", "복약안내", "복약지도", "복용방법", "복용법", "조제일자", "조제일", "조제약사", "식후", "식전", "취침전"],
     "name_stopwords": ["홍길동", "성명", "환자명", "수진자", "보호자", "발급", "병원", "의원", "약국", "주민", "번호", "구분", "등록", "정보", "생년"],
 }
 
@@ -309,8 +312,29 @@ def _extract_drugs(text: str) -> list[ParsedDrug]:
     return drugs
 
 
+# 문서 종류 판별 — 키워드 적중 수가 같으면 앞 순서 우선
+_DOC_TYPE_KEYWORDS = [
+    ("prescription",  "prescription_keywords"),
+    ("receipt",       "receipt_keywords"),
+    ("pill_envelope", "pill_envelope_keywords"),
+]
+
+
+def detect_doc_type(text: str) -> str | None:
+    """OCR 텍스트에서 문서 종류(처방전/영수증/약봉투)를 추정. 단서가 없으면 None."""
+    compact = re.sub(r"\s", "", text or "")
+    best, best_score = None, 0
+    for doc_type, kw_key in _DOC_TYPE_KEYWORDS:
+        score = sum(1 for kw in KW[kw_key] if re.sub(r"\s", "", kw) in compact)
+        if score > best_score:
+            best, best_score = doc_type, score
+    return best
+
+
 def _regex_parse(text: str) -> ParsedDocument:
+    doc_type = detect_doc_type(text)
     return ParsedDocument(
+        doc_types=[doc_type] if doc_type else [],
         patient_name=_extract_patient_name(text),
         hospital=_extract_hospital(text),
         department=_extract_department(text),
@@ -385,6 +409,7 @@ def _merge_with_llm(base: ParsedDocument, llm: dict) -> ParsedDocument:
         prescription_date = base.prescription_date  or llm.get("prescription_date"),
         total_amount      = base.total_amount       or llm.get("total_amount"),
         drugs             = drugs,
+        doc_types         = base.doc_types,
     )
 
 
@@ -408,3 +433,46 @@ async def parse_medical_document_async(raw_text: str) -> ParsedDocument:
         doc = _merge_with_llm(doc, llm_result)
     return doc
 
+
+def merge_parsed_documents(docs: list[ParsedDocument]) -> ParsedDocument:
+    """여러 장(예: 처방전 + 약봉투)을 하나의 문서로 병합.
+
+    - 일반 항목: 약봉투가 아닌 문서 값을 우선 사용
+    - 총액: 영수증 값을 우선 사용
+    - 약품: 이름 기준 중복 제거
+    """
+    if not docs:
+        return ParsedDocument()
+    if len(docs) == 1:
+        return docs[0]
+
+    ordered = sorted(docs, key=lambda d: d.doc_types == ["pill_envelope"])
+    by_amount = sorted(ordered, key=lambda d: "receipt" not in d.doc_types)
+
+    def first(field: str, seq=ordered):
+        return next((getattr(d, field) for d in seq if getattr(d, field)), None)
+
+    drugs: list[ParsedDrug] = []
+    seen: set[str] = set()
+    for d in ordered:
+        for drug in d.drugs:
+            key = re.sub(r"\s", "", drug.name)
+            if key and key not in seen:
+                seen.add(key)
+                drugs.append(drug)
+
+    doc_types: list[str] = []
+    for d in docs:
+        doc_types += [t for t in d.doc_types if t not in doc_types]
+
+    return ParsedDocument(
+        patient_name      = first("patient_name"),
+        hospital          = first("hospital"),
+        department        = first("department"),
+        icd_code          = first("icd_code"),
+        diagnosis         = first("diagnosis"),
+        prescription_date = first("prescription_date"),
+        total_amount      = first("total_amount", by_amount),
+        drugs             = drugs,
+        doc_types         = doc_types,
+    )

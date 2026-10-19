@@ -82,6 +82,14 @@ OCR + RAG로 **3초 이내** 실손/정액 보상 여부 및 예상 지급액 �
 - [x] response_builder — basicCard/simpleText/quickReplies 포맷 빌더
 - [x] 랜딩페이지: 히어로 CTA 카카오 채팅 직링크 + 웹 대시보드 병렬 버튼
 
+### 카카오톡 보험증권·약관·약봉투 업로드 ✅ (2026-10-18)
+- [x] 계정 연결 — 카톡 첫 등록 시 카카오 전용 회원 자동 생성(`kakao-…@kakao.song2nes.com`), 웹 `POST /auth/kakao-link-code` 발급 코드를 카톡에 `연결 <코드>` 입력 → 보험·분석 이력 웹 계정으로 이전 (`app/services/kakao/account.py`, `KakaoLinkCode`)
+- [x] 카톡 `내 보험` 메뉴 — 보험증권 사진 등록(최대 10장, 수신 즉시 다운로드 → 증권용 OCR → 주민번호·전화번호 마스킹 → 임베딩), 약관 연결(보험사→상품 선택, 파일 없는 `UserPolicy`)
+- [x] 보안 이미지 플러그인 `secureUrls: List(...)` 형식 + 여러 장 수신 지원
+- [x] 약봉투 — 문서 종류 판별(`detect_doc_type`), 여러 장 병합(`merge_parsed_documents`), 약봉투 단독 시 신뢰도 하향 지시·청구 서류 안내
+- [x] 카톡·웹 분석 모두 `collect_policy_sources()`로 내 보험(마이데이터·연결 약관·업로드 증권) 포함
+- [ ] **외부 작업**: 오픈빌더에 `내 보험`·`보험증권 등록`·`약관 연결`·`계정 연결` 발화 블록 추가(또는 폴백 블록을 스킬에 연결), 이미지 파라미터는 보안 이미지 플러그인 다중 장 허용
+
 ### 자동 로그인 / 로그인 이력 ✅ (2026-06-09)
 - [x] `RefreshToken` 모델 — SHA-256 해시 저장, 만료일, 폐기 플래그
 - [x] `LoginHistory` 모델 — user_id, email, IP, User-Agent, 기기유형, success/failed

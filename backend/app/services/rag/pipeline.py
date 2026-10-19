@@ -1,6 +1,6 @@
 import time
 import uuid
-from app.schemas.upload import ParsedDocument
+from app.schemas.upload import ParsedDocument, DOC_TYPE_LABELS
 from app.schemas.analysis import AnalyzeResponse, CoverageItem
 from app.services.rag.retriever import retrieve_relevant_clauses
 from app.services.rag.embedder import get_query_embedding
@@ -57,6 +57,10 @@ def _build_query(doc: ParsedDocument) -> str:
 
 def _format_document_info(doc: ParsedDocument) -> str:
     lines = []
+    if doc.doc_types:
+        lines.append("문서 종류: " + ", ".join(DOC_TYPE_LABELS.get(t, t) for t in doc.doc_types))
+        if doc.doc_types == ["pill_envelope"] and not doc.diagnosis and not doc.icd_code:
+            lines.append("※ 약봉투만 제출되어 진단명·상병코드가 없음 — 약품 정보로만 판단하고 신뢰도를 낮게 평가할 것")
     if doc.hospital:
         lines.append(f"병원: {doc.hospital}")
     if doc.department:

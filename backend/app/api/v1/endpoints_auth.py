@@ -195,3 +195,29 @@ async def login_history(
         .limit(limit)
     )
     return result.scalars().all()
+
+
+# ── 카카오톡 계정 연결 ────────────────────────────────────────────────────────
+
+@router.post("/kakao-link-code", status_code=201)
+async def create_kakao_link_code(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """카카오톡 챗봇에서 '연결 <코드>'로 입력할 1회용 코드 발급 (10분 유효)."""
+    from app.services.kakao.account import issue_link_code, LINK_CODE_EXPIRE_MINUTES
+    code = await issue_link_code(db, current_user.id)
+    return {"code": code, "expires_in_minutes": LINK_CODE_EXPIRE_MINUTES}
+
+
+@router.get("/kakao-link")
+async def kakao_link_status(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """카카오톡 계정 연결 여부."""
+    from app.models.kakao_session import KakaoSession
+    result = await db.execute(
+        select(KakaoSession.kakao_user_id).where(KakaoSession.user_id == current_user.id).limit(1)
+    )
+    return {"linked": result.first() is not None}
