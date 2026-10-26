@@ -16,7 +16,7 @@ def get_vectorstore():
 PINECONE_UPSERT_BATCH = 100  # Pinecone 4MB 한도 대응: 100벡터씩 분할 업서트
 
 
-async def upsert_policy_chunks(chunks: list[dict]):
+async def upsert_policy_chunks(chunks: list[dict], namespace: str = ""):
     """약관 청크를 벡터스토어에 업서트합니다. chunks: [{id, embedding, metadata}]"""
     if settings.VECTOR_DB_TYPE == "pinecone":
         index = get_vectorstore()
@@ -24,7 +24,7 @@ async def upsert_policy_chunks(chunks: list[dict]):
         # 배치 단위로 나눠서 upsert (대용량 파일 대응)
         for i in range(0, len(vectors), PINECONE_UPSERT_BATCH):
             batch = vectors[i:i + PINECONE_UPSERT_BATCH]
-            index.upsert(vectors=batch)
+            index.upsert(vectors=batch, namespace=namespace)
         print(f"    → Pinecone upsert 완료: {len(vectors)}개 ({len(vectors)//PINECONE_UPSERT_BATCH + 1}배치)")
     else:
         raise NotImplementedError("Milvus upsert not yet implemented")

@@ -6,7 +6,6 @@ from app.schemas.upload import ParsedDocument
 
 class AnalyzeRequest(BaseModel):
     parsed: ParsedDocument
-    policy_ids: list[str] = []   # 공개 약관 ID 목록 (선택사항)
 
 
 class CoverageItem(BaseModel):

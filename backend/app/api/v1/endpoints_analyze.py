@@ -17,23 +17,16 @@ async def analyze_coverage(
     db: AsyncSession = Depends(get_db),
     current_user=Depends(get_optional_user),
 ):
-    """파싱된 의료 문서 + (선택) JWT → 공개 약관 + 개인 보험증권 + 마이데이터 보험 통합 RAG.
+    """파싱된 의료 문서 + (선택) JWT → 표준약관 RAG 보상 분석.
 
-    검색 우선순위:
-    1. request.policy_ids       — 명시적으로 지정한 공개 약관
-    2. 마이데이터 연결 보험·상품 연결 보험증권 — 해당 공개 약관 자동 포함
-    3. 업로드 보험증권           — 임베딩 완료된 개인 문서 자동 포함
+    표준약관(별표15)은 항상 검색하고, 회원이 업로드해 임베딩된 문서가 있으면 함께 검색합니다.
     """
-    policy_ids    : list[str] = list(request.policy_ids)
     user_namespaces: list[str] = []
-
     if current_user:
-        own_ids, user_namespaces = await collect_policy_sources(db, current_user.id)
-        policy_ids += [pid for pid in own_ids if pid not in policy_ids]
+        _, user_namespaces = await collect_policy_sources(db, current_user.id)
 
     result = await run_rag_pipeline(
         parsed_doc=request.parsed,
-        policy_ids=policy_ids,
         user_namespaces=user_namespaces,
     )
 

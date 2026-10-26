@@ -10,18 +10,17 @@ from app.services.rag.retriever import retrieve_relevant_clauses
 
 async def run_rag_pipeline(
     parsed_doc: ParsedDocument,
-    policy_ids: list[str],
     user_namespaces: list[str] | None = None,
 ) -> AnalyzeResponse:
     """
     1. 파싱된 의료 문서를 쿼리 텍스트로 변환
-    2. Vector DB에서 관련 약관 조항 검색
+    2. Vector DB에서 관련 표준약관 조항 검색 (+ 회원 업로드 문서)
     3. LangChain + Claude로 보상 여부 및 예상 금액 추론
     """
     started = time.perf_counter()
     query = _build_query(parsed_doc)
     embedding = await get_query_embedding(query)
-    clauses = await retrieve_relevant_clauses(embedding, policy_ids, user_namespaces)
+    clauses = await retrieve_relevant_clauses(embedding, user_namespaces)
 
     document_info = _format_document_info(parsed_doc)
     clauses_text = _format_clauses(clauses)
@@ -42,8 +41,12 @@ async def run_rag_pipeline(
     )
 
 
+# 진단·약품만으로는 용어 정의나 부표가 걸리기 쉬워, 보상 판단에 필요한 조항 쪽으로 검색을 유도한다
+QUERY_INTENT = "실손의료비 보상"
+
+
 def _build_query(doc: ParsedDocument) -> str:
-    parts = []
+    parts = [QUERY_INTENT]
     if doc.icd_code:
         parts.append(f"상병코드: {doc.icd_code}")
     if doc.diagnosis:

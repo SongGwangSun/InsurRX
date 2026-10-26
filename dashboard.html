@@ -219,15 +219,6 @@
     /* CURRENT TAB LABEL (mobile breadcrumb) */
     .current-tab-label { display:none;font-size:.92rem;font-weight:700;color:var(--gray-700);padding:.5rem 0;margin-bottom:.5rem; }
 
-    /* ONBOARDING OVERLAY */
-    .onboard-steps { display:flex;align-items:center;gap:.3rem;margin-bottom:1.75rem; }
-    .onboard-step-dot { width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;flex-shrink:0;transition:all .3s; }
-    .onboard-step-dot.done    { background:#DCFCE7;color:#166534; }
-    .onboard-step-dot.active  { background:var(--blue);color:var(--white);box-shadow:0 0 0 4px #DBEAFE; }
-    .onboard-step-dot.pending { background:var(--gray-100);color:var(--gray-400); }
-    .onboard-step-line { flex:1;height:2px;background:var(--gray-200);border-radius:99px; }
-    .onboard-step-line.done { background:#DCFCE7; }
-    .onboard-step-label { font-size:.72rem;color:var(--gray-500);text-align:center;margin-top:4px; }
 
     /* RESPONSIVE */
     @media (max-width:767px) {
@@ -272,64 +263,12 @@
   </div>
   <div class="mobile-nav-menu">
     <button class="mobile-nav-item active" id="mobAnalyze"  onclick="switchMainTab('analyze')">🔍 보상 분석</button>
-    <button class="mobile-nav-item"        id="mobMydata"   onclick="switchMainTab('mydata')">🔗 마이데이터</button>
-    <button class="mobile-nav-item"        id="mobPolicies" onclick="switchMainTab('policies')">📄 내 보험증권</button>
     <button class="mobile-nav-item"        id="mobHistory"  onclick="switchMainTab('history')">📋 분석 히스토리</button>
     <button class="mobile-nav-item"        id="mobAccount"  onclick="switchMainTab('account')">⚙️ 계정 설정</button>
   </div>
   <div class="mobile-nav-footer">
     <div class="mobile-nav-user" id="mobileNavUser"></div>
     <button class="btn-sm btn-outline" style="width:100%;justify-content:center" onclick="logout()">로그아웃</button>
-  </div>
-</div>
-
-<!-- ONBOARDING OVERLAY -->
-<div class="overlay hidden" id="onboardingOverlay">
-  <div class="modal" style="max-width:480px">
-    <!-- 진행 단계 -->
-    <div class="onboard-steps">
-      <div style="text-align:center;flex:0 0 auto">
-        <div class="onboard-step-dot done">✓</div>
-        <div class="onboard-step-label">가입 완료</div>
-      </div>
-      <div class="onboard-step-line done"></div>
-      <div style="text-align:center;flex:0 0 auto">
-        <div class="onboard-step-dot active">2</div>
-        <div class="onboard-step-label">증권 등록</div>
-      </div>
-      <div class="onboard-step-line"></div>
-      <div style="text-align:center;flex:0 0 auto">
-        <div class="onboard-step-dot pending">3</div>
-        <div class="onboard-step-label">분석 시작</div>
-      </div>
-    </div>
-
-    <div style="text-align:center;margin-bottom:1.5rem">
-      <div style="font-size:2.5rem;margin-bottom:.5rem">📄</div>
-      <h2 style="font-size:1.3rem">내 보험증권을 등록하세요</h2>
-      <p class="sub" style="margin-top:.4rem">등록된 증권 기준으로 AI가 보상 여부를 더 정확하게 분석해드려요.<br>PDF, JPG, PNG 모두 지원합니다.</p>
-    </div>
-
-    <div class="form-group">
-      <label>보험 상품 선택 <span style="font-weight:400;color:var(--gray-400)">(선택사항)</span></label>
-      <select id="onboardProductSelect" style="width:100%;padding:10px 14px;border:1.5px solid var(--gray-200);border-radius:9px;font-size:.9rem;background:var(--white);outline:none">
-        <option value="">상품 선택...</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>보험증권 파일</label>
-      <input type="file" id="onboardPolicyFile" accept=".pdf,.jpg,.jpeg,.png,.webp"
-             style="width:100%;padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:9px;font-size:.875rem;background:var(--white)" />
-    </div>
-
-    <div id="onboardProgress" style="display:none;margin-bottom:1rem">
-      <div class="progress-bar-wrap"><div class="progress-bar" id="onboardProgressBar" style="width:0%"></div></div>
-      <div class="progress-text" id="onboardProgressText">업로드 중...</div>
-    </div>
-
-    <button class="btn-full" id="onboardUploadBtn" onclick="uploadOnboardPolicy()">보험증권 등록하기</button>
-    <button onclick="skipOnboarding()" style="width:100%;padding:11px;margin-top:.75rem;border-radius:10px;border:1.5px solid var(--gray-200);background:transparent;font-size:.9rem;font-weight:600;color:var(--gray-500);cursor:pointer">나중에 추가할게요 →</button>
-    <p style="font-size:.75rem;color:var(--gray-300);text-align:center;margin-top:.75rem">언제든 "내 보험증권" 탭에서 추가할 수 있어요.</p>
   </div>
 </div>
 
@@ -408,15 +347,13 @@
   <div class="welcome-banner">
     <div>
       <h1 id="welcomeName">안녕하세요!</h1>
-      <p id="welcomeSub">업로드한 보험증권을 기반으로 AI가 보상 여부를 분석합니다.</p>
+      <p id="welcomeSub">표준약관을 기준으로 AI가 보상 가능성과 예상 금액을 분석합니다.</p>
     </div>
   </div>
 
   <!-- 주 탭 (데스크톱) / 현재 탭 레이블 (모바일) -->
   <div class="main-tabs">
     <button class="main-tab-btn active" id="mtAnalyze"  onclick="switchMainTab('analyze')">🔍 보상 분석</button>
-    <button class="main-tab-btn"        id="mtMydata"   onclick="switchMainTab('mydata')">🔗 마이데이터</button>
-    <button class="main-tab-btn"        id="mtPolicies" onclick="switchMainTab('policies')">📄 내 보험증권</button>
     <button class="main-tab-btn"        id="mtHistory"  onclick="switchMainTab('history')">📋 분석 히스토리</button>
     <button class="main-tab-btn"        id="mtAccount"  onclick="switchMainTab('account')">⚙️ 계정 설정</button>
   </div>
@@ -445,14 +382,10 @@
       </div>
       <input type="file" id="analyzeFileInput" accept=".jpg,.jpeg,.png,.webp,.pdf" onchange="onFileSelected(this.files[0])" />
 
-      <!-- 공개 약관 선택 (선택사항) -->
-      <div class="card" style="margin-bottom:0">
-        <h3 style="font-size:.9rem">보험사 약관 추가 검색 <span style="font-weight:400;color:var(--gray-500)">(선택사항)</span></h3>
-        <p style="margin-bottom:.6rem">로그인 시 내 보험증권이 자동으로 분석에 포함됩니다.</p>
-        <select id="publicPolicySelect" style="width:100%;padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:9px;font-size:.875rem;outline:none;">
-          <option value="">공개 약관 선택 안 함</option>
-        </select>
-      </div>
+      <p style="font-size:.8rem;color:var(--gray-500);margin-top:.75rem">
+        📘 보험사별 약관 대신 <b>표준약관</b>(보험업감독업무시행세칙 별표15, 실손 2026.5.6. 개정)을 기준으로 분석합니다.
+        진료비 영수증을 함께 올리면 예상 금액까지 계산할 수 있습니다.
+      </p>
     </div>
 
     <!-- Step 2: OCR 진행 중 -->
@@ -470,15 +403,6 @@
       <div class="ocr-preview">
         <h4>OCR 추출 결과 — 분석에 사용할 정보입니다</h4>
         <div class="ocr-fields" id="ocrFields"></div>
-      </div>
-
-      <!-- 마이데이터 진료내역 대조 -->
-      <div id="mydataVerifyBox" style="margin-bottom:1rem">
-        <button onclick="verifyWithMydata()" id="mydataVerifyBtn"
-          style="padding:9px 16px;border-radius:9px;font-size:.85rem;font-weight:600;border:1.5px solid var(--teal);background:#F0FDFA;color:#0F766E;cursor:pointer">
-          🔗 마이데이터로 진료내역 확인
-        </button>
-        <div id="mydataVerifyResult" style="display:none;margin-top:.7rem"></div>
       </div>
 
       <!-- OCR 인식 불충분 시 직접 입력 -->
@@ -535,114 +459,6 @@
     <div id="analysisResult" style="display:none">
       <div id="resultCard"></div>
       <button class="btn-sm btn-outline" style="margin-top:.5rem" onclick="resetAnalyze()">다시 분석하기</button>
-    </div>
-
-  </div>
-
-  <!-- ═══ TAB: 마이데이터 ═════════════════════════════════════════════ -->
-  <div class="tab-content" id="tabMydata">
-
-    <!-- 연결 전 안내 -->
-    <div id="mydataConnectSection">
-      <div class="card" style="max-width:560px">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem">
-          <div style="font-size:2.5rem">🏦</div>
-          <div>
-            <h3 style="margin:0">금융 마이데이터로 내 보험 자동 연결</h3>
-            <p style="margin:.25rem 0 0;font-size:.82rem;color:var(--gray-500)">가입한 보험이 자동으로 분석에 활용됩니다.</p>
-          </div>
-        </div>
-        <div style="background:var(--gray-50);border-radius:10px;padding:1rem;margin-bottom:1.25rem;font-size:.85rem;line-height:1.8">
-          <strong>연결 후 제공되는 기능:</strong><br>
-          ✅ 가입 보험 자동 인식 — 처방전 업로드만으로 즉시 분석<br>
-          ✅ AI가 내 보험 약관을 정확히 검색<br>
-          ✅ 미청구 보험금 자동 발굴
-        </div>
-        <div class="form-group">
-          <label>이름</label>
-          <input type="text" id="mdName" placeholder="홍길동" />
-        </div>
-        <div class="form-group">
-          <label>생년월일 (8자리)</label>
-          <input type="text" id="mdBirth" placeholder="19901231" maxlength="8" />
-        </div>
-        <div style="background:#EFF6FF;border-radius:8px;padding:.75rem 1rem;font-size:.8rem;color:#1E40AF;margin-bottom:1rem">
-          🔒 입력 정보는 보험 계약 조회에만 사용되며 서버에 저장되지 않습니다.
-        </div>
-        <button class="upload-btn" id="mdConnectBtn" onclick="connectMydata()" style="width:100%">
-          마이데이터 연결하기
-        </button>
-        <div style="font-size:.8rem;color:var(--red);margin-top:.5rem" id="mdError"></div>
-      </div>
-    </div>
-
-    <!-- 연결 완료 후 보험 목록 -->
-    <div id="mydataPoliciesSection" style="display:none">
-      <div class="section-header">
-        <h2>연결된 보험 계약</h2>
-        <div style="display:flex;gap:8px">
-          <button class="btn-sm btn-outline" onclick="loadMydataPolicies()">새로고침</button>
-          <button class="btn-sm btn-danger-sm" onclick="disconnectAll()"
-                  style="padding:7px 14px;border-radius:8px;font-size:.82rem;font-weight:600;border:1.5px solid #FCA5A5;color:var(--red);background:transparent;cursor:pointer">연결 해제</button>
-        </div>
-      </div>
-
-      <div style="background:#DCFCE7;border-radius:10px;padding:.75rem 1rem;font-size:.85rem;color:#166534;margin-bottom:1rem;display:flex;align-items:center;gap:8px">
-        <span>✅</span>
-        <span id="mdRagNotice">마이데이터 연결 완료 — 보상 분석 시 내 보험이 자동으로 검색됩니다.</span>
-      </div>
-
-      <div class="policies-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>보험사</th><th>상품명</th><th>종류</th><th>월 보험료</th><th>보장 기간</th><th>상태</th><th>AI 분석</th><th></th>
-            </tr>
-          </thead>
-          <tbody id="mydataBody"><tr class="empty-row"><td colspan="8">로딩 중...</td></tr></tbody>
-        </table>
-      </div>
-
-      <div class="card" style="background:var(--gray-50);margin-top:1rem">
-        <p style="font-size:.82rem;color:var(--gray-500);margin:0">
-          💡 <strong>AI 분석 가능</strong> 표시는 해당 보험의 약관 데이터가 등록되어 있어 더 정확한 분석이 가능함을 의미합니다.<br>
-          표시가 없는 보험도 연결 상태는 유지되며, 약관 등록 후 자동으로 활성화됩니다.
-        </p>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- ═══ TAB: 내 보험증권 ════════════════════════════════════════════ -->
-  <div class="tab-content" id="tabPolicies">
-
-    <div class="section-header" style="margin-bottom:1rem">
-      <h2>보험증권 / 약관 업로드</h2>
-      <span>PDF · JPG · PNG · WEBP 최대 20MB</span>
-    </div>
-    <div class="upload-card">
-      <h3>내 보험 문서 등록</h3>
-      <p>보험증권 또는 약관 파일을 업로드하면 AI가 자동으로 임베딩하여 벡터 DB에 저장합니다.<br>등록된 문서는 보상 분석 시 자동으로 검색 대상에 포함됩니다.</p>
-      <div class="upload-row">
-        <select id="productSelect"><option value="">보험 상품 선택 (선택사항)</option></select>
-        <input type="file" id="policyFile" accept=".pdf,.jpg,.jpeg,.png,.webp" />
-        <button class="upload-btn" id="uploadBtn" onclick="uploadPolicy()">업로드</button>
-      </div>
-      <div id="uploadProgress" style="display:none">
-        <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
-        <div class="progress-text" id="progressText">업로드 중...</div>
-      </div>
-    </div>
-
-    <div class="section-header">
-      <h2>내 보험증권 목록</h2>
-      <button class="btn-sm btn-outline" onclick="loadPolicies()">새로고침</button>
-    </div>
-    <div class="policies-wrap">
-      <table>
-        <thead><tr><th>#</th><th>파일명</th><th>상태</th><th>청크 수</th><th>업로드일</th><th></th></tr></thead>
-        <tbody id="policiesBody"><tr class="empty-row"><td colspan="6">로딩 중...</td></tr></tbody>
-      </table>
     </div>
 
   </div>
@@ -747,7 +563,7 @@
 <div class="page-wrap" id="guestContent" style="display:none;text-align:center;padding-top:160px;">
   <div style="font-size:4rem">🔒</div>
   <h2 style="margin-top:1rem;font-size:1.5rem">로그인이 필요합니다</h2>
-  <p style="color:var(--gray-500);margin-top:.5rem;margin-bottom:1.5rem">보험증권 관리 및 AI 분석 기능을 이용하려면 로그인하세요.</p>
+  <p style="color:var(--gray-500);margin-top:.5rem;margin-bottom:1.5rem">처방전·영수증 보상 분석과 분석 이력을 이용하려면 로그인하세요.</p>
   <button class="btn-sm btn-primary" style="font-size:1rem;padding:12px 32px" onclick="showAuth()">로그인 / 회원가입</button>
 </div>
 
@@ -791,16 +607,13 @@ function enterDashboard() {
   document.getElementById('mobileNavUser').textContent = currentUser.email;
   if (currentUser.is_admin) document.getElementById('adminLink').style.display = '';
   document.getElementById('welcomeName').textContent = `안녕하세요, ${currentUser.name}님!`;
-  document.getElementById('welcomeSub').textContent = '업로드한 보험증권을 기반으로 AI가 보상 여부를 분석합니다.';
-  loadProductOptions();
-  loadPublicPolicies();
 }
 
 // ── 주 탭 전환 ─────────────────────────────────────────
-const _tabLabels = { analyze:'🔍 보상 분석', mydata:'🔗 마이데이터', policies:'📄 내 보험증권', history:'📋 분석 히스토리', account:'⚙️ 계정 설정' };
+const _tabLabels = { analyze:'🔍 보상 분석', history:'📋 분석 히스토리', account:'⚙️ 계정 설정' };
 
 function switchMainTab(name) {
-  ['analyze','mydata','policies','history','account'].forEach(t => {
+  ['analyze','history','account'].forEach(t => {
     document.getElementById('tab' + cap(t)).classList.toggle('active', t === name);
     document.getElementById('mt'  + cap(t)).classList.toggle('active', t === name);
     const mob = document.getElementById('mob' + cap(t));
@@ -809,10 +622,8 @@ function switchMainTab(name) {
   const lbl = document.getElementById('currentTabLabel');
   if (lbl) lbl.textContent = _tabLabels[name] || '';
   closeMobileNav();
-  if (name === 'policies') loadPolicies();
   if (name === 'history')  loadHistory();
   if (name === 'account')  loadAccountInfo();
-  if (name === 'mydata')   loadMydataPolicies();
 }
 function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
@@ -942,7 +753,6 @@ async function doRegister() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || '회원가입 실패');
     saveAuth(data); enterDashboard(); toast(`${data.user.name}님, 환영합니다!`, 'success');
-    showOnboarding();
   } catch(e) { errEl.textContent = e.message; }
   finally { btn.disabled = false; btn.textContent = '회원가입'; }
 }
@@ -1134,15 +944,12 @@ async function runAnalysis() {
   const bar = document.getElementById('analysisBar');
   const timer = setInterval(() => { pct = Math.min(pct + 5, 85); bar.style.width = pct + '%'; }, 800);
 
-  const publicPolicyId = document.getElementById('publicPolicySelect').value;
-  const policy_ids = publicPolicyId ? [publicPolicyId] : [];
-
   try {
     const headers = { 'Content-Type': 'application/json' };
     if (authToken) headers.Authorization = `Bearer ${authToken}`;
     const res  = await fetch(`${API}/analyze/`, {
       method: 'POST', headers,
-      body: JSON.stringify({ parsed: _parsedDoc, policy_ids }),
+      body: JSON.stringify({ parsed: _parsedDoc }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || '분석 실패');
@@ -1167,9 +974,9 @@ async function runAnalysis() {
 function payoutNoticeHtml() {
   return `
     <div class="payout-notice">
-      ⚠️ 이 금액은 약관과 영수증을 바탕으로 AI가 계산한 <b>추정치</b>입니다.
+      ⚠️ 이 금액은 현행 실손의료보험 <b>표준약관</b>(2026.5.6. 개정)과 영수증을 바탕으로 AI가 계산한 <b>추정치</b>입니다.
       최종 지급 여부와 금액은 <b>보험사 심사</b>로 결정됩니다.
-      실손보험은 가입 시기(1~4세대)에 따라 공제액과 자기부담률이 달라 실제 금액과 차이가 날 수 있습니다.
+      실손보험은 가입 시기(1~5세대)와 특별약관 가입 여부에 따라 공제액과 자기부담률이 달라 실제 금액과 차이가 날 수 있습니다.
     </div>
     <details class="payout-guide">
       <summary>실제 지급 결과가 예상과 다르다면?</summary>
@@ -1234,52 +1041,6 @@ function renderAnalysisResult(data) {
   `;
 }
 
-// OCR 인식 정보로 의료 마이데이터 진료내역 대조 + 가입보험 자동 연결
-async function verifyWithMydata() {
-  if (!_parsedDoc) return;
-  const btn = document.getElementById('mydataVerifyBtn');
-  const box = document.getElementById('mydataVerifyResult');
-  const orig = btn.textContent;
-  btn.disabled = true; btn.textContent = '확인 중...';
-  try {
-    const headers = { 'Content-Type': 'application/json' };
-    if (authToken) headers.Authorization = `Bearer ${authToken}`;
-    const res = await fetch(`${API}/mydata/verify-treatment`, {
-      method: 'POST', headers,
-      body: JSON.stringify({
-        patient_name: _parsedDoc.patient_name || null,
-        hospital: _parsedDoc.hospital || null,
-        treatment_date: _parsedDoc.prescription_date || null,
-      }),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || '확인 실패');
-
-    box.style.display = '';
-    if (data.verified) {
-      const t = data.treatment || {};
-      const sub = [t.patient_name, t.hospital, t.treatment_date].filter(Boolean).map(esc).join(' · ');
-      box.innerHTML = `
-        <div style="background:#DCFCE7;border:1px solid #86EFAC;border-radius:10px;padding:.8rem 1rem;font-size:.85rem;color:#166534">
-          ✅ ${esc(data.message)}
-          ${sub ? `<div style="margin-top:.3rem;color:#15803D;font-size:.8rem">진료내역: ${sub}</div>` : ''}
-          ${data.insurance_connected ? `<div style="margin-top:.45rem;font-weight:700">🔗 가입 보험 ${data.insurance_connected}건이 보상 분석에 자동 반영됩니다.</div>` : ''}
-        </div>`;
-      if (data.insurance_connected) toast(`마이데이터 가입 보험 ${data.insurance_connected}건 연결됨`, 'success');
-      btn.style.display = 'none';
-    } else {
-      box.innerHTML = `
-        <div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:10px;padding:.8rem 1rem;font-size:.85rem;color:#92400E">
-          ⚠️ ${esc(data.message)}
-        </div>`;
-    }
-  } catch(e) {
-    toast(e.message, 'error');
-  } finally {
-    btn.disabled = false; btn.textContent = orig;
-  }
-}
-
 // OCR 결과가 불충분할 때: 수기 입력 대신 다른 사진을 다시 선택
 function reselectPhoto() {
   resetAnalyze();
@@ -1296,38 +1057,11 @@ function resetAnalyze() {
   document.getElementById('analysisResult').style.display = 'none';
   document.getElementById('analyzeFileInput').value = '';
   document.getElementById('ocrManualInput').style.display = 'none';
-  const mvBox = document.getElementById('mydataVerifyResult');
-  const mvBtn = document.getElementById('mydataVerifyBtn');
-  if (mvBox) { mvBox.style.display = 'none'; mvBox.innerHTML = ''; }
-  if (mvBtn) mvBtn.style.display = '';
   ['manualDiagnosis','manualIcd','manualAmount','manualHospital'].forEach(id => {
     document.getElementById(id).value = '';
   });
   const btn = document.getElementById('runAnalysisBtn');
   btn.disabled = false; btn.style.opacity = ''; btn.textContent = 'AI 보상 분석 시작';
-}
-
-// ══ 공개 약관 선택 로드 ════════════════════════════════════
-async function loadPublicPolicies() {
-  try {
-    const res = await fetch(`${API}/insurers/`);
-    const insurers = await res.json();
-    const sel = document.getElementById('publicPolicySelect');
-    insurers.forEach(ins => {
-      if (!ins.products?.length) return;
-      const grp = document.createElement('optgroup');
-      grp.label = ins.name;
-      ins.products.forEach(p => {
-        // vector_policy_id 있는 상품만 표시 (Pinecone에 실제 데이터 있는 것만)
-        if (!p.vector_policy_id) return;
-        const opt = document.createElement('option');
-        opt.value = p.vector_policy_id;   // Pinecone policy_id와 정확히 일치
-        opt.textContent = p.name;
-        grp.appendChild(opt);
-      });
-      if (grp.childElementCount > 0) sel.appendChild(grp);
-    });
-  } catch {}
 }
 
 // ══ 분석 히스토리 ════════════════════════════════════════
@@ -1429,245 +1163,6 @@ async function deleteHistory(sessionId) {
     toast('삭제 완료', 'success');
     await loadHistory();
   } catch(e) { toast(e.message, 'error'); }
-}
-
-// ══ 보험증권 탭 ════════════════════════════════════════════
-async function loadProductOptions() {
-  try {
-    const res = await fetch(`${API}/insurers/`);
-    const insurers = await res.json();
-    const targets = ['productSelect', 'onboardProductSelect'];
-    targets.forEach(selId => {
-      const sel = document.getElementById(selId);
-      if (!sel) return;
-      sel.innerHTML = '<option value="">보험 상품 선택 (선택사항)</option>';
-      insurers.forEach(ins => {
-        if (!ins.products?.length) return;
-        const grp = document.createElement('optgroup');
-        grp.label = ins.name;
-        ins.products.forEach(p => {
-          const opt = document.createElement('option');
-          opt.value = p.id; opt.textContent = `${p.name} (${p.product_code})`;
-          grp.appendChild(opt);
-        });
-        sel.appendChild(grp);
-      });
-    });
-  } catch {}
-}
-
-async function uploadPolicy() {
-  const fi = document.getElementById('policyFile');
-  if (!fi.files.length) { toast('파일을 선택해 주세요.', 'error'); return; }
-  const file = fi.files[0];
-  const productId = document.getElementById('productSelect').value;
-  const form = new FormData();
-  form.append('file', file);
-  if (productId) form.append('product_id', productId);
-  const btn = document.getElementById('uploadBtn');
-  btn.disabled = true;
-  showProg(30, '파일 업로드 중...');
-  try {
-    const res  = await apiFetch(`${API}/my/policies/upload`, { method:'POST', body: form });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || '업로드 실패');
-    showProg(80, '임베딩 처리 중 (백그라운드)...');
-    await new Promise(r => setTimeout(r, 800));
-    showProg(100, '완료!');
-    setTimeout(() => hideProg(), 1500);
-    toast(`"${data.original_name}" 업로드 완료`, 'success');
-    fi.value = ''; document.getElementById('productSelect').value = '';
-    await loadPolicies();
-  } catch(e) { hideProg(); toast(e.message, 'error'); }
-  finally { btn.disabled = false; }
-}
-
-function showProg(pct, msg) {
-  document.getElementById('uploadProgress').style.display = '';
-  document.getElementById('progressBar').style.width = pct + '%';
-  document.getElementById('progressText').textContent = msg;
-}
-function hideProg() { document.getElementById('uploadProgress').style.display = 'none'; }
-
-async function loadPolicies() {
-  try {
-    const res = await apiFetch(`${API}/my/policies/`);
-    renderPolicies(await res.json());
-  } catch { document.getElementById('policiesBody').innerHTML = `<tr class="empty-row"><td colspan="6">불러오기 실패</td></tr>`; }
-}
-
-function renderPolicies(list) {
-  startPollIfNeeded(list);
-  const tb = document.getElementById('policiesBody');
-  if (!list.length) { tb.innerHTML = `<tr class="empty-row"><td colspan="6">등록된 보험증권이 없습니다.</td></tr>`; return; }
-  tb.innerHTML = list.map((p, i) => `
-    <tr>
-      <td style="color:var(--gray-500)">${i+1}</td>
-      <td style="font-weight:500">${esc(p.original_name)}</td>
-      <td>${statusBadge(p.status)}</td>
-      <td>${p.chunk_count > 0 ? p.chunk_count + '개' : '-'}</td>
-      <td style="color:var(--gray-500);font-size:.82rem">${fmtDate(p.uploaded_at)}</td>
-      <td><button class="del-btn" onclick="deletePolicy(${p.id},'${esc(p.original_name)}')" title="삭제">🗑</button></td>
-    </tr>
-  `).join('');
-}
-
-function statusBadge(s) {
-  const m = { pending:'처리 대기',processing:'임베딩 중',ready:'사용 가능',failed:'오류' };
-  const c = { pending:'badge-pending',processing:'badge-processing',ready:'badge-ready',failed:'badge-failed' };
-  return `<span class="badge ${c[s]||''}">${m[s]||s}</span>`;
-}
-
-async function deletePolicy(id, name) {
-  if (!confirm(`"${name}" 을(를) 삭제합니다. 벡터 DB에서도 제거됩니다.`)) return;
-  try {
-    const res = await apiFetch(`${API}/my/policies/${id}`, { method:'DELETE' });
-    if (!res.ok && res.status !== 204) throw new Error('삭제 실패');
-    toast(`"${name}" 삭제 완료`, 'success'); await loadPolicies();
-  } catch(e) { toast(e.message, 'error'); }
-}
-
-// ══ 마이데이터 탭 ══════════════════════════════════════════
-
-async function loadMydataPolicies() {
-  try {
-    const res = await fetch(`${API}/mydata/policies`, {
-      headers: { Authorization: `Bearer ${authToken}` },
-    });
-    if (!res.ok) return;
-    const list = await res.json();
-    if (list.length === 0) {
-      document.getElementById('mydataConnectSection').style.display = '';
-      document.getElementById('mydataPoliciesSection').style.display = 'none';
-    } else {
-      document.getElementById('mydataConnectSection').style.display = 'none';
-      document.getElementById('mydataPoliciesSection').style.display = '';
-      renderMydataPolicies(list);
-    }
-  } catch {}
-}
-
-async function connectMydata() {
-  const name  = v('mdName');
-  const birth = v('mdBirth').replace(/\D/g, '');
-  const errEl = document.getElementById('mdError');
-  if (!name) { errEl.textContent = '이름을 입력하세요.'; return; }
-  if (birth.length !== 8) { errEl.textContent = '생년월일을 8자리로 입력하세요. (예: 19901231)'; return; }
-  errEl.textContent = '';
-
-  const btn = document.getElementById('mdConnectBtn');
-  btn.disabled = true; btn.textContent = '조회 중...';
-
-  try {
-    const res  = await fetch(`${API}/mydata/connect`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
-      body: JSON.stringify({ name, birth_date: birth }),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || '연결 실패');
-
-    document.getElementById('mydataConnectSection').style.display = 'none';
-    document.getElementById('mydataPoliciesSection').style.display = '';
-    renderMydataPolicies(data.policies);
-
-    const ragCnt = data.policies.filter(p => p.has_rag_data).length;
-    document.getElementById('mdRagNotice').textContent =
-      `마이데이터 연결 완료 — ${data.connected_count}개 보험 (이 중 ${ragCnt}개 AI 분석 즉시 가능)`;
-    toast(data.message, 'success');
-  } catch(e) {
-    errEl.textContent = e.message;
-  } finally {
-    btn.disabled = false; btn.textContent = '마이데이터 연결하기';
-  }
-}
-
-function renderMydataPolicies(list) {
-  const tb = document.getElementById('mydataBody');
-  tb.innerHTML = list.map(p => `
-    <tr>
-      <td style="font-weight:600">${esc(p.org_name)}</td>
-      <td>${esc(p.insurance_name)}</td>
-      <td><span class="badge" style="background:var(--gray-100);color:var(--gray-700)">${esc(p.product_type)}</span></td>
-      <td style="font-size:.85rem">₩${(p.premium||0).toLocaleString()}</td>
-      <td style="font-size:.78rem;color:var(--gray-500)">${p.coverage_start||'-'} ~ ${p.coverage_end||'-'}</td>
-      <td>
-        <span class="badge ${p.status==='정상'?'badge-ready':'badge-failed'}">${esc(p.status)}</span>
-      </td>
-      <td style="text-align:center">
-        ${p.has_rag_data
-          ? '<span style="color:var(--green);font-weight:700" title="약관 데이터 있음">✅ 가능</span>'
-          : '<span style="color:var(--gray-300)" title="약관 데이터 없음">–</span>'}
-      </td>
-      <td><button class="del-btn" onclick="disconnectOne(${p.id})" title="연결 해제">🗑</button></td>
-    </tr>
-  `).join('');
-}
-
-async function disconnectOne(id) {
-  if (!confirm('이 보험 연결을 해제할까요?')) return;
-  try {
-    await fetch(`${API}/mydata/policies/${id}`, {
-      method: 'DELETE', headers: { Authorization: `Bearer ${authToken}` },
-    });
-    toast('연결 해제 완료', 'success');
-    loadMydataPolicies();
-  } catch(e) { toast(e.message, 'error'); }
-}
-
-async function disconnectAll() {
-  if (!confirm('모든 마이데이터 보험 연결을 해제할까요?\n분석 시 해당 보험이 자동 포함되지 않습니다.')) return;
-  try {
-    await fetch(`${API}/mydata/disconnect`, {
-      method: 'DELETE', headers: { Authorization: `Bearer ${authToken}` },
-    });
-    toast('마이데이터 연결이 해제되었습니다.', 'info');
-    document.getElementById('mydataConnectSection').style.display = '';
-    document.getElementById('mydataPoliciesSection').style.display = 'none';
-  } catch(e) { toast(e.message, 'error'); }
-}
-
-// ══ 온보딩 ════════════════════════════════════════════════
-function showOnboarding() {
-  document.getElementById('onboardingOverlay').classList.remove('hidden');
-  // 진행 상태 초기화
-  document.getElementById('onboardProgress').style.display = 'none';
-  document.getElementById('onboardProgressBar').style.width = '0%';
-  document.getElementById('onboardPolicyFile').value = '';
-}
-
-function skipOnboarding() {
-  document.getElementById('onboardingOverlay').classList.add('hidden');
-  switchMainTab('policies');  // 증권 탭으로 이동하여 나중에 추가 유도
-}
-
-async function uploadOnboardPolicy() {
-  const file = document.getElementById('onboardPolicyFile').files[0];
-  if (!file) { toast('파일을 선택해 주세요.', 'error'); return; }
-  const productId = document.getElementById('onboardProductSelect').value;
-  const form = new FormData();
-  form.append('file', file);
-  if (productId) form.append('product_id', productId);
-  const btn = document.getElementById('onboardUploadBtn');
-  btn.disabled = true; btn.textContent = '업로드 중...';
-  const progEl  = document.getElementById('onboardProgress');
-  const progBar = document.getElementById('onboardProgressBar');
-  const progTxt = document.getElementById('onboardProgressText');
-  progEl.style.display = ''; progBar.style.width = '30%'; progTxt.textContent = '파일 업로드 중...';
-  try {
-    const res  = await apiFetch(`${API}/my/policies/upload`, { method:'POST', body: form });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || '업로드 실패');
-    progBar.style.width = '100%'; progTxt.textContent = '등록 완료! 분석 화면으로 이동합니다.';
-    toast(`"${data.original_name}" 등록 완료!`, 'success');
-    setTimeout(() => {
-      document.getElementById('onboardingOverlay').classList.add('hidden');
-      switchMainTab('analyze');
-    }, 1200);
-  } catch(e) {
-    progEl.style.display = 'none';
-    toast(e.message, 'error');
-  } finally { btn.disabled = false; btn.textContent = '보험증권 등록하기'; }
 }
 
 // ══ 계정 설정 탭 ══════════════════════════════════════════
@@ -1786,26 +1281,6 @@ function setMsg(id, msg, ok) {
   const el = document.getElementById(id);
   el.textContent  = msg;
   el.style.color  = ok ? 'var(--green)' : 'var(--red)';
-}
-
-// ══ 보험증권 임베딩 상태 폴링 ══════════════════════════
-let _pollTimer = null;
-
-function startPollIfNeeded(policies) {
-  const pending = policies.filter(p => p.status === 'pending' || p.status === 'processing');
-  if (pending.length === 0) { clearInterval(_pollTimer); _pollTimer = null; return; }
-  if (_pollTimer) return;   // 이미 폴링 중
-  _pollTimer = setInterval(async () => {
-    const res  = await apiFetch(`${API}/my/policies/`);
-    if (!res.ok) { clearInterval(_pollTimer); _pollTimer = null; return; }
-    const list = await res.json();
-    renderPolicies(list);
-    const stillPending = list.filter(p => p.status === 'pending' || p.status === 'processing');
-    if (stillPending.length === 0) {
-      clearInterval(_pollTimer); _pollTimer = null;
-      toast('보험증권 임베딩이 완료되었습니다.', 'success');
-    }
-  }, 5000);  // 5초 간격
 }
 
 // ── 유틸 ──────────────────────────────────────────────────

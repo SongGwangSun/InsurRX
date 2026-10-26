@@ -19,9 +19,8 @@
 | 기능 | 설명 |
 |------|------|
 | **OCR 분석** | GPT-4o Vision으로 처방전·영수증에서 상병코드·진단명·금액 추출 |
-| **RAG 보상 분석** | Pinecone 벡터 검색 + LangChain + GPT-4o로 약관 대조 분석 |
-| **개인 보험증권 등록** | PDF·이미지 업로드 → 자동 임베딩 → 개인 벡터 네임스페이스 |
-| **카카오톡 챗봇** | 카카오 i 오픈빌더 스킬 서버 — 사진 전송만으로 분석 완료 |
+| **RAG 보상 분석** | 표준약관(보험업감독업무시행세칙 별표15) 벡터 검색 + LangChain + GPT-4o로 보상 여부·예상 금액 분석 |
+| **카카오톡 챗봇** | 카카오 i 오픈빌더 스킬 서버 (현재 임시 제외, `KAKAO_ENABLED`) |
 | **분석 히스토리** | 과거 분석 결과 조회·삭제 |
 | **관리자 패널** | 보험사·상품 CRUD, 회원 관리, 시스템 통계 |
 
@@ -35,15 +34,15 @@ GitHub Pages (index / dashboard / admin)
        ▼
 FastAPI on Railway (PostgreSQL)
   ├── /upload      → GPT-4o Vision OCR
-  ├── /analyze     → 공개 약관 + 개인 보험증권 통합 RAG
+  ├── /analyze     → 표준약관 RAG 보상 분석
   ├── /auth        → JWT 회원가입·로그인
   ├── /my/policies → 개인 보험증권 업로드·임베딩
   ├── /kakao/skill → 카카오 i 오픈빌더 스킬 서버
   └── /admin       → 보험사·회원 관리
 
 Pinecone (insurrx-policies)
-  ├── 기본 네임스페이스: 공개 약관 1,358 벡터
-  └── user-{id}-xxxx: 개인 보험증권 (사용자별 격리)
+  ├── standard-terms: 표준약관 조항 169 벡터 (질병·상해, 실손 기본형·특약1·특약2)
+  └── user-{id}-xxxx: 개인 보험증권 (사용자별 격리, 화면에서는 제외)
 ```
 
 ---
@@ -96,8 +95,11 @@ ADMIN_EMAIL=admin@example.com ADMIN_NAME=관리자 ADMIN_PASSWORD=비밀번호 \
 # 보험사·상품 시드 데이터
 python -m scripts.seed_insurers
 
-# 공개 약관 임베딩 (Pinecone 필요)
-python -m ai.embeddings.embed_policies --policy-dir data/policies/raw
+# 표준약관 임베딩 (Pinecone 필요) — data/policies/standard/*.json → standard-terms 네임스페이스
+cd .. && PYTHONPATH=.:backend python -m ai.embeddings.embed_policies
+
+# 표준약관 JSON 재생성 (별표15 PDF가 개정됐을 때만)
+python scripts/build_standard_terms.py "<별표15 PDF 경로>"
 ```
 
 ---

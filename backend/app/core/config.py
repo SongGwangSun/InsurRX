@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     VECTOR_DB_TYPE: str = "pinecone"
     PINECONE_API_KEY: str = ""
     PINECONE_INDEX: str = "insurrx-policies"
+    # 표준약관(별표15) 벡터 네임스페이스 — ai/embeddings/embed_policies.py가 채운다
+    STANDARD_TERMS_NAMESPACE: str = "standard-terms"
     MILVUS_HOST: str = "localhost"
     MILVUS_PORT: int = 19530
 

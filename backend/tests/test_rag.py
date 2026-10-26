@@ -71,7 +71,7 @@ async def test_run_rag_pipeline():
         mock_retrieve.return_value = []
         mock_chain.return_value = MOCK_LLM_RESULT
 
-        result = await run_rag_pipeline(doc, policy_ids=["hyundai-silson-v4"])
+        result = await run_rag_pipeline(doc)
 
     assert isinstance(result, AnalyzeResponse)
     assert result.is_claimable is True
@@ -89,8 +89,35 @@ async def test_run_rag_pipeline_records_trace():
         mock_embed.return_value = [0.1] * 1536
         mock_retrieve.return_value = []
         mock_chain.return_value = MOCK_LLM_RESULT
-        result = await run_rag_pipeline(doc, policy_ids=[])
+        result = await run_rag_pipeline(doc)
 
     assert result.llm_model
     assert result.prompt_version and len(result.prompt_version) == 12
     assert result.latency_ms is not None and result.latency_ms >= 0
+
+
+@pytest.mark.asyncio
+async def test_retriever_searches_standard_terms_namespace(monkeypatch):
+    """보험사 약관(policy_id 필터) 없이 표준약관 네임스페이스 + 개인 네임스페이스만 검색한다."""
+    from types import SimpleNamespace
+    from unittest.mock import MagicMock
+
+    from app.core.config import settings
+    from app.services.rag import retriever
+
+    monkeypatch.setattr(settings, "VECTOR_DB_TYPE", "pinecone")
+    index = MagicMock()
+    index.query.side_effect = [
+        SimpleNamespace(matches=[SimpleNamespace(metadata={"policy_id": "std-silson-basic", "article": "제3조"})]),
+        SimpleNamespace(matches=[SimpleNamespace(metadata={"content": "내 증권"})]),
+    ]
+    with patch("pinecone.Pinecone") as pc:
+        pc.return_value.Index.return_value = index
+        results = await retriever.retrieve_relevant_clauses([0.1] * 1536, ["user-1-abcd"])
+
+    calls = index.query.call_args_list
+    assert calls[0].kwargs["namespace"] == settings.STANDARD_TERMS_NAMESPACE
+    assert "filter" not in calls[0].kwargs
+    assert calls[1].kwargs["namespace"] == "user-1-abcd"
+    assert results[0]["policy_id"] == "std-silson-basic"
+    assert results[1]["policy_name"] == "내 보험증권"

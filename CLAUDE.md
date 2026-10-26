@@ -29,8 +29,8 @@ OCR + RAG로 **3초 이내** 실손/정액 보상 여부 및 예상 지급액 �
 
 ### 백엔드 API
 - [x] `POST /api/v1/upload/` — 이미지 업로드 → GPT-4o Vision OCR → 파싱 결과 반환 ✅
-- [x] `POST /api/v1/analyze/` — 파싱 문서 → 공개 약관 + 개인 보험증권 통합 RAG → 보상 분석
-  - JWT 선택 인증: 비로그인(공개 약관만) / 로그인(개인 업로드 보험증권 자동 포함)
+- [x] `POST /api/v1/analyze/` — 파싱 문서 → 표준약관 RAG → 보상 분석
+  - JWT 선택 인증: 비로그인·로그인 모두 표준약관 기준 (로그인 시 업로드 증권이 있으면 함께 검색)
   - `policy_ids` 선택사항으로 변경 (기본값 빈 배열)
 - [x] `POST /api/v1/waitlist/` — Waitlist 이메일 저장 (중복 방지 포함)
 - [x] `GET  /api/v1/result/{session_id}` — 분석 결과 조회 ✅
@@ -48,7 +48,7 @@ OCR + RAG로 **3초 이내** 실손/정액 보상 여부 및 예상 지급액 �
 - [x] 임베딩 서비스 (`app/services/rag/embedder.py`) — OpenAI text-embedding-3-small
 - [x] Vector DB 검색 (`app/services/rag/retriever.py`) — Pinecone 연동 + **개인 네임스페이스 통합 검색**
 - [x] RAG 파이프라인 오케스트레이터 (`app/services/rag/pipeline.py`) — `user_namespaces` 파라미터 추가
-- [x] 약관 임베딩 스크립트 (`ai/embeddings/embed_policies.py`) — CLI 실행 가능
+- [x] 약관 임베딩 스크립트 (`ai/embeddings/embed_policies.py`) — 표준약관 → `standard-terms` 네임스페이스
 - [x] Vectorstore 클라이언트 (`ai/rag/vectorstore.py`) — Pinecone upsert 완성
 - [x] 사용자 보험증권 임베딩 서비스 (`app/services/user_policy_service.py`) — PDF/이미지 → 청킹 → Pinecone
 
@@ -73,6 +73,15 @@ OCR + RAG로 **3초 이내** 실손/정액 보상 여부 및 예상 지급액 �
 - [x] `models/claim.py`, `models/session.py`, `models/waitlist.py`, `models/analysis_result.py`
 - [x] `schemas/user.py`, `schemas/insurer.py`, `schemas/user_policy.py`
 - [x] `schemas/upload.py`, `schemas/analysis.py`, `schemas/result.py`, `schemas/waitlist.py`
+
+### 표준약관 전환 + 화면 정리 ✅ (2026-10-26)
+- [x] 보험사별 상품 약관(`data/policies/raw`) 제거 → **표준약관**(보험업감독업무시행세칙 [별표15], 실손 2026.5.6. 개정) 사용
+  - `scripts/build_standard_terms.py` — 별표15 PDF → 조항 단위 JSON (`data/policies/standard/`: 질병·상해, 실손 기본형·특약1·특약2)
+  - Pinecone `standard-terms` 네임스페이스 169 벡터. 기존 기본 네임스페이스 벡터는 남아 있으나 검색하지 않음
+  - 검색: 표준약관 상위 15건 → 조항당 2건 제한 → 6건 (`retriever.py`), `policy_ids`·보험사 선택 제거
+  - RAG 시스템 프롬프트에 표준약관 보상 기준(급여 통원 공제 1만/2만원·20%, 특약1 3만원·30%, 특약2 5만원·50% 등) 명시. 예전 기본값 그대로인 DB 프롬프트는 시작 시 자동 갱신
+- [x] 대시보드: 마이데이터·내 보험증권 탭, 가입 후 증권 등록 온보딩, 보험사 약관 선택, 마이데이터 진료내역 대조 제거 (백엔드 API는 유지)
+- [x] 랜딩: 보험 선택 단계·보험사 추가 모달·요금제 섹션 제거, 미구현 기능(원클릭 청구·가족 관리·마이데이터) 문구 정리, 보안 문구를 실제 구현 기준으로 수정, OCR 오류 화면 버그 수정
 
 ### 카카오톡 챗봇 연동 ✅ (2026-06-08)
 > ⏸ **2026-10-26 임시 제외** — `KAKAO_ENABLED=false`(기본값)면 `/kakao/*`·`/auth/kakao-link*` 404, 랜딩·대시보드 카카오 UI 숨김. 다시 켜려면 Railway env `KAKAO_ENABLED=true` + `dashboard.html`의 `KAKAO_ENABLED` 상수 + `index.html` 히어로 주석 복원.
@@ -164,7 +173,7 @@ index.html / dashboard.html (GitHub Pages)
 FastAPI (backend/app/main.py)
   ├── /auth         → JWT 회원가입·로그인
   ├── /upload       → GPT-4o Vision OCR → ParsedDocument
-  ├── /analyze      → 공개 약관 + 개인 보험증권 통합 RAG → 보상 분석
+  ├── /analyze      → 표준약관 RAG → 보상 분석
   │     ├── embedder    (OpenAI text-embedding-3-small)
   │     ├── retriever   (Pinecone: 공개 네임스페이스 + user-{id}-xxx 네임스페이스)
   │     └── chain       (LangChain + GPT-4o)
@@ -173,11 +182,11 @@ FastAPI (backend/app/main.py)
   ├── /result       → DB 조회
   └── /waitlist     → PostgreSQL 저장
 
-data/policies/raw/*.json
+data/policies/standard/*.json   (scripts/build_standard_terms.py ← 별표15 PDF)
        │ python -m ai.embeddings.embed_policies
        ▼
 Pinecone Index "insurrx-policies"
-  ├── (기본 네임스페이스) 공개 약관 1,358 벡터
+  ├── standard-terms        표준약관 169 벡터 (기본 네임스페이스의 예전 보험사 약관은 미사용)
   └── user-{id}-xxxx      개인 보험증권 (사용자별 격리)
 ```
 
@@ -217,7 +226,8 @@ python -m scripts.seed_insurers
 | `backend/app/services/rag/retriever.py` | Pinecone 공개+개인 통합 검색 |
 | `backend/app/services/user_policy_service.py` | 개인 보험증권 임베딩 파이프라인 |
 | `ai/rag/chain.py` | LangChain + LLM 호출 |
-| `ai/embeddings/embed_policies.py` | 공개 약관 임베딩 CLI |
+| `ai/embeddings/embed_policies.py` | 표준약관 임베딩 CLI |
+| `scripts/build_standard_terms.py` | 별표15 PDF → 표준약관 조항 JSON |
 | `backend/scripts/seed_insurers.py` | 보험사·상품 초기 데이터 |
 | `backend/scripts/create_admin.py` | 관리자 계정 생성 CLI |
 | `backend/app/services/ocr/parser.py` | OCR 텍스트 파싱 |

@@ -171,17 +171,15 @@ async def _run_analysis(kakao_uid: str, image_urls: list[str], policy_ids: list[
                 docs.append(await parse_medical_document_async(raw_text))
             parsed = merge_parsed_documents(docs)
 
-            # 4) RAG 분석 — 회원이면 내 보험(연결 약관 + 업로드 증권) 포함
+            # 4) RAG 분석 — 표준약관 + 회원이면 업로드 증권 포함
             user_namespaces: list[str] = []
             if session.user_id:
                 from app.services.user_policy_service import collect_policy_sources
-                own_ids, user_namespaces = await collect_policy_sources(db, session.user_id)
-                policy_ids = policy_ids + [pid for pid in own_ids if pid not in policy_ids]
+                _, user_namespaces = await collect_policy_sources(db, session.user_id)
 
             from app.services.rag.pipeline import run_rag_pipeline
             analysis = await run_rag_pipeline(
                 parsed_doc=parsed,
-                policy_ids=policy_ids,
                 user_namespaces=user_namespaces,
             )
 
