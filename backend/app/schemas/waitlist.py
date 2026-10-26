@@ -1,14 +1,14 @@
+
 from pydantic import BaseModel, EmailStr
-from typing import Optional
 
 
 class WaitlistCreate(BaseModel):
     email: EmailStr
     source: str = "landing"
-    usage_intent: Optional[str] = None
-    paid_intent: Optional[str] = None
-    price_range: Optional[str] = None
-    feedback: Optional[str] = None
+    usage_intent: str | None = None
+    paid_intent: str | None = None
+    price_range: str | None = None
+    feedback: str | None = None
 
 
 class WaitlistResponse(BaseModel):

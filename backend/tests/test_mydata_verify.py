@@ -1,9 +1,9 @@
 """의료 마이데이터 진료내역 대조 + 가입보험 자동 연결 테스트"""
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
+
 from app.main import app
 from app.services.ocr.parser import parse_medical_document
-
 
 SAMPLE_WITH_NAME = """
 서울내과의원

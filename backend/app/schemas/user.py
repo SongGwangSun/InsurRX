@@ -1,6 +1,6 @@
-from pydantic import BaseModel, EmailStr
 from datetime import datetime
-from typing import Optional, List
+
+from pydantic import BaseModel, EmailStr
 
 
 class UserCreate(BaseModel):
@@ -28,7 +28,7 @@ class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserResponse
-    refresh_token: Optional[str] = None
+    refresh_token: str | None = None
 
 
 class RefreshRequest(BaseModel):
@@ -36,11 +36,11 @@ class RefreshRequest(BaseModel):
 
 
 class LogoutRequest(BaseModel):
-    refresh_token: Optional[str] = None
+    refresh_token: str | None = None
 
 
 class UserUpdate(BaseModel):
-    name: Optional[str] = None
+    name: str | None = None
 
 
 class PasswordChange(BaseModel):
@@ -61,9 +61,9 @@ class PasswordResetConfirm(BaseModel):
 
 class LoginHistoryResponse(BaseModel):
     id: int
-    ip_address: Optional[str]
-    user_agent: Optional[str]
-    device_type: Optional[str]
+    ip_address: str | None
+    user_agent: str | None
+    device_type: str | None
     status: str
     created_at: datetime
 

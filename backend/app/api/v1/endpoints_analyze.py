@@ -1,12 +1,12 @@
-from typing import Optional
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.security import get_optional_user
 from app.database import get_db
+from app.models.analysis_result import AnalysisResult
 from app.schemas.analysis import AnalyzeRequest, AnalyzeResponse
 from app.services.rag.pipeline import run_rag_pipeline
-from app.models.analysis_result import AnalysisResult
 from app.services.user_policy_service import collect_policy_sources
-from app.core.security import get_optional_user
 
 router = APIRouter()
 

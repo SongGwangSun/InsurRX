@@ -1,17 +1,21 @@
 """마이데이터 보험 계약 연동 엔드포인트."""
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete
-from typing import List
 
-from app.database import get_db
-from app.models.user import User
-from app.models.mydata_policy import UserMydataPolicy
-from app.schemas.mydata import (
-    MydataConsentRequest, MydataPolicyResponse, MydataConnectResult,
-    TreatmentVerifyRequest, TreatmentRecord, TreatmentVerifyResult,
-)
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import delete, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.security import get_current_user, get_optional_user
+from app.database import get_db
+from app.models.mydata_policy import UserMydataPolicy
+from app.models.user import User
+from app.schemas.mydata import (
+    MydataConnectResult,
+    MydataConsentRequest,
+    MydataPolicyResponse,
+    TreatmentRecord,
+    TreatmentVerifyRequest,
+    TreatmentVerifyResult,
+)
 
 router = APIRouter()
 
@@ -85,7 +89,7 @@ async def connect_mydata(
 
 # ── 연결된 보험 목록 ─────────────────────────────────────────────────────────────
 
-@router.get("/policies", response_model=List[MydataPolicyResponse])
+@router.get("/policies", response_model=list[MydataPolicyResponse])
 async def list_mydata_policies(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),

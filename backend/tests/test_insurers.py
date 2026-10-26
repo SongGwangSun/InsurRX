@@ -2,12 +2,11 @@
 보험사 / 보험 상품 CRUD 엔드포인트 테스트
 """
 import pytest
-from httpx import AsyncClient, ASGITransport
-from sqlalchemy import select
+from httpx import ASGITransport, AsyncClient
+
+from app.database import get_db
 from app.main import app
 from app.models.user import User
-from app.core.security import hash_password
-from app.database import get_db
 
 
 async def _make_admin(db_override) -> str:
@@ -17,7 +16,7 @@ async def _make_admin(db_override) -> str:
         reg = await c.post("/api/v1/auth/register", json={
             "name": "관리자", "email": "admin@test.com", "password": "admin1234"
         })
-        token = reg.json()["access_token"]
+        assert reg.status_code == 201
 
     # dependency override 내의 세션으로 is_admin 플래그 설정
     async for session in db_override():
@@ -64,8 +63,6 @@ async def test_create_and_list_insurer(admin_token):
         # 생성
         res = await c.post("/api/v1/insurers/", json={"name": "현대해상", "code": "hyundai"}, headers=headers)
         assert res.status_code == 201
-        ins_id = res.json()["id"]
-
         # 목록 조회
         res2 = await c.get("/api/v1/insurers/")
         assert len(res2.json()) == 1

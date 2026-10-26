@@ -1,9 +1,11 @@
 """
 사용자 보험증권 업로드 / 목록 / 삭제 엔드포인트 테스트
 """
-import pytest
 from unittest.mock import AsyncMock, patch
-from httpx import AsyncClient, ASGITransport
+
+import pytest
+from httpx import ASGITransport, AsyncClient
+
 from app.main import app
 
 
@@ -118,6 +120,7 @@ async def test_cannot_access_other_user_policy():
 async def test_delete_ready_policy():
     """임베딩 완료(ready) 보험증권 삭제 — Pinecone 정리 분기를 거쳐도 204."""
     from sqlalchemy import update
+
     from app.database import get_db
     from app.models.user_policy import PolicyStatus, UserPolicy
 

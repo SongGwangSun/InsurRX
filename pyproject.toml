@@ -24,3 +24,20 @@ dependencies = [
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.backends.legacy:build"
+
+[tool.ruff]
+# CI(.github/workflows/ci.yml)가 Python 3.10에서 돌기 때문에 3.10 문법 기준으로 검사
+target-version = "py310"
+extend-exclude = ["backend/.venv"]
+src = [".", "backend"]
+
+[tool.ruff.lint]
+# 백그라운드 작업·CLI 루프·외부 API 경계에서는 의도적으로 Exception 전체를 잡아 기록한다
+ignore = ["BLE001"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI 의존성 주입은 기본값에 함수 호출을 쓰는 것이 정상 패턴
+extend-immutable-calls = [
+    "fastapi.Depends", "fastapi.File", "fastapi.Form",
+    "fastapi.Query", "fastapi.Path", "fastapi.Body", "fastapi.Header",
+]

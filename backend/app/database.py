@@ -1,5 +1,6 @@
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
+
 from app.core.config import settings
 
 engine = create_async_engine(settings.DATABASE_URL, echo=settings.APP_ENV == "development")
@@ -40,6 +41,8 @@ async def run_migrations():
         # kakao_link_codes는 create_tables()가 신규 테이블로 자동 생성
     ]
     async with engine.begin() as conn:
+        from contextlib import suppress
+
         from sqlalchemy import text
         dialect = engine.dialect.name
         for table, col, col_type in migrations:
@@ -48,9 +51,8 @@ async def run_migrations():
                     f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {col} {col_type}"
                 ))
             else:
-                try:
+                # SQLite는 IF NOT EXISTS 미지원 → 이미 있는 컬럼이면 오류를 무시
+                with suppress(Exception):
                     await conn.execute(text(
                         f"ALTER TABLE {table} ADD COLUMN {col} {col_type}"
                     ))
-                except Exception:
-                    pass

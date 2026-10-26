@@ -1,13 +1,14 @@
-import secrets
 import hashlib
+import secrets
 from datetime import datetime, timedelta, timezone
-from typing import Optional
-from jose import JWTError, jwt
+
 import bcrypt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.ext.asyncio import AsyncSession
+from jose import JWTError, jwt
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.config import settings
 from app.database import get_db
 
@@ -162,7 +163,7 @@ async def consume_password_reset_token(raw_token: str, db: AsyncSession):
 
 # ── User Agent 파싱 ──────────────────────────────────────────────────────────
 
-def detect_device(user_agent: Optional[str]) -> str:
+def detect_device(user_agent: str | None) -> str:
     if not user_agent:
         return "Unknown"
     ua = user_agent.lower()
@@ -178,10 +179,10 @@ def detect_device(user_agent: Optional[str]) -> str:
 async def record_login(
     db: AsyncSession,
     status: str,
-    user_id: Optional[int] = None,
-    email: Optional[str] = None,
-    ip_address: Optional[str] = None,
-    user_agent: Optional[str] = None,
+    user_id: int | None = None,
+    email: str | None = None,
+    ip_address: str | None = None,
+    user_agent: str | None = None,
 ) -> None:
     from app.models.login_history import LoginHistory
 
@@ -212,7 +213,7 @@ async def get_current_user(
     )
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
-        user_id: Optional[str] = payload.get("sub")
+        user_id: str | None = payload.get("sub")
         if user_id is None:
             raise credentials_exc
     except JWTError:
@@ -235,7 +236,7 @@ _optional_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_erro
 
 
 async def get_optional_user(
-    token: Optional[str] = Depends(_optional_scheme),
+    token: str | None = Depends(_optional_scheme),
     db: AsyncSession = Depends(get_db),
 ):
     if not token:

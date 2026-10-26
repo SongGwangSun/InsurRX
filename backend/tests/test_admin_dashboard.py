@@ -1,9 +1,10 @@
 """관리자 오늘 대시보드 — 요약 지표 및 항목별 목록 테스트"""
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
+
+from app.database import get_db
 from app.main import app
 from app.models.user import User
-from app.database import get_db
 
 
 async def _make_admin(db_override) -> str:

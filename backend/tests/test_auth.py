@@ -2,7 +2,8 @@
 회원가입 / 로그인 / 내 정보 엔드포인트 테스트
 """
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
+
 from app.main import app
 
 
@@ -88,7 +89,9 @@ async def test_forgot_password_no_enumeration():
 
 @pytest.mark.asyncio
 async def test_forgot_then_reset_full_flow(caplog, monkeypatch):
-    import logging, re
+    import logging
+    import re
+
     from app.core.config import settings
     # 메일 키 없이 dev 모드 → 재설정 링크가 로그로 출력됨
     monkeypatch.setattr(settings, "RESEND_API_KEY", "")

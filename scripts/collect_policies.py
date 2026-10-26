@@ -1,4 +1,4 @@
-ek"""
+"""
 보험 약관 PDF 수집 → 텍스트 추출 → JSON 변환 스크립트
 
 사용법:
@@ -11,7 +11,6 @@ ek"""
 """
 import json
 import re
-import sys
 import time
 from pathlib import Path
 
@@ -90,8 +89,7 @@ def download_pdf(url: str, dest: Path, timeout: int = 60) -> bool:
             print(f"    ⚠ HTML 응답 (로그인 필요 또는 잘못된 URL): {url}")
             return False
         with open(dest, "wb") as f:
-            for chunk in resp.iter_content(chunk_size=8192):
-                f.write(chunk)
+            f.writelines(resp.iter_content(chunk_size=8192))
         size_kb = dest.stat().st_size // 1024
         print(f"    ✓ 다운로드 완료 ({size_kb} KB): {dest.name}")
         return True
@@ -172,7 +170,7 @@ def process_policy(meta: dict):
         if not ok:
             return
     else:
-        print(f"    ⏭ PDF 이미 존재, 스킵")
+        print("    ⏭ PDF 이미 존재, 스킵")
 
     # 2. 텍스트 추출
     print("  2. 텍스트 추출 중...")
@@ -218,7 +216,7 @@ def main():
     if failed:
         print(f"\n실패: {failed}")
         print("→ 해당 URL을 직접 브라우저에서 확인하거나 수동으로 PDF를 다운받아 주세요.")
-    print(f"\n다음 단계:\n  python -m ai.embeddings.embed_policies --policy-dir data/policies/raw")
+    print("\n다음 단계:\n  python -m ai.embeddings.embed_policies --policy-dir data/policies/raw")
 
 
 if __name__ == "__main__":

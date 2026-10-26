@@ -6,10 +6,11 @@ GET /api/v1/result/{session_id} 테스트
 - 저장된 created_at 포함 확인
 """
 import uuid
+from unittest.mock import AsyncMock, patch
 
 import pytest
-from httpx import AsyncClient, ASGITransport
-from unittest.mock import AsyncMock, patch
+from httpx import ASGITransport, AsyncClient
+
 from app.main import app
 from app.schemas.analysis import AnalyzeResponse, CoverageItem
 

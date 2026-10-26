@@ -13,13 +13,14 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from sqlalchemy import select
+
+import app.models.analysis_result
+import app.models.insurer
+import app.models.user_policy
+import app.models.waitlist  # noqa
+from app.core.security import hash_password
 from app.database import AsyncSessionLocal, create_tables
 from app.models.user import User
-from app.core.security import hash_password
-import app.models.waitlist        # noqa
-import app.models.analysis_result # noqa
-import app.models.insurer         # noqa
-import app.models.user_policy     # noqa
 
 
 async def create_admin():

@@ -1,6 +1,6 @@
-from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional, List
+
+from pydantic import BaseModel
 
 
 class MydataConsentRequest(BaseModel):
@@ -16,11 +16,11 @@ class MydataPolicyResponse(BaseModel):
     policy_number: str
     insurance_name: str
     product_type: str
-    premium: Optional[int]
-    coverage_start: Optional[str]
-    coverage_end: Optional[str]
+    premium: int | None
+    coverage_start: str | None
+    coverage_end: str | None
     status: str
-    vector_policy_id: Optional[str]
+    vector_policy_id: str | None
     has_rag_data: bool = False   # vector_policy_id 있으면 True
     connected_at: datetime
     is_active: bool
@@ -30,28 +30,28 @@ class MydataPolicyResponse(BaseModel):
 
 class MydataConnectResult(BaseModel):
     connected_count: int
-    policies: List[MydataPolicyResponse]
+    policies: list[MydataPolicyResponse]
     message: str
 
 
 class TreatmentVerifyRequest(BaseModel):
     """OCR로 인식한 의료 정보로 의료 마이데이터 진료내역을 대조 요청."""
-    patient_name: Optional[str] = None
-    hospital: Optional[str] = None
-    treatment_date: Optional[str] = None   # 조제일/처방일 YYYY-MM-DD
-    birth_date: Optional[str] = None        # 있으면 금융 마이데이터 연동에 사용
+    patient_name: str | None = None
+    hospital: str | None = None
+    treatment_date: str | None = None   # 조제일/처방일 YYYY-MM-DD
+    birth_date: str | None = None        # 있으면 금융 마이데이터 연동에 사용
 
 
 class TreatmentRecord(BaseModel):
     patient_name: str
     hospital: str
-    treatment_date: Optional[str] = None
+    treatment_date: str | None = None
     source: str
 
 
 class TreatmentVerifyResult(BaseModel):
     verified: bool
     message: str
-    treatment: Optional[TreatmentRecord] = None
+    treatment: TreatmentRecord | None = None
     insurance_connected: int = 0           # 자동 연결된 금융 마이데이터 보험 수
-    policies: List[MydataPolicyResponse] = []
+    policies: list[MydataPolicyResponse] = []

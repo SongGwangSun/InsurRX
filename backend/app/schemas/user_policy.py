@@ -1,19 +1,20 @@
-from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional
+
+from pydantic import BaseModel
+
 from app.models.user_policy import PolicyStatus
 
 
 class UserPolicyResponse(BaseModel):
     id: int
     user_id: int
-    product_id: Optional[int]
+    product_id: int | None
     file_name: str
     original_name: str
     vector_namespace: str
     chunk_count: int
     status: PolicyStatus
-    error_message: Optional[str]
+    error_message: str | None
     uploaded_at: datetime
 
     model_config = {"from_attributes": True}

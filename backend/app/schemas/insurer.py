@@ -1,25 +1,25 @@
-from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional, List
+
+from pydantic import BaseModel
 
 
 class InsurerCreate(BaseModel):
     name: str
     code: str
-    logo_url: Optional[str] = None
+    logo_url: str | None = None
 
 
 class InsurerUpdate(BaseModel):
-    name: Optional[str] = None
-    logo_url: Optional[str] = None
-    is_active: Optional[bool] = None
+    name: str | None = None
+    logo_url: str | None = None
+    is_active: bool | None = None
 
 
 class InsurerResponse(BaseModel):
     id: int
     name: str
     code: str
-    logo_url: Optional[str]
+    logo_url: str | None
     is_active: bool
     created_at: datetime
 
@@ -30,17 +30,17 @@ class ProductCreate(BaseModel):
     name: str
     product_code: str
     product_type: str
-    description: Optional[str] = None
-    vector_policy_id: Optional[str] = None   # Pinecone policy_id
+    description: str | None = None
+    vector_policy_id: str | None = None   # Pinecone policy_id
 
 
 class ProductUpdate(BaseModel):
-    name: Optional[str] = None
-    product_code: Optional[str] = None
-    product_type: Optional[str] = None
-    description: Optional[str] = None
-    vector_policy_id: Optional[str] = None
-    is_active: Optional[bool] = None
+    name: str | None = None
+    product_code: str | None = None
+    product_type: str | None = None
+    description: str | None = None
+    vector_policy_id: str | None = None
+    is_active: bool | None = None
 
 
 class ProductResponse(BaseModel):
@@ -49,8 +49,8 @@ class ProductResponse(BaseModel):
     name: str
     product_code: str
     product_type: str
-    description: Optional[str]
-    vector_policy_id: Optional[str]
+    description: str | None
+    vector_policy_id: str | None
     is_active: bool
     created_at: datetime
 
@@ -58,4 +58,4 @@ class ProductResponse(BaseModel):
 
 
 class InsurerWithProducts(InsurerResponse):
-    products: List[ProductResponse] = []
+    products: list[ProductResponse] = []

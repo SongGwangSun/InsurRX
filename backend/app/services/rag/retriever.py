@@ -1,4 +1,8 @@
+import logging
+
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 async def retrieve_relevant_clauses(
@@ -51,8 +55,8 @@ async def _query_pinecone(
                 meta.setdefault("policy_name", "내 보험증권")
                 meta.setdefault("article", "-")
                 results.append(meta)
-        except Exception:
-            pass  # 네임스페이스 없음 등은 무시
+        except Exception as e:  # 한 네임스페이스 실패가 전체 검색을 막지 않도록 건너뜀
+            logger.warning("개인 네임스페이스 검색 실패 (%s): %s", ns, e)
 
     # policy_ids 도 user_namespaces 도 없으면 전체 검색 fallback
     if not policy_ids and not user_namespaces:

@@ -76,7 +76,7 @@ async def link_kakao_account(db: AsyncSession, session: KakaoSession, raw_code: 
     result = await db.execute(
         select(KakaoLinkCode).where(
             KakaoLinkCode.code_hash == _hash(normalize_link_code(raw_code)),
-            KakaoLinkCode.is_used == False,  # noqa: E712
+            KakaoLinkCode.is_used == False,
             KakaoLinkCode.expires_at > datetime.now(timezone.utc),
         )
     )

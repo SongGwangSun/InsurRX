@@ -8,7 +8,7 @@ def get_vectorstore():
         pc = Pinecone(api_key=settings.PINECONE_API_KEY)
         return pc.Index(settings.PINECONE_INDEX)
     else:
-        from pymilvus import connections, Collection
+        from pymilvus import Collection, connections
         connections.connect(host=settings.MILVUS_HOST, port=settings.MILVUS_PORT)
         return Collection("insurrx_policies")
 

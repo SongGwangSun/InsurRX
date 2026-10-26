@@ -1,6 +1,7 @@
 """마이데이터 연동 엔드포인트 테스트."""
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
+
 from app.main import app
 
 BASE = "/api/v1/mydata"

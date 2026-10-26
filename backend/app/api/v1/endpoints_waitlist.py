@@ -1,11 +1,11 @@
+
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, text
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.database import get_db
 from app.models.waitlist import Waitlist
 from app.schemas.waitlist import WaitlistCreate, WaitlistResponse
-from typing import List, Optional
-import os
 
 router = APIRouter()
 

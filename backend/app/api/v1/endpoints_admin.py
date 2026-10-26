@@ -1,16 +1,17 @@
 """관리자 전용 — 회원·시스템 관리 엔드포인트."""
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
+
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
-from typing import List
+
+from app.core.security import get_current_admin
 from app.database import get_db
-from app.models.user import User
-from app.models.user_policy import UserPolicy
 from app.models.analysis_result import AnalysisResult
 from app.models.login_history import LoginHistory
+from app.models.user import User
+from app.models.user_policy import UserPolicy
 from app.schemas.user import AdminUserResponse
-from app.core.security import get_current_admin
 
 router = APIRouter()
 
@@ -28,7 +29,7 @@ def _today_start() -> datetime:
     return start_kst.astimezone(timezone.utc).replace(tzinfo=None)
 
 
-@router.get("/users", response_model=List[AdminUserResponse])
+@router.get("/users", response_model=list[AdminUserResponse])
 async def list_users(
     db: AsyncSession = Depends(get_db),
     _=Depends(get_current_admin),
@@ -38,23 +39,23 @@ async def list_users(
     users = result.scalars().all()
 
     # 각 유저의 보험증권 수 / 분석 수 집계
-    pol_counts = dict(
-        (row[0], row[1]) for row in (
+    pol_counts = {
+        row[0]: row[1] for row in (
             await db.execute(
                 select(UserPolicy.user_id, func.count(UserPolicy.id))
                 .group_by(UserPolicy.user_id)
             )
         ).all()
-    )
-    ana_counts = dict(
-        (row[0], row[1]) for row in (
+    }
+    ana_counts = {
+        row[0]: row[1] for row in (
             await db.execute(
                 select(AnalysisResult.user_id, func.count(AnalysisResult.session_id))
                 .where(AnalysisResult.user_id.isnot(None))
                 .group_by(AnalysisResult.user_id)
             )
         ).all()
-    )
+    }
 
     out = []
     for u in users:

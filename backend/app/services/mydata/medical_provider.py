@@ -9,7 +9,6 @@
 fetch_treatment() 내부만 실제 API 호출로 교체하면 된다.
 """
 import hashlib
-from typing import Optional
 
 
 def _mock_birth_date(name: str) -> str:
@@ -22,9 +21,9 @@ def _mock_birth_date(name: str) -> str:
 
 
 async def fetch_treatment(
-    patient_name: Optional[str],
-    hospital: Optional[str],
-    treatment_date: Optional[str],
+    patient_name: str | None,
+    hospital: str | None,
+    treatment_date: str | None,
 ) -> dict:
     """진료/조제 내역 대조.
 

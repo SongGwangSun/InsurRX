@@ -2,9 +2,10 @@
 pytest 공통 픽스처 — 테스트용 인메모리 SQLite DB 설정
 """
 import pytest
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
 from app.database import Base, get_db
-from app.main import app as fastapi_app   # 패키지명(app)과 구분하기 위해 별칭 사용
+from app.main import app as fastapi_app  # 패키지명(app)과 구분하기 위해 별칭 사용
 
 TEST_DB_URL = "sqlite+aiosqlite:///:memory:"
 
@@ -16,14 +17,14 @@ async def test_db():
     session_factory = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
     # 모든 모델 임포트 — Base.metadata에 테이블 등록 보장
-    import app.models.waitlist          # noqa: F401
-    import app.models.analysis_result   # noqa: F401
-    import app.models.user              # noqa: F401
-    import app.models.insurer           # noqa: F401
-    import app.models.user_policy       # noqa: F401
-    import app.models.kakao_session     # noqa: F401
-    import app.models.kakao_link_code   # noqa: F401
-    import app.models.mydata_policy     # noqa: F401
+    import app.models.analysis_result
+    import app.models.insurer
+    import app.models.kakao_link_code
+    import app.models.kakao_session
+    import app.models.mydata_policy
+    import app.models.user
+    import app.models.user_policy
+    import app.models.waitlist  # noqa: F401
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

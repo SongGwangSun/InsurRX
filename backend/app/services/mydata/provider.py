@@ -18,7 +18,6 @@
 import hashlib
 import random
 from datetime import date, timedelta
-from typing import List
 
 # ── 실제 금융기관 코드표 (금융결제원 제공) ─────────────────────────────────────
 ORG_CODES = {
@@ -75,7 +74,7 @@ EXTRA_PRODUCTS = [
 ]
 
 
-def _deterministic_policies(name: str, birth: str) -> List[dict]:
+def _deterministic_policies(name: str, birth: str) -> list[dict]:
     """이름+생년월일 해시로 결정론적으로 보험 목록을 선택합니다.
 
     같은 입력이면 항상 같은 결과를 반환하므로 데모에서 일관성이 유지됩니다.
@@ -117,7 +116,7 @@ def _deterministic_policies(name: str, birth: str) -> List[dict]:
     return policies
 
 
-async def fetch_policies(name: str, birth_date: str) -> List[dict]:
+async def fetch_policies(name: str, birth_date: str) -> list[dict]:
     """마이데이터 허브에서 보험 계약 목록을 가져옵니다.
 
     실제 운영 시 이 함수 내부를 아래와 같이 교체합니다:

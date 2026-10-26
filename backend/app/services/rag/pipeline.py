@@ -1,11 +1,11 @@
 import time
 import uuid
-from app.schemas.upload import ParsedDocument, DOC_TYPE_LABELS
-from app.schemas.analysis import AnalyzeResponse, CoverageItem
-from app.services.rag.retriever import retrieve_relevant_clauses
-from app.services.rag.embedder import get_query_embedding
 
 from ai.rag.chain import current_model_name, current_prompt_version, run_coverage_chain
+from app.schemas.analysis import AnalyzeResponse, CoverageItem
+from app.schemas.upload import DOC_TYPE_LABELS, ParsedDocument
+from app.services.rag.embedder import get_query_embedding
+from app.services.rag.retriever import retrieve_relevant_clauses
 
 
 async def run_rag_pipeline(

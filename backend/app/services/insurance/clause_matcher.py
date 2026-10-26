@@ -1,4 +1,3 @@
-import re
 from app.schemas.upload import ParsedDocument
 
 # 실손 보험 주요 면책 조항 키워드

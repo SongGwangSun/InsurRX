@@ -1,10 +1,19 @@
 from fastapi import APIRouter
+
 from app.api.v1 import (
-    endpoints_upload, endpoints_analyze,
-    endpoints_result, endpoints_waitlist, endpoints_prompts,
-    endpoints_auth, endpoints_user_policies, endpoints_insurers,
-    endpoints_history, endpoints_bootstrap, endpoints_admin,
-    endpoints_kakao, endpoints_mydata,
+    endpoints_admin,
+    endpoints_analyze,
+    endpoints_auth,
+    endpoints_bootstrap,
+    endpoints_history,
+    endpoints_insurers,
+    endpoints_kakao,
+    endpoints_mydata,
+    endpoints_prompts,
+    endpoints_result,
+    endpoints_upload,
+    endpoints_user_policies,
+    endpoints_waitlist,
 )
 
 api_router = APIRouter()

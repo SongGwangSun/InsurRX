@@ -1,11 +1,11 @@
+
 from pydantic import BaseModel
-from typing import Optional, List
 
 
 class ParsedDrug(BaseModel):
     name: str
-    dosage: Optional[str] = None
-    days: Optional[int] = None
+    dosage: str | None = None
+    days: int | None = None
     is_nonbenefit: bool = False
     confidence: float = 1.0
 
@@ -19,15 +19,15 @@ DOC_TYPE_LABELS = {
 
 
 class ParsedDocument(BaseModel):
-    patient_name: Optional[str] = None
-    hospital: Optional[str] = None
-    department: Optional[str] = None
-    icd_code: Optional[str] = None
-    diagnosis: Optional[str] = None
-    prescription_date: Optional[str] = None
-    drugs: List[ParsedDrug] = []
-    total_amount: Optional[int] = None
-    doc_types: List[str] = []   # 인식된 문서 종류 (prescription/receipt/pill_envelope), 여러 장이면 복수
+    patient_name: str | None = None
+    hospital: str | None = None
+    department: str | None = None
+    icd_code: str | None = None
+    diagnosis: str | None = None
+    prescription_date: str | None = None
+    drugs: list[ParsedDrug] = []
+    total_amount: int | None = None
+    doc_types: list[str] = []   # 인식된 문서 종류 (prescription/receipt/pill_envelope), 여러 장이면 복수
 
 
 class UploadResponse(BaseModel):

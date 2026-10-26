@@ -11,14 +11,15 @@ Stage 1(정규식) 케이스:
 Stage 2(비동기 LLM 폴백) 케이스:
 - 핵심 필드 누락 시 LLM 보완 확인
 """
-import pytest
 from unittest.mock import AsyncMock, patch
+
+import pytest
+
 from app.services.ocr.parser import (
+    _needs_llm_fallback,
     parse_medical_document,
     parse_medical_document_async,
-    _needs_llm_fallback,
 )
-
 
 # ── 샘플 OCR 텍스트 ────────────────────────────────────────────────────────────
 

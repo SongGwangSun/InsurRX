@@ -6,13 +6,15 @@ Header: X-Bootstrap-Key 값이 일치해야 실행됩니다.
 Railway 배포 후 1회 호출 → 완료 후 Railway 대시보드에서 BOOTSTRAP_SECRET 삭제.
 """
 import os
-from fastapi import APIRouter, Header, HTTPException, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
+
+from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlalchemy import select
-from app.database import get_db
-from app.models.user import User
-from app.models.insurer import Insurer, InsuranceProduct
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.security import hash_password
+from app.database import get_db
+from app.models.insurer import InsuranceProduct, Insurer
+from app.models.user import User
 
 router = APIRouter()
 

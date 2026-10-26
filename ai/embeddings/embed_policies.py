@@ -7,16 +7,15 @@
 - 배치 단위 임베딩 (100개씩) → rate limit 대응
 - 파일 단위 에러 격리 → 한 파일 실패해도 나머지 계속 처리
 """
-import asyncio
 import argparse
+import asyncio
 import json
-import uuid
-import time
 from pathlib import Path
+
 from openai import AsyncOpenAI
 
-from app.core.config import settings
 from ai.rag.vectorstore import upsert_policy_chunks
+from app.core.config import settings
 
 # 한국어 기준 1500자 ≈ 500~700 토큰 (OpenAI 8192 한도 대비 충분한 여유)
 CHUNK_CHARS    = 1500
@@ -76,8 +75,7 @@ async def embed_chunks(chunks: list[dict]) -> list[dict]:
 
 
 async def process_policy_file(path: Path):
-    with open(path, encoding="utf-8") as f:
-        data = json.load(f)
+    data = json.loads(path.read_text(encoding="utf-8"))
 
     policy_id   = data["policy_id"]
     policy_name = data["policy_name"]

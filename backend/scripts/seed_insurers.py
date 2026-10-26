@@ -6,18 +6,19 @@
 vector_policy_id: data/policies/raw/*.json 의 policy_id 값과 반드시 일치해야 함.
 """
 import asyncio
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+import os
+import sys
 
-import sys, os
+from sqlalchemy import select
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
+import app.models.analysis_result
+import app.models.user
+import app.models.user_policy
+import app.models.waitlist  # noqa
 from app.database import AsyncSessionLocal, create_tables
-from app.models.insurer import Insurer, InsuranceProduct
-import app.models.waitlist        # noqa
-import app.models.analysis_result # noqa
-import app.models.user            # noqa
-import app.models.user_policy     # noqa
+from app.models.insurer import InsuranceProduct, Insurer
 
 SEED_DATA = [
     {

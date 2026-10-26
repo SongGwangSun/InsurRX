@@ -1,13 +1,13 @@
 """
 InsurRX 기획서 → .docx 변환 스크립트
 """
+
 from docx import Document
-from docx.shared import Pt, RGBColor, Cm, Inches
+from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.enum.table import WD_TABLE_ALIGNMENT, WD_ALIGN_VERTICAL
-from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
-import copy
+from docx.oxml.ns import qn
+from docx.shared import Cm, Pt, RGBColor
 
 # ─────────────────────────────────────────────
 # 헬퍼 함수
@@ -710,6 +710,7 @@ r_f.font.italic = True
 # 저장
 # ──────────────────────────────────────────────────────────
 from pathlib import Path
+
 OUTPUT = Path(__file__).parent / '기획서_InsurRX_v1.0.docx'
 doc.save(OUTPUT)
 print(f'저장 완료: {OUTPUT}')

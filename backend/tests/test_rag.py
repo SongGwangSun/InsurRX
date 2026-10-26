@@ -1,9 +1,14 @@
-import pytest
 from unittest.mock import AsyncMock, patch
-from app.schemas.upload import ParsedDocument, ParsedDrug
-from app.schemas.analysis import AnalyzeResponse
-from app.services.rag.pipeline import run_rag_pipeline, _build_query, _format_document_info
 
+import pytest
+
+from app.schemas.analysis import AnalyzeResponse
+from app.schemas.upload import ParsedDocument, ParsedDrug
+from app.services.rag.pipeline import (
+    _build_query,
+    _format_document_info,
+    run_rag_pipeline,
+)
 
 MOCK_LLM_RESULT = {
     "is_claimable": True,

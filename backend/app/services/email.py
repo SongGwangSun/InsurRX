@@ -3,7 +3,9 @@
 RESEND_API_KEY 가 비어 있으면(개발 환경) 실제 발송 대신 링크를 로그로 남긴다.
 """
 import logging
+
 import httpx
+
 from app.core.config import settings
 
 _log = logging.getLogger(__name__)

@@ -5,13 +5,13 @@ import asyncio
 import logging
 import re
 import uuid
-from pathlib import Path
+
 from openai import AsyncOpenAI
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.models.user_policy import UserPolicy, PolicyStatus
+from app.models.user_policy import PolicyStatus, UserPolicy
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +90,7 @@ async def _extract_text_from_file(file_bytes: bytes, content_type: str, filename
     """이미지 → Vision OCR, PDF → pdfplumber 텍스트 추출"""
     if content_type == "application/pdf" or filename.lower().endswith(".pdf"):
         import io
+
         import pdfplumber
         text_parts = []
         with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
@@ -195,7 +196,7 @@ async def collect_policy_sources(db: AsyncSession, user_id: int) -> tuple[list[s
     mydata_rows = await db.execute(
         select(UserMydataPolicy.vector_policy_id).where(
             UserMydataPolicy.user_id == user_id,
-            UserMydataPolicy.is_active == True,  # noqa: E712
+            UserMydataPolicy.is_active == True,
             UserMydataPolicy.status == "정상",
             UserMydataPolicy.vector_policy_id.isnot(None),
         )

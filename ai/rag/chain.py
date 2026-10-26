@@ -1,11 +1,12 @@
 import hashlib
 import json
+
 from langchain_anthropic import ChatAnthropic
+from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
-from langchain_core.messages import SystemMessage, HumanMessage
+
 from app.core.config import settings
 from app.services.prompt_service import get_prompt
-
 
 _OPENAI_MODEL = "gpt-4o"
 
@@ -53,7 +54,6 @@ async def run_coverage_chain(document_info: str, clauses: str) -> dict:
     # JSON 블록 추출 (```json ... ``` 감싸인 경우 대응)
     if raw.startswith("```"):
         raw = raw.split("```")[1]
-        if raw.startswith("json"):
-            raw = raw[4:]
+        raw = raw.removeprefix("json")
 
     return json.loads(raw.strip())

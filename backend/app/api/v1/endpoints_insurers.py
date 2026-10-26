@@ -1,22 +1,28 @@
+
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from typing import List
+
+from app.core.security import get_current_admin
 from app.database import get_db
-from app.models.insurer import Insurer, InsuranceProduct
+from app.models.insurer import InsuranceProduct, Insurer
 from app.schemas.insurer import (
-    InsurerCreate, InsurerUpdate, InsurerResponse, InsurerWithProducts,
-    ProductCreate, ProductUpdate, ProductResponse,
+    InsurerCreate,
+    InsurerResponse,
+    InsurerUpdate,
+    InsurerWithProducts,
+    ProductCreate,
+    ProductResponse,
+    ProductUpdate,
 )
-from app.core.security import get_current_admin, get_current_user
 
 router = APIRouter()
 
 
 # ── 보험사 CRUD ────────────────────────────────────────────────────────────────
 
-@router.get("/", response_model=List[InsurerWithProducts])
+@router.get("/", response_model=list[InsurerWithProducts])
 async def list_insurers(
     include_inactive: bool = False,
     db: AsyncSession = Depends(get_db),
@@ -78,7 +84,7 @@ async def delete_insurer(
 
 # ── 보험 상품 CRUD ─────────────────────────────────────────────────────────────
 
-@router.get("/{insurer_id}/products", response_model=List[ProductResponse])
+@router.get("/{insurer_id}/products", response_model=list[ProductResponse])
 async def list_products(
     insurer_id: int,
     include_inactive: bool = False,

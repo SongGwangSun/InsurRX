@@ -1,14 +1,27 @@
+import logging
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, BackgroundTasks, status
-from sqlalchemy.ext.asyncio import AsyncSession
+
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    UploadFile,
+    status,
+)
 from sqlalchemy import select
-from typing import List, Optional
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.config import settings
+from app.core.security import get_current_user
 from app.database import get_db
 from app.models.user import User
-from app.models.user_policy import UserPolicy, PolicyStatus
+from app.models.user_policy import PolicyStatus, UserPolicy
 from app.schemas.user_policy import UserPolicyResponse, UserPolicyUploadResult
-from app.core.security import get_current_user
-from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -23,7 +36,7 @@ MAX_SIZE_MB = 20
 async def upload_user_policy(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    product_id: Optional[int] = Form(None),
+    product_id: int | None = Form(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -50,8 +63,8 @@ async def upload_user_policy(
     await db.commit()
     await db.refresh(policy)
 
-    from app.services.user_policy_service import process_user_policy
     from app.database import AsyncSessionLocal
+    from app.services.user_policy_service import process_user_policy
 
     async def _bg():
         async with AsyncSessionLocal() as bg_db:
@@ -68,7 +81,7 @@ async def upload_user_policy(
     )
 
 
-@router.get("/", response_model=List[UserPolicyResponse])
+@router.get("/", response_model=list[UserPolicyResponse])
 async def list_user_policies(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -125,8 +138,8 @@ async def delete_user_policy(
             pc = Pinecone(api_key=settings.PINECONE_API_KEY)
             index = pc.Index(settings.PINECONE_INDEX)
             index.delete(delete_all=True, namespace=policy.vector_namespace)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning("Pinecone 네임스페이스 삭제 실패 (%s): %s", policy.vector_namespace, e)
 
     await db.delete(policy)
     await db.commit()

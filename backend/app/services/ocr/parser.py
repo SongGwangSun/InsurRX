@@ -382,7 +382,7 @@ async def _llm_parse(text: str) -> dict:
         raw = _re.sub(r'^```(?:json)?\s*', '', raw)
         raw = _re.sub(r'\s*```$', '', raw)
         return json.loads(raw)
-    except Exception as e:  # noqa: BLE001 — 폴백 경로: 어떤 실패든 정규식 결과만 사용
+    except Exception as e:
         logger.warning("LLM 파서 폴백 실패: %s", e)
         return {}
 

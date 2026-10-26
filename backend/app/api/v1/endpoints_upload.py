@@ -1,6 +1,9 @@
 import logging
-from fastapi import APIRouter, UploadFile, File, HTTPException
-from openai import APIError as OpenAIAPIError, APITimeoutError, APIConnectionError
+
+from fastapi import APIRouter, File, HTTPException, UploadFile
+from openai import APIConnectionError, APITimeoutError
+from openai import APIError as OpenAIAPIError
+
 from app.schemas.upload import UploadResponse
 from app.services.ocr.clova_ocr import run_ocr
 from app.services.ocr.parser import parse_medical_document_async
