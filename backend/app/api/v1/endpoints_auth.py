@@ -1,24 +1,40 @@
-from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, desc
-from app.database import get_db
+
+from app.api.v1.endpoints_kakao import require_kakao_enabled
 from app.core.config import settings
-from app.models.user import User
-from app.models.login_history import LoginHistory
-from app.schemas.user import (
-    UserCreate, UserResponse, Token, UserUpdate, PasswordChange,
-    ForgotPasswordRequest, PasswordResetConfirm,
-    RefreshRequest, LogoutRequest, LoginHistoryResponse,
-)
 from app.core.security import (
-    hash_password, verify_password, create_access_token,
-    get_current_user, issue_refresh_token, rotate_refresh_token,
-    revoke_refresh_token, revoke_all_refresh_tokens, record_login,
-    issue_password_reset_token, consume_password_reset_token,
+    consume_password_reset_token,
+    create_access_token,
+    get_current_user,
+    hash_password,
+    issue_password_reset_token,
+    issue_refresh_token,
+    record_login,
+    revoke_all_refresh_tokens,
+    revoke_refresh_token,
+    rotate_refresh_token,
+    verify_password,
 )
-from app.services.email import send_email, build_reset_email
+from app.database import get_db
+from app.models.login_history import LoginHistory
+from app.models.user import User
+from app.schemas.user import (
+    ForgotPasswordRequest,
+    LoginHistoryResponse,
+    LogoutRequest,
+    PasswordChange,
+    PasswordResetConfirm,
+    RefreshRequest,
+    Token,
+    UserCreate,
+    UserResponse,
+    UserUpdate,
+)
+from app.services.email import build_reset_email, send_email
 
 router = APIRouter()
 
@@ -182,7 +198,7 @@ async def reset_password(
     return {"message": "비밀번호가 재설정되었습니다. 새 비밀번호로 로그인해주세요."}
 
 
-@router.get("/login-history", response_model=List[LoginHistoryResponse])
+@router.get("/login-history", response_model=list[LoginHistoryResponse])
 async def login_history(
     limit: int = Query(default=20, le=100),
     db: AsyncSession = Depends(get_db),
@@ -199,18 +215,18 @@ async def login_history(
 
 # ── 카카오톡 계정 연결 ────────────────────────────────────────────────────────
 
-@router.post("/kakao-link-code", status_code=201)
+@router.post("/kakao-link-code", status_code=201, dependencies=[Depends(require_kakao_enabled)])
 async def create_kakao_link_code(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """카카오톡 챗봇에서 '연결 <코드>'로 입력할 1회용 코드 발급 (10분 유효)."""
-    from app.services.kakao.account import issue_link_code, LINK_CODE_EXPIRE_MINUTES
+    from app.services.kakao.account import LINK_CODE_EXPIRE_MINUTES, issue_link_code
     code = await issue_link_code(db, current_user.id)
     return {"code": code, "expires_in_minutes": LINK_CODE_EXPIRE_MINUTES}
 
 
-@router.get("/kakao-link")
+@router.get("/kakao-link", dependencies=[Depends(require_kakao_enabled)])
 async def kakao_link_status(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),

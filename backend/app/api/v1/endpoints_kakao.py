@@ -13,24 +13,36 @@
 import json
 import logging
 import re
-import httpx
-from fastapi import APIRouter, Depends, BackgroundTasks, Request
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
-from app.database import get_db, AsyncSessionLocal
+import httpx
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.config import settings
+from app.database import AsyncSessionLocal, get_db
 from app.models.analysis_result import AnalysisResult
-from app.models.insurer import Insurer, InsuranceProduct
+from app.models.insurer import InsuranceProduct, Insurer
 from app.models.kakao_session import KakaoSession, KakaoState
 from app.models.user import User
-from app.models.user_policy import UserPolicy, PolicyStatus
+from app.models.user_policy import PolicyStatus, UserPolicy
 from app.services.kakao import response_builder as rb
 from app.services.kakao.account import (
-    get_or_create_kakao_user, is_kakao_only_user, link_kakao_account,
+    get_or_create_kakao_user,
+    is_kakao_only_user,
+    link_kakao_account,
 )
 
 logger = logging.getLogger(__name__)
-router = APIRouter()
+
+
+def require_kakao_enabled() -> None:
+    """카카오 연동이 꺼져 있으면 엔드포인트를 404로 숨긴다."""
+    if not settings.KAKAO_ENABLED:
+        raise HTTPException(404, detail="Not Found")
+
+
+router = APIRouter(dependencies=[Depends(require_kakao_enabled)])
 
 MAX_ANALYSIS_IMAGES = 5
 MAX_POLICY_IMAGES   = 10
@@ -149,7 +161,10 @@ async def _run_analysis(kakao_uid: str, image_urls: list[str], policy_ids: list[
 
             # 2) OCR + 파싱 (장별) → 3) 병합
             from app.services.ocr.clova_ocr import run_ocr
-            from app.services.ocr.parser import parse_medical_document_async, merge_parsed_documents
+            from app.services.ocr.parser import (
+                merge_parsed_documents,
+                parse_medical_document_async,
+            )
             docs = []
             for image_bytes, content_type in images:
                 raw_text = await run_ocr(image_bytes, content_type)
@@ -368,7 +383,7 @@ async def kakao_skill(
 
     if utterance in ("약관 연결", "약관연결"):
         result = await db.execute(
-            select(Insurer.id, Insurer.name).where(Insurer.is_active == True).order_by(Insurer.id)  # noqa: E712
+            select(Insurer.id, Insurer.name).where(Insurer.is_active == True).order_by(Insurer.id)
         )
         return rb.select_insurer([tuple(r) for r in result.all()])
 
@@ -379,7 +394,7 @@ async def kakao_skill(
         result = await db.execute(
             select(InsuranceProduct.id, InsuranceProduct.name).where(
                 InsuranceProduct.insurer_id == insurer.id,
-                InsuranceProduct.is_active == True,  # noqa: E712
+                InsuranceProduct.is_active == True,
             ).order_by(InsuranceProduct.id)
         )
         return rb.select_product(insurer.name, [tuple(r) for r in result.all()])

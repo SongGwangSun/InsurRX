@@ -704,8 +704,8 @@
         <div style="font-size:.82rem;margin-top:.5rem" id="pwMsg"></div>
       </div>
 
-      <!-- 카카오톡 연결 -->
-      <div class="card">
+      <!-- 카카오톡 연결 — 임시 제외: KAKAO_ENABLED를 true로 바꾸면 다시 표시 -->
+      <div class="card" id="kakaoLinkCard" style="display:none">
         <h3>💬 카카오톡 연결</h3>
         <p>카카오톡 챗봇에서 등록한 보험증권·분석 이력을 이 계정으로 합치고, 웹에서 등록한 보험을 카톡 분석에도 사용합니다.</p>
         <div style="font-size:.85rem;margin-bottom:.75rem" id="kakaoLinkStatus"></div>
@@ -1671,6 +1671,9 @@ async function uploadOnboardPolicy() {
 }
 
 // ══ 계정 설정 탭 ══════════════════════════════════════════
+// 카카오톡 연동 임시 제외 — 백엔드 settings.KAKAO_ENABLED와 함께 켠다
+const KAKAO_ENABLED = false;
+
 function loadAccountInfo() {
   if (!currentUser) return;
   document.getElementById('accName').value          = currentUser.name;
@@ -1678,7 +1681,10 @@ function loadAccountInfo() {
   document.getElementById('accRole').textContent    = currentUser.is_admin ? '👑 관리자' : '일반 회원';
   document.getElementById('accCreated').textContent = fmtDate(currentUser.created_at);
   loadLoginHistory();
-  loadKakaoLinkStatus();
+  if (KAKAO_ENABLED) {
+    document.getElementById('kakaoLinkCard').style.display = '';
+    loadKakaoLinkStatus();
+  }
 }
 
 async function loadKakaoLinkStatus() {

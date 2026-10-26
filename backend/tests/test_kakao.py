@@ -1,9 +1,17 @@
 """카카오 스킬 서버 엔드포인트 테스트."""
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
+
+from app.core.config import settings
 from app.main import app
 
 BASE = "/api/v1/kakao/skill"
+
+
+@pytest.fixture(autouse=True)
+def _kakao_enabled(monkeypatch):
+    """카카오 연동은 기본 비활성 — 이 파일의 테스트에서만 켠다."""
+    monkeypatch.setattr(settings, "KAKAO_ENABLED", True)
 
 def _req(utterance: str, uid: str = "test_kakao_user", params: dict | None = None) -> dict:
     body: dict = {

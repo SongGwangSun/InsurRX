@@ -1,5 +1,5 @@
+
 from pydantic_settings import BaseSettings
-from typing import List
 
 
 class Settings(BaseSettings):
@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     LLM_PROVIDER: str = "anthropic"
     LLM_MODEL: str = "claude-sonnet-4-6"
 
-    ALLOWED_ORIGINS: List[str] = [
+    ALLOWED_ORIGINS: list[str] = [
         "http://localhost:3000",
         "http://localhost:8080",
         "http://localhost:5500",   # VS Code Live Server
@@ -40,6 +40,9 @@ class Settings(BaseSettings):
     JWT_EXPIRE_MINUTES: int = 60              # 1시간 (액세스 토큰)
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30       # 로그인 유지 선택 시
     REFRESH_TOKEN_SHORT_DAYS: int = 1         # 로그인 유지 미선택 시
+
+    # 카카오톡 챗봇 연동 — 임시 제외. true로 바꾸면 스킬 서버·계정 연결 API가 다시 열림
+    KAKAO_ENABLED: bool = False
 
     # 비밀번호 재설정 메일 (Resend)
     RESEND_API_KEY: str = ""                                  # 비어 있으면 메일 미발송(개발 모드: 링크 로그 출력)

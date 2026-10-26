@@ -2,14 +2,21 @@
 import json
 
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 
 from app.api.v1 import endpoints_kakao
+from app.core.config import settings
 from app.database import get_db
 from app.main import app
 from app.schemas.upload import ParsedDocument, ParsedDrug
 
 BASE = "/api/v1/kakao/skill"
+
+
+@pytest.fixture(autouse=True)
+def _kakao_enabled(monkeypatch):
+    """카카오 연동은 기본 비활성 — 이 파일의 테스트에서만 켠다."""
+    monkeypatch.setattr(settings, "KAKAO_ENABLED", True)
 
 
 def _req(utterance: str, uid: str, params: dict | None = None) -> dict:
@@ -38,7 +45,7 @@ async def _db():
 
 
 async def _seed_product(vector_policy_id: str | None = "hyundai-silson-v4") -> tuple[int, int]:
-    from app.models.insurer import Insurer, InsuranceProduct
+    from app.models.insurer import InsuranceProduct, Insurer
     gen, db = await _db()
     insurer = Insurer(name="현대해상", code="hyundai")
     db.add(insurer)

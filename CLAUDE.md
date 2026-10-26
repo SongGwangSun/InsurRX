@@ -75,6 +75,7 @@ OCR + RAG로 **3초 이내** 실손/정액 보상 여부 및 예상 지급액 �
 - [x] `schemas/upload.py`, `schemas/analysis.py`, `schemas/result.py`, `schemas/waitlist.py`
 
 ### 카카오톡 챗봇 연동 ✅ (2026-06-08)
+> ⏸ **2026-10-26 임시 제외** — `KAKAO_ENABLED=false`(기본값)면 `/kakao/*`·`/auth/kakao-link*` 404, 랜딩·대시보드 카카오 UI 숨김. 다시 켜려면 Railway env `KAKAO_ENABLED=true` + `dashboard.html`의 `KAKAO_ENABLED` 상수 + `index.html` 히어로 주석 복원.
 - [x] `KakaoSession` 모델 — 대화 상태 관리 (idle/wait_image/processing/done/error)
 - [x] `POST /api/v1/kakao/skill` — 카카오 i 오픈빌더 스킬 서버
   - 이미지 수신 → 약관 선택 → 비동기 OCR+RAG → 결과 확인 폴링
@@ -136,7 +137,7 @@ OCR + RAG로 **3초 이내** 실손/정액 보상 여부 및 예상 지급액 �
 
 ### 🔴 높음
 
-1. **카카오 i 오픈빌더 시나리오 수동 설정** (외부 작업)
+1. **카카오 i 오픈빌더 시나리오 수동 설정** (외부 작업) — ⏸ 카카오 연동 임시 제외 중
    - 스킬 URL: `POST https://magnificent-celebration-production-2dd9.up.railway.app/api/v1/kakao/skill`
    - 발화 블록 연결: 처음으로, 보험금 분석, 결과 확인, 도움말, 이미지 수신 이벤트
    - 카카오 비즈니스 채널 → 오픈빌더 연결: business.kakao.com
