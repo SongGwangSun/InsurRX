@@ -19,7 +19,7 @@
 | 기능 | 설명 |
 |------|------|
 | **OCR 분석** | GPT-4o Vision으로 처방전·영수증에서 상병코드·진단명·금액 추출 |
-| **RAG 보상 분석** | 표준약관(보험업감독업무시행세칙 별표15) 벡터 검색 + LangChain + GPT-4o로 보상 여부·예상 금액 분석 |
+| **예상 환급금 조회** | 실손의료보험 표준약관(보험업감독업무시행세칙 별표15) 벡터 검색 + LangChain + GPT-4o로 보상 여부·예상 환급금·근거 조항 산출 |
 | **카카오톡 챗봇** | 카카오 i 오픈빌더 스킬 서버 (현재 임시 제외, `KAKAO_ENABLED`) |
 | **분석 히스토리** | 과거 분석 결과 조회·삭제 |
 | **관리자 패널** | 보험사·상품 CRUD, 회원 관리, 시스템 통계 |
@@ -34,14 +34,14 @@ GitHub Pages (index / dashboard / admin)
        ▼
 FastAPI on Railway (PostgreSQL)
   ├── /upload      → GPT-4o Vision OCR
-  ├── /analyze     → 표준약관 RAG 보상 분석
+  ├── /analyze     → 실손 표준약관 RAG → 예상 환급금
   ├── /auth        → JWT 회원가입·로그인
   ├── /my/policies → 개인 보험증권 업로드·임베딩
   ├── /kakao/skill → 카카오 i 오픈빌더 스킬 서버
   └── /admin       → 보험사·회원 관리
 
 Pinecone (insurrx-policies)
-  ├── standard-terms: 표준약관 조항 169 벡터 (질병·상해, 실손 기본형·특약1·특약2)
+  ├── standard-terms: 실손 표준약관 기본형·특약1·특약2 (119 벡터, policy_id 필터로 실손만 검색)
   └── user-{id}-xxxx: 개인 보험증권 (사용자별 격리, 화면에서는 제외)
 ```
 
@@ -109,7 +109,7 @@ python scripts/build_standard_terms.py "<별표15 PDF 경로>"
 | 메서드 | 경로 | 설명 |
 |--------|------|------|
 | `POST` | `/api/v1/upload/` | 이미지 → OCR → ParsedDocument |
-| `POST` | `/api/v1/analyze/` | RAG 보상 분석 (JWT 선택) |
+| `POST` | `/api/v1/analyze/` | 예상 환급금 조회 (JWT 선택) |
 | `GET`  | `/api/v1/result/{session_id}` | 분석 결과 조회 |
 | `POST` | `/api/v1/auth/register` | 회원가입 |
 | `POST` | `/api/v1/auth/login` | 로그인 (JWT 발급) |

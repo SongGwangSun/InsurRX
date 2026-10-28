@@ -46,6 +46,10 @@ class Settings(BaseSettings):
     # 카카오톡 챗봇 연동 — 임시 제외. true로 바꾸면 스킬 서버·계정 연결 API가 다시 열림
     KAKAO_ENABLED: bool = False
 
+    # 개인정보 보관 기한 — 시작 시와 주기적으로 지난 데이터를 지움 (app/services/retention.py)
+    GUEST_RESULT_RETENTION_HOURS: int = 24    # 비로그인 분석 결과
+    LOGIN_HISTORY_RETENTION_DAYS: int = 365   # 로그인 이력
+
     # 비밀번호 재설정 메일 (Resend)
     RESEND_API_KEY: str = ""                                  # 비어 있으면 메일 미발송(개발 모드: 링크 로그 출력)
     MAIL_FROM: str = "InsurRX <onboarding@resend.dev>"        # 도메인 인증 후 noreply@song2nes.com 으로 교체

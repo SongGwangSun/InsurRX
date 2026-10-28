@@ -62,5 +62,21 @@ async def test_upload_invalid_file_type():
         response = await client.post(
             "/api/v1/upload/",
             files={"file": ("test.txt", b"hello", "text/plain")},
+            data={"health_consent": "true"},
         )
     assert response.status_code == 400
+    assert "지원하지 않는" in response.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_upload_requires_health_consent():
+    """건강정보·국외 이전 동의 없이 보낸 사진은 OCR을 호출하지 않고 거절한다."""
+    with patch("app.api.v1.endpoints_upload.run_ocr", new_callable=AsyncMock) as mock_ocr:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            response = await client.post(
+                "/api/v1/upload/",
+                files={"file": ("receipt.jpg", b"\xff\xd8", "image/jpeg")},
+            )
+    assert response.status_code == 400
+    assert "동의" in response.json()["detail"]
+    mock_ocr.assert_not_called()

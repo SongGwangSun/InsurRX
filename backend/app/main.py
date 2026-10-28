@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
@@ -20,6 +21,7 @@ from app.api.v1.router import api_router
 from app.core.config import settings
 from app.database import AsyncSessionLocal, create_tables, run_migrations
 from app.services import prompt_service
+from app.services.retention import run_periodic_purge
 
 _log = logging.getLogger(__name__)
 
@@ -33,12 +35,14 @@ async def lifespan(app: FastAPI):
             await prompt_service.seed_and_load(db)
     except Exception as e:
         _log.warning("DB 초기화 실패 (기본값으로 동작): %s", e)
+    purge_task = asyncio.create_task(run_periodic_purge(AsyncSessionLocal))
     yield
+    purge_task.cancel()
 
 
 app = FastAPI(
     title="InsurRX API",
-    description="처방전/영수증 기반 AI 보험 보상 확인 서비스",
+    description="영수증·처방전 기반 실손보험 예상 환급금 조회 서비스",
     version="0.1.0",
     lifespan=lifespan,
 )

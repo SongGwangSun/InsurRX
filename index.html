@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>InsurRX — 1분 이내 확인하는 내 보험 혜택</title>
+  <title>InsurRX — 실손보험 예상 환급금 조회</title>
   <style>
     :root {
       --blue:    #2563EB;
@@ -364,18 +364,6 @@
       background: white; font-size: 0.78rem; font-weight: 600; color: #3C3020; cursor: pointer;
       text-align: center;
     }
-    .app-input-row {
-      display: flex; gap: 8px; align-items: center;
-      background: white; border: 1px solid #C8C0B0; border-radius: 8px; padding: 8px 12px;
-    }
-    .app-input-field {
-      flex: 1; border: none; outline: none; font-size: 0.82rem; color: #8B7E6A;
-      background: transparent; font-family: inherit;
-    }
-    .app-send-btn {
-      width: 32px; height: 32px; border-radius: 6px; background: #2563EB;
-      border: none; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center;
-    }
 
     /* ── Screen 2: OCR 확인 ── */
     .ocr-screen {
@@ -494,7 +482,6 @@
       padding: 8px 12px; border-radius: 0 6px 6px 0;
       font-size: 0.75rem; color: #5C4F3A; font-style: italic; line-height: 1.6;
     }
-    .citation-link { color: #2563EB; font-size: 0.72rem; font-weight: 600; margin-top: 6px; display: block; }
     .confidence-row {
       padding: 10px 14px; display: flex; align-items: center; gap: 10px;
     }
@@ -785,6 +772,11 @@
     }
     .ocr-preview-box img { width: 100%; max-height: 300px; object-fit: contain; display: block; }
     .ocr-preview-btns { display: flex; gap: 10px; }
+    .consent-box { display: flex; gap: 10px; align-items: flex-start; text-align: left; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; font-size: 0.8rem; line-height: 1.55; color: #475569; cursor: pointer; }
+    .consent-box input { margin-top: 3px; width: 18px; height: 18px; flex-shrink: 0; accent-color: var(--blue); }
+    .consent-box b { color: #0F172A; }
+    .consent-box.need { border-color: #F43F5E; background: #FFF1F2; }
+    .consent-box a { color: var(--blue); }
 
     /* 로딩 */
     .ocr-loading-box {
@@ -913,7 +905,7 @@
     .payout-guide summary {
       cursor: pointer; padding: 10px 14px; font-weight: 700; color: #1D4ED8;
     }
-    .payout-guide ol { margin: 0; padding: 0 14px 12px 32px; line-height: 1.7; }
+    .payout-guide ol, .payout-guide > ul { margin: 0; padding: 0 14px 12px 32px; line-height: 1.7; }
     .payout-guide li { margin-bottom: 6px; }
     .payout-guide li ul { padding-left: 16px; margin-top: 2px; color: #64748B; }
 
@@ -952,9 +944,9 @@
 <!-- HERO -->
 <section class="hero">
   <div class="bot-avatar">🤖</div>
-  <div class="badge">AI 보험금 자동 확인 서비스</div>
+  <div class="badge">실손보험 예상 환급금 조회</div>
   <h1>버려지는 영수증,<br><em>내 숨은 보험금</em>으로.</h1>
-  <p>처방전 사진 한 장만 찍어 올리면<br>AI가 1분 이내에 내 보험 혜택과 예상 수령액을 알려드립니다.</p>
+  <p>영수증·처방전 사진 한 장으로<br>실손보험 표준약관 기준 예상 환급금과 근거 조항을 청구 전에 알려드립니다.</p>
   <div class="hero-btns">
     <!-- 카카오톡 연동 임시 제외 (KAKAO_ENABLED 복원 시 함께 되살림)
     <a class="btn-kakao"
@@ -983,16 +975,16 @@
 
   <div class="hero-stats">
     <div class="stat">
-      <div class="stat-num">2조+</div>
-      <div class="stat-label">연간 미청구 보험금 추정</div>
+      <div class="stat-num">3,622만 건</div>
+      <div class="stat-label">실손보험 보유계약 (2025년 말, 금융감독원)</div>
     </div>
     <div class="stat">
-      <div class="stat-num">1분</div>
-      <div class="stat-label">AI 보상 확인 소요 시간</div>
+      <div class="stat-num">약 2,500억 원</div>
+      <div class="stat-label">연간 미청구 실손보험금 추정 (2021~2022년)</div>
     </div>
     <div class="stat">
-      <div class="stat-num">98%</div>
-      <div class="stat-label">약관 문서 분석 정확도</div>
+      <div class="stat-num">80.1%</div>
+      <div class="stat-label">청구 포기 이유 "소액이라서" (한국소비자원, 2024)</div>
     </div>
   </div>
 </section>
@@ -1008,11 +1000,10 @@
       <div class="ba-label">BEFORE</div>
       <div class="ba-title">😩 기존 방식</div>
       <ul class="ba-list">
-        <li>두꺼운 약관집 직접 검색</li>
-        <li>보험사 콜센터 30분 대기</li>
-        <li>"소액이라 귀찮아서" 포기</li>
-        <li>특약 존재 자체를 모름</li>
-        <li>면책 조항 해석 불가</li>
+        <li>얼마 나올지 몰라 "소액이겠지" 하고 포기</li>
+        <li>보장 대상인지 약관을 찾아봐야 함</li>
+        <li>외래·약국 공제 기준이 복잡함</li>
+        <li>청구해 봐야 금액을 앎</li>
       </ul>
     </div>
     <div class="arrow-divider">→</div>
@@ -1020,11 +1011,10 @@
       <div class="ba-label">AFTER</div>
       <div class="ba-title">😊 InsurRX</div>
       <ul class="ba-list">
-        <li>처방전 사진 1장 업로드</li>
-        <li>1분 이내 보상 여부 확인</li>
-        <li>예상 수령액 즉시 산출</li>
-        <li>표준약관 기준 보상 판단</li>
-        <li>비급여 면책 여부 AI 필터링</li>
+        <li>영수증·처방전 사진 1장 업로드</li>
+        <li>청구 전에 예상 환급금 확인</li>
+        <li>본인부담금 − 공제액 산정식 표시</li>
+        <li>실손 표준약관 근거 조항 제시</li>
       </ul>
     </div>
   </div>
@@ -1033,7 +1023,7 @@
 <!-- HOW IT WORKS -->
 <section class="section how-bg">
   <div class="section-label">사용 방법</div>
-  <h2 class="section-title">단 3단계, 1분이면 충분합니다</h2>
+  <h2 class="section-title">단 3단계로 확인합니다</h2>
   <p class="section-sub">복잡한 설치 없이, 웹에서 바로 시작하세요.</p>
 
   <div class="steps">
@@ -1046,8 +1036,8 @@
     <div class="step">
       <div class="step-num">2</div>
       <div class="step-icon">💰</div>
-      <h3>보상 결과 확인</h3>
-      <p>AI가 실손의료보험 표준약관과 대조해 보상 여부·예상 금액·근거 조항을 알려드립니다.</p>
+      <h3>예상 환급금 확인</h3>
+      <p>AI가 실손의료보험 표준약관과 대조해 보상 여부·예상 환급금·근거 조항을 알려드립니다.</p>
     </div>
     <div class="step">
       <div class="step-num">3</div>
@@ -1068,6 +1058,13 @@
 
     <!-- Step 1: 촬영 방법 선택 -->
     <div id="ocr-s1">
+      <label class="consent-box" id="ocr-consent-box">
+        <input type="checkbox" id="ocr-consent" onchange="this.parentElement.classList.remove('need')" />
+        <span><b>[필수] 건강정보 처리 및 국외 이전 동의</b><br>
+        사진 속 진료·처방 정보(건강에 관한 민감정보)를 예상 환급금 계산에 쓰고, 이를 위해 OpenAI(미국)로 전송하는 데 동의합니다.
+        사진 파일은 저장하지 않으며, 로그인하지 않은 조회 결과는 24시간 뒤 삭제됩니다. 동의하지 않으면 조회할 수 없습니다.
+        <a href="privacy.html" target="_blank" rel="noopener">자세히 보기</a></span>
+      </label>
       <div class="ocr-modes">
         <button class="ocr-mode" onclick="ocrTrigger('camera')">
           <span class="ocr-mode-emoji">📷</span>
@@ -1118,7 +1115,7 @@
         <div id="ocr-fields"></div>
         <div class="ocr-result-btns">
           <button class="btn-ghost" onclick="ocrReset()">다시 촬영</button>
-          <button class="btn-primary" onclick="startAnalysis()">💸 보상 분석 받기 →</button>
+          <button class="btn-primary" onclick="startAnalysis()">💸 예상 환급금 보기 →</button>
         </div>
       </div>
     </div>
@@ -1145,14 +1142,14 @@
 <section class="section" id="demo">
   <div class="section-label">라이브 데모</div>
   <h2 class="section-title">실제 화면으로 확인하세요</h2>
-  <p class="section-sub">처방전 업로드부터 보상 결과까지, InsurRX 앱의 3단계 화면입니다.</p>
+  <p class="section-sub">사진 업로드부터 예상 환급금까지, InsurRX의 3단계 화면입니다.</p>
 
   <div class="demo-outer">
     <!-- step tabs -->
     <div class="demo-tabs">
       <button class="demo-tab active" onclick="switchDemo(0)">① 사진 업로드</button>
       <button class="demo-tab" onclick="switchDemo(1)">② OCR 인식 확인</button>
-      <button class="demo-tab" onclick="switchDemo(2)">③ 보상 결과 리포트</button>
+      <button class="demo-tab" onclick="switchDemo(2)">③ 예상 환급금</button>
     </div>
 
     <!-- browser chrome -->
@@ -1161,7 +1158,7 @@
         <div class="browser-dots">
           <span></span><span></span><span></span>
         </div>
-        <div class="browser-url">🔒 app.insurrx.app · 챗봇</div>
+        <div class="browser-url">🔒 song2nes.com</div>
       </div>
 
       <!-- Screen 1: 업로드 (데스크탑 분할 레이아웃) -->
@@ -1225,17 +1222,8 @@
               <div class="upload-btns">
                 <div class="upload-btn" onclick="switchDemo(1)">📷 촬영</div>
                 <div class="upload-btn" onclick="switchDemo(1)">🖼 업로드</div>
-                <div class="upload-btn">🎤 음성</div>
               </div>
 
-              <div class="app-input-row">
-                <input class="app-input-field" placeholder='예) "이번 주 소아과 진료 보상되나요?"' readonly />
-                <button class="app-send-btn">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
-                    <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                  </svg>
-                </button>
-              </div>
             </div>
           </div>
         </div>
@@ -1269,7 +1257,7 @@
                 <div class="field-label">상병코드</div>
                 <div class="field-value">
                   <strong>J20.9 급성기관지염</strong>
-                  <small>식약처 DB 교차 확인</small>
+                  <small>사진에서 인식</small>
                 </div>
                 <span class="confidence conf-sure">확실</span>
               </div>
@@ -1309,12 +1297,12 @@
 
           <div class="ocr-actions">
             <button class="btn-ghost" onclick="switchDemo(0)">다시 촬영</button>
-            <button class="btn-primary" onclick="switchDemo(2)">보상 분석 →</button>
+            <button class="btn-primary" onclick="switchDemo(2)">예상 환급금 보기 →</button>
           </div>
         </div>
       </div><!-- /screen-1 -->
 
-      <!-- Screen 3: 보상 결과 리포트 -->
+      <!-- Screen 3: 예상 환급금 -->
       <div class="demo-screen" id="screen-2">
         <div class="result-screen">
           <div class="screen-header">
@@ -1326,7 +1314,7 @@
           <div class="result-body">
             <!-- 보상 금액 -->
             <div class="payout-card">
-              <div class="payout-label">예상 보상 금액 · EST. PAYOUT</div>
+              <div class="payout-label">예상 환급금 · EST. REFUND</div>
               <div class="payout-amount">₩ 18,500</div>
               <span class="claimable-badge">✓ 청구 가능 · CLAIMABLE</span>
               <div style="font-size:0.75rem;color:#94A3B8;margin-top:8px">실손의료보험 표준약관 기본형(급여) 통원 기준</div>
@@ -1344,7 +1332,7 @@
                 <span class="br-val">₩ 8,000</span>
               </div>
               <div class="breakdown-row">
-                <span class="br-label">비급여 (코대원포르테) <span style="font-size:0.68rem;color:#E11D48">제외</span></span>
+                <span class="br-label">비급여 (코대원포르테) <span style="font-size:0.68rem;color:#E11D48">기본형 대상 아님</span></span>
                 <span class="br-exempt">₩ 3,200</span>
               </div>
               <div class="breakdown-row" style="background:#FFF8F8;">
@@ -1359,7 +1347,6 @@
               <div class="citation-box">
                 <div class="citation-source">실손의료보험 표준약관 기본형 · 제3조(보장종목별 보상내용)</div>
                 <div class="citation-text">"통원 1회당(외래 및 처방조제 합산) … 본인부담금에서 &lt;표1&gt;의 '통원항목별 공제금액'을 뺀 금액"</div>
-                <a class="citation-link" href="#">원문 보기 ↗</a>
               </div>
               <div class="confidence-row">
                 <span style="font-size:0.72rem;color:#8B7E6A;">AI 신뢰도</span>
@@ -1372,8 +1359,8 @@
           </div>
 
           <div class="result-actions">
-            <button class="btn-ask" onclick="switchDemo(0)">추가 질문</button>
-            <button class="btn-claim-main">💸 바로 청구하기 →</button>
+            <button class="btn-ask" onclick="switchDemo(0)">다른 영수증</button>
+            <button class="btn-claim-main" onclick="switchDemo(0)">보험사 앱·실손24에서 청구 →</button>
           </div>
         </div>
       </div><!-- /screen-2 -->
@@ -1385,7 +1372,7 @@
 <!-- FEATURES -->
 <section class="section how-bg">
   <div class="section-label">핵심 기능</div>
-  <h2 class="section-title">진단명·약품 단위의 정밀 분석</h2>
+  <h2 class="section-title">청구 전에, 근거와 함께</h2>
 
   <div class="features-grid">
     <div class="feat-card">
@@ -1410,8 +1397,8 @@
     </div>
     <div class="feat-card">
       <div class="feat-icon" style="background:#FFF1F2">🧾</div>
-      <h3>면책 조항 사전 필터링</h3>
-      <p>비급여·선천성 질환 등 보상 제외 항목을 AI가 미리 걸러내어 헛청구를 방지합니다.</p>
+      <h3>보장 제외 이유 안내</h3>
+      <p>표준약관의 "보상하지 않는 사항"과 대조해, 제외될 수 있는 항목과 그 이유를 함께 알려드립니다.</p>
     </div>
     <div class="feat-card">
       <div class="feat-icon" style="background:#ECFDF5">📋</div>
@@ -1440,13 +1427,13 @@
     </div>
     <div class="sec-item">
       <div class="sec-icon">🤖</div>
-      <h4>외부 AI 처리 고지</h4>
-      <p>글자 인식과 약관 대조에 OpenAI API를 사용합니다. 사진과 인식된 내용이 분석을 위해 전송됩니다.</p>
+      <h4>민감정보 동의와 국외 이전 고지</h4>
+      <p>진료·처방 정보는 건강에 관한 민감정보입니다. 별도 동의를 받은 뒤에만 분석하며, 글자 인식과 약관 대조를 위해 OpenAI(미국)로 전송됩니다.</p>
     </div>
     <div class="sec-item">
       <div class="sec-icon">🧾</div>
-      <h4>분석 이력은 본인만</h4>
-      <p>로그인한 경우 분석 결과는 본인 계정에만 저장되며, 언제든 직접 삭제할 수 있습니다.</p>
+      <h4>보관 기한과 삭제</h4>
+      <p>로그인하지 않은 조회 결과는 24시간 뒤 자동 삭제됩니다. 로그인한 경우 본인 계정에만 저장되며, 직접 삭제하거나 탈퇴하면 모두 지워집니다.</p>
     </div>
   </div>
 </section>
@@ -1578,16 +1565,15 @@
 <!-- FOOTER -->
 <footer>
   <div class="foot-logo">Insur<span>RX</span></div>
-  <p>잦은 병의원 방문자를 위한 AI 맞춤형 보험 보상 확인 챗봇</p>
+  <p>영수증·처방전 사진으로 확인하는 실손보험 예상 환급금</p>
   <div class="foot-links">
-    <a href="#">서비스 소개</a>
-    <a href="#">개인정보 처리방침</a>
-    <a href="#">이용약관</a>
-    <a href="#">고객센터</a>
+    <a href="#try">서비스 이용</a>
+    <a href="privacy.html"><b>개인정보 처리방침</b></a>
   </div>
   <p style="margin-top:16px">
     © 2026 InsurRX. All rights reserved.<br>
-    본 서비스는 보험 가입 권유 또는 재정 조언이 아닌 정보 제공 목적으로만 운영됩니다.
+    본 서비스는 보험 가입 권유 또는 재정 조언이 아닌 정보 제공 목적으로만 운영됩니다.<br>
+    예상 환급금은 추정치이며 최종 지급 여부와 금액은 보험사 심사로 결정됩니다. InsurRX는 보험금 청구 대행이나 손해사정을 하지 않습니다.
   </p>
 </footer>
 
@@ -1636,6 +1622,10 @@
   let _progTimer = null;
 
   function ocrTrigger(mode) {
+    if (!document.getElementById('ocr-consent').checked) {
+      document.getElementById('ocr-consent-box').classList.add('need');
+      return;
+    }
     document.getElementById(mode === 'camera' ? 'ocr-cam' : 'ocr-gal').click();
   }
 
@@ -1681,6 +1671,7 @@
     try {
       const form = new FormData();
       form.append('file', _ocrFile);
+      form.append('health_consent', 'true');   // ocrTrigger에서 동의 확인 후에만 여기까지 옴
       const res = await fetch(`${API_BASE}/upload/`, { method: 'POST', body: form });
       clearInterval(_progTimer); _progTimer = null;
       progEl.style.width = '100%';
@@ -1773,6 +1764,14 @@
   // 산정 근거 고지 + 실제 결과와 차이 날 때 안내 (웹·대시보드·카카오 공통 문구)
   function payoutNoticeHtml() {
     return `
+      <details class="payout-guide" open>
+        <summary>청구하는 방법</summary>
+        <ul>
+          <li><b>실손24 앱</b>(보험개발원) 또는 <b>가입한 보험사 앱</b>에서 청구합니다. 실손24에 연계된 병원·약국이면 서류 없이 청구할 수 있습니다.</li>
+          <li>사진 청구 시 필요 서류: <b>진료비 영수증</b>, 약국 <b>약제비 영수증</b>. 비급여가 있거나 금액이 크면 <b>진료비 세부내역서</b>, 보험사에 따라 처방전(질병분류코드)을 요구할 수 있습니다.</li>
+          <li>청구 기한은 진료일로부터 <b>3년</b>입니다. InsurRX는 청구를 대신하지 않습니다.</li>
+        </ul>
+      </details>
       <div class="payout-notice">
         ⚠️ 이 금액은 현행 실손의료보험 <b>표준약관</b>(2026.5.6. 개정)과 영수증을 바탕으로 AI가 계산한 <b>추정치</b>입니다.
         최종 지급 여부와 금액은 <b>보험사 심사</b>로 결정됩니다.

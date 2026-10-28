@@ -10,7 +10,7 @@
              "articles": [ { "article": "제3조(보장종목별 보상내용)", "page": 204, "text": "..." } ] }
 
 보험사별 상품 약관 대신, 모든 보험사가 따르는 표준약관만 사용한다.
-분석에 필요한 질병·상해보험과 실손의료보험(기본형·특별약관1·2)만 추출한다.
+예상 환급금 조회에 필요한 실손의료보험(기본형·특별약관1·2)만 추출한다.
 """
 import json
 import re
@@ -24,13 +24,6 @@ OUT_DIR = Path(__file__).resolve().parent.parent / "data" / "policies" / "standa
 
 # PDF 쪽 번호(1부터) 기준 구간 — 문서 하단 쪽 번호와 PDF 쪽 번호가 같다
 SECTIONS = [
-    {
-        "policy_id": "std-disease-injury",
-        "policy_name": "질병·상해보험 표준약관",
-        "pages": (144, 203),
-        # 장해분류표 등 부표는 처방전·영수증 기반 청구 판단과 무관하고 검색 결과를 독차지한다
-        "skip_appendix": True,
-    },
     {
         "policy_id": "std-silson-basic",
         "policy_name": "실손의료보험 표준약관 — 기본형(급여 실손의료비)",
@@ -130,8 +123,6 @@ def main():
             first, last = section["pages"]
             lines = extract_lines(pdf, first, last)
             articles = split_articles(lines)
-            if section.get("skip_appendix"):
-                articles = [a for a in articles if not APPENDIX_RE.match(a["article"])]
             chunks = [c for a in articles for c in chunk_article(a)]
             data = {
                 "policy_id": section["policy_id"],

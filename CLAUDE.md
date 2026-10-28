@@ -76,12 +76,23 @@ OCR + RAG로 **3초 이내** 실손/정액 보상 여부 및 예상 지급액 �
 
 ### 표준약관 전환 + 화면 정리 ✅ (2026-10-26)
 - [x] 보험사별 상품 약관(`data/policies/raw`) 제거 → **표준약관**(보험업감독업무시행세칙 [별표15], 실손 2026.5.6. 개정) 사용
-  - `scripts/build_standard_terms.py` — 별표15 PDF → 조항 단위 JSON (`data/policies/standard/`: 질병·상해, 실손 기본형·특약1·특약2)
-  - Pinecone `standard-terms` 네임스페이스 169 벡터. 기존 기본 네임스페이스 벡터는 남아 있으나 검색하지 않음
+  - `scripts/build_standard_terms.py` — 별표15 PDF → 조항 단위 JSON (`data/policies/standard/`: 실손 기본형·특약1·특약2)
+  - Pinecone `standard-terms` 네임스페이스. 실손 119 벡터만 `policy_id` 필터로 검색 (`retriever.SILSON_POLICY_IDS`). 질병·상해 50 벡터는 네임스페이스에 남아 있으나 검색하지 않음(재임베딩하면 지워짐). 기본 네임스페이스의 예전 보험사 약관도 미사용
   - 검색: 표준약관 상위 15건 → 조항당 2건 제한 → 6건 (`retriever.py`), `policy_ids`·보험사 선택 제거
   - RAG 시스템 프롬프트에 표준약관 보상 기준(급여 통원 공제 1만/2만원·20%, 특약1 3만원·30%, 특약2 5만원·50% 등) 명시. 예전 기본값 그대로인 DB 프롬프트는 시작 시 자동 갱신
 - [x] 대시보드: 마이데이터·내 보험증권 탭, 가입 후 증권 등록 온보딩, 보험사 약관 선택, 마이데이터 진료내역 대조 제거 (백엔드 API는 유지)
 - [x] 랜딩: 보험 선택 단계·보험사 추가 모달·요금제 섹션 제거, 미구현 기능(원클릭 청구·가족 관리·마이데이터) 문구 정리, 보안 문구를 실제 구현 기준으로 수정, OCR 오류 화면 버그 수정
+
+### 멘토 의견 반영 — 실손 예상 환급금 조회 + 개인정보 ✅ (2026-10-28)
+> 기획서: `docs/기획서_InsurRX_v1.2.md` (멘토 의견 11개와 반영 위치). 제출용 HWP 사업계획서는 수동 반영 필요
+- [x] 실손 집중: 질병·상해 표준약관 검색 제외, 화면 용어 "예상 환급금 조회"로 통일, 결과에 "청구하는 방법"(실손24·보험사 앱, 필요 서류) 안내
+- [x] 랜딩 수치를 출처 있는 실손 통계로 교체 (보유계약 3,622만 건, 미청구 약 2,500억 원, 소액 포기 80.1%), 데모의 미구현 UI(음성·채팅 입력·바로 청구) 제거
+- [x] `POST /upload/`는 `health_consent=true`(Form) 없으면 400 — 랜딩·대시보드에서 민감정보·국외 이전(OpenAI) 별도 동의 체크 후에만 전송
+  - ⚠ 카카오 연동을 다시 켜면 카카오 OCR 경로에도 같은 동의 절차를 넣어야 함
+- [x] `privacy.html` 개인정보 처리방침 (위탁·국외 이전 표, 보유 기간, 보호책임자), 회원가입 시 동의 체크
+- [x] `DELETE /auth/me` 회원 탈퇴 (비밀번호 확인) — 분석 결과·카카오 세션·보험증권(Pinecone 네임스페이스)·로그인 이력·토큰 삭제, 대시보드 계정 탭에 버튼
+- [x] `app/services/retention.py` — 비회원 분석 결과 24시간(`GUEST_RESULT_RETENTION_HOURS`), 로그인 이력 1년(`LOGIN_HISTORY_RETENTION_DAYS`) 지나면 삭제. 앱 시작 시와 6시간마다 실행
+- [ ] 회원 분석 결과의 진단명·병원명 원문 저장 최소화, 토큰 사용량(건당 원가) 기록
 
 ### 카카오톡 챗봇 연동 ✅ (2026-06-08)
 > ⏸ **2026-10-26 임시 제외** — `KAKAO_ENABLED=false`(기본값)면 `/kakao/*`·`/auth/kakao-link*` 404, 랜딩·대시보드 카카오 UI 숨김. 다시 켜려면 Railway env `KAKAO_ENABLED=true` + `dashboard.html`의 `KAKAO_ENABLED` 상수 + `index.html` 히어로 주석 복원.
@@ -173,7 +184,7 @@ index.html / dashboard.html (GitHub Pages)
 FastAPI (backend/app/main.py)
   ├── /auth         → JWT 회원가입·로그인
   ├── /upload       → GPT-4o Vision OCR → ParsedDocument
-  ├── /analyze      → 표준약관 RAG → 보상 분석
+  ├── /analyze      → 실손 표준약관 RAG → 예상 환급금
   │     ├── embedder    (OpenAI text-embedding-3-small)
   │     ├── retriever   (Pinecone: 공개 네임스페이스 + user-{id}-xxx 네임스페이스)
   │     └── chain       (LangChain + GPT-4o)
@@ -186,7 +197,7 @@ data/policies/standard/*.json   (scripts/build_standard_terms.py ← 별표15 PD
        │ python -m ai.embeddings.embed_policies
        ▼
 Pinecone Index "insurrx-policies"
-  ├── standard-terms        표준약관 169 벡터 (기본 네임스페이스의 예전 보험사 약관은 미사용)
+  ├── standard-terms        실손 표준약관 119 벡터만 검색 (질병·상해 50 벡터·기본 네임스페이스 예전 약관은 미사용)
   └── user-{id}-xxxx      개인 보험증권 (사용자별 격리)
 ```
 

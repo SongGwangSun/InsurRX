@@ -94,6 +94,10 @@
     .progress-text { font-size:.8rem;color:var(--gray-500);margin-top:6px; }
 
     /* ANALYZE ZONE */
+    .consent-box { display:flex;gap:.6rem;align-items:flex-start;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:10px;padding:.75rem .9rem;margin-bottom:1rem;font-size:.8rem;line-height:1.55;color:var(--gray-500);cursor:pointer; }
+    .consent-box input { margin-top:3px;width:17px;height:17px;flex-shrink:0; }
+    .consent-box b { color:var(--gray-900); }
+    .consent-box.need { border-color:var(--red);background:#FFF1F2; }
     .analyze-drop { border:2px dashed var(--gray-300);border-radius:var(--radius);padding:2.5rem 1.5rem;text-align:center;cursor:pointer;transition:all .2s;background:var(--white);margin-bottom:1.2rem; }
     .analyze-drop:hover,.analyze-drop.drag-over { border-color:var(--blue);background:#EFF6FF; }
     .analyze-drop .drop-icon { font-size:2.5rem;margin-bottom:.5rem; }
@@ -138,7 +142,7 @@
     .payout-guide summary {
       cursor: pointer; padding: 10px 14px; font-weight: 700; color: #1D4ED8;
     }
-    .payout-guide ol { margin: 0; padding: 0 14px 12px 32px; line-height: 1.7; }
+    .payout-guide ol, .payout-guide > ul { margin: 0; padding: 0 14px 12px 32px; line-height: 1.7; }
     .payout-guide li { margin-bottom: 6px; }
     .payout-guide li ul { padding-left: 16px; margin-top: 2px; color: #64748B; }
     .coverage-list h4 { font-size:.85rem;font-weight:700;color:var(--gray-500);margin-bottom:.6rem;text-transform:uppercase;letter-spacing:.05em; }
@@ -262,7 +266,7 @@
     <button class="mobile-nav-close" onclick="closeMobileNav()">✕</button>
   </div>
   <div class="mobile-nav-menu">
-    <button class="mobile-nav-item active" id="mobAnalyze"  onclick="switchMainTab('analyze')">🔍 보상 분석</button>
+    <button class="mobile-nav-item active" id="mobAnalyze"  onclick="switchMainTab('analyze')">🔍 예상 환급금 조회</button>
     <button class="mobile-nav-item"        id="mobHistory"  onclick="switchMainTab('history')">📋 분석 히스토리</button>
     <button class="mobile-nav-item"        id="mobAccount"  onclick="switchMainTab('account')">⚙️ 계정 설정</button>
   </div>
@@ -276,7 +280,7 @@
 <div class="overlay hidden" id="authOverlay">
   <div class="modal">
     <h2>InsurRX 시작하기</h2>
-    <p class="sub">AI로 내 보험 보상을 3초 안에 확인하세요.</p>
+    <p class="sub">영수증·처방전 사진으로 실손보험 예상 환급금을 확인하세요.</p>
     <div class="tabs">
       <button class="tab-btn active" id="tabLogin" onclick="switchTab('login')">로그인</button>
       <button class="tab-btn" id="tabRegister" onclick="switchTab('register')">회원가입</button>
@@ -320,6 +324,10 @@
       <div class="form-group"><label>이메일</label><input type="email" id="regEmail" placeholder="example@email.com" /></div>
       <div class="form-group"><label>비밀번호 (6자 이상)</label><input type="password" id="regPw" placeholder="비밀번호 설정" /></div>
       <div class="form-group"><label>비밀번호 확인</label><input type="password" id="regPw2" placeholder="비밀번호 재입력" onkeydown="if(event.key==='Enter')doRegister()" /></div>
+      <label style="display:flex;gap:.5rem;align-items:flex-start;font-size:.8rem;color:var(--gray-500);margin:.25rem 0 .9rem;cursor:pointer">
+        <input type="checkbox" id="regAgree" style="margin-top:2px" />
+        <span>[필수] <a href="privacy.html" target="_blank" rel="noopener">개인정보 처리방침</a>을 읽었으며, 회원 정보(이메일·이름) 수집·이용에 동의합니다.</span>
+      </label>
       <button class="btn-full" onclick="doRegister()" id="registerBtn">회원가입</button>
       <div class="error-msg" id="registerErr"></div>
     </div>
@@ -347,19 +355,19 @@
   <div class="welcome-banner">
     <div>
       <h1 id="welcomeName">안녕하세요!</h1>
-      <p id="welcomeSub">표준약관을 기준으로 AI가 보상 가능성과 예상 금액을 분석합니다.</p>
+      <p id="welcomeSub">실손보험 표준약관을 기준으로 AI가 보상 여부와 예상 환급금을 알려드립니다.</p>
     </div>
   </div>
 
   <!-- 주 탭 (데스크톱) / 현재 탭 레이블 (모바일) -->
   <div class="main-tabs">
-    <button class="main-tab-btn active" id="mtAnalyze"  onclick="switchMainTab('analyze')">🔍 보상 분석</button>
+    <button class="main-tab-btn active" id="mtAnalyze"  onclick="switchMainTab('analyze')">🔍 예상 환급금 조회</button>
     <button class="main-tab-btn"        id="mtHistory"  onclick="switchMainTab('history')">📋 분석 히스토리</button>
     <button class="main-tab-btn"        id="mtAccount"  onclick="switchMainTab('account')">⚙️ 계정 설정</button>
   </div>
-  <div class="current-tab-label" id="currentTabLabel">🔍 보상 분석</div>
+  <div class="current-tab-label" id="currentTabLabel">🔍 예상 환급금 조회</div>
 
-  <!-- ═══ TAB: 보상 분석 ══════════════════════════════════════════════ -->
+  <!-- ═══ TAB: 예상 환급금 조회 ══════════════════════════════════════════════ -->
   <div class="tab-content active" id="tabAnalyze">
 
     <!-- 단계 표시 -->
@@ -367,14 +375,21 @@
       <div class="step" id="step1">① 파일 선택</div>
       <div class="step" id="step2">② OCR 분석</div>
       <div class="step" id="step3">③ 내용 확인</div>
-      <div class="step" id="step4">④ 보상 분석</div>
+      <div class="step" id="step4">④ 환급금 계산</div>
       <div class="step" id="step5">⑤ 결과 확인</div>
     </div>
 
     <!-- Step 1: 파일 드롭존 -->
     <div id="analyzeZone">
+      <label class="consent-box" id="consentBox">
+        <input type="checkbox" id="healthConsent" onchange="this.parentElement.classList.remove('need')" />
+        <span><b>[필수] 건강정보 처리 및 국외 이전 동의</b><br>
+        사진 속 진료·처방 정보(건강에 관한 민감정보)를 예상 환급금 계산에 쓰고, 이를 위해 OpenAI(미국)로 전송하는 데 동의합니다.
+        사진 파일은 저장하지 않으며, 분석 결과는 내 계정에만 저장되어 직접 삭제하거나 탈퇴하면 지워집니다. 동의하지 않으면 조회할 수 없습니다.
+        <a href="privacy.html" target="_blank" rel="noopener">자세히 보기</a></span>
+      </label>
       <div class="analyze-drop" id="dropZone"
-           onclick="document.getElementById('analyzeFileInput').click()"
+           onclick="if (requireConsent()) document.getElementById('analyzeFileInput').click()"
            ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
         <div class="drop-icon">📋</div>
         <p><strong>처방전 또는 진료비 영수증</strong>을 여기에 끌어다 놓거나 클릭해 선택</p>
@@ -383,8 +398,8 @@
       <input type="file" id="analyzeFileInput" accept=".jpg,.jpeg,.png,.webp,.pdf" onchange="onFileSelected(this.files[0])" />
 
       <p style="font-size:.8rem;color:var(--gray-500);margin-top:.75rem">
-        📘 보험사별 약관 대신 <b>표준약관</b>(보험업감독업무시행세칙 별표15, 실손 2026.5.6. 개정)을 기준으로 분석합니다.
-        진료비 영수증을 함께 올리면 예상 금액까지 계산할 수 있습니다.
+        📘 보험사별 약관 대신 <b>실손의료보험 표준약관</b>(보험업감독업무시행세칙 별표15, 2026.5.6. 개정)을 기준으로 계산합니다.
+        진료비 영수증을 함께 올리면 예상 환급금까지 계산할 수 있습니다.
       </p>
     </div>
 
@@ -436,7 +451,7 @@
 
       <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center">
         <button class="btn-full" style="max-width:300px;margin:0" onclick="runAnalysis()" id="runAnalysisBtn">
-          AI 보상 분석 시작
+          예상 환급금 계산
         </button>
         <button onclick="reselectPhoto()" id="reselectBtn"
           style="padding:10px 18px;border-radius:9px;font-size:.875rem;font-weight:600;border:1.5px solid var(--gray-300);background:var(--white);color:var(--gray-700);cursor:pointer;white-space:nowrap">
@@ -448,7 +463,7 @@
     <!-- Step 4: 분석 중 -->
     <div id="analysisLoading" style="display:none;text-align:center;padding:3rem 0">
       <div style="font-size:3rem;margin-bottom:1rem">🤖</div>
-      <p style="font-weight:700;font-size:1.1rem">보상 여부 분석 중...</p>
+      <p style="font-weight:700;font-size:1.1rem">예상 환급금 계산 중...</p>
       <p style="color:var(--gray-500);font-size:.875rem;margin-top:.3rem">AI가 약관을 검토하고 있습니다. 최대 15초 소요됩니다.</p>
       <div style="width:200px;margin:1rem auto 0">
         <div class="progress-bar-wrap"><div class="progress-bar" id="analysisBar" style="width:20%"></div></div>
@@ -554,6 +569,18 @@
         </div>
       </div>
 
+      <!-- 회원 탈퇴 -->
+      <div class="card">
+        <h3>회원 탈퇴</h3>
+        <p>탈퇴하면 계정과 분석 이력, 로그인 이력이 모두 삭제되며 되돌릴 수 없습니다.</p>
+        <div class="form-group">
+          <label>비밀번호 확인</label>
+          <input type="password" id="deletePw" placeholder="현재 비밀번호 입력" />
+        </div>
+        <button class="upload-btn" style="background:var(--red)" onclick="deleteAccount()">회원 탈퇴</button>
+        <div style="font-size:.82rem;margin-top:.5rem" id="deleteMsg"></div>
+      </div>
+
     </div>
   </div>
 
@@ -563,7 +590,7 @@
 <div class="page-wrap" id="guestContent" style="display:none;text-align:center;padding-top:160px;">
   <div style="font-size:4rem">🔒</div>
   <h2 style="margin-top:1rem;font-size:1.5rem">로그인이 필요합니다</h2>
-  <p style="color:var(--gray-500);margin-top:.5rem;margin-bottom:1.5rem">처방전·영수증 보상 분석과 분석 이력을 이용하려면 로그인하세요.</p>
+  <p style="color:var(--gray-500);margin-top:.5rem;margin-bottom:1.5rem">영수증·처방전 예상 환급금 조회와 조회 이력을 이용하려면 로그인하세요.</p>
   <button class="btn-sm btn-primary" style="font-size:1rem;padding:12px 32px" onclick="showAuth()">로그인 / 회원가입</button>
 </div>
 
@@ -610,7 +637,7 @@ function enterDashboard() {
 }
 
 // ── 주 탭 전환 ─────────────────────────────────────────
-const _tabLabels = { analyze:'🔍 보상 분석', history:'📋 분석 히스토리', account:'⚙️ 계정 설정' };
+const _tabLabels = { analyze:'🔍 예상 환급금 조회', history:'📋 분석 히스토리', account:'⚙️ 계정 설정' };
 
 function switchMainTab(name) {
   ['analyze','history','account'].forEach(t => {
@@ -746,6 +773,7 @@ async function doRegister() {
   if (!name || !email || !pw) { errEl.textContent = '모든 항목을 입력하세요.'; return; }
   if (pw.length < 6) { errEl.textContent = '비밀번호는 6자 이상이어야 합니다.'; return; }
   if (pw !== pw2)    { errEl.textContent = '비밀번호가 일치하지 않습니다.'; return; }
+  if (!document.getElementById('regAgree').checked) { errEl.textContent = '개인정보 수집·이용에 동의해야 가입할 수 있습니다.'; return; }
   const btn = document.getElementById('registerBtn');
   btn.disabled = true; btn.textContent = '가입 중...';
   try {
@@ -824,7 +852,7 @@ async function logout() {
   location.reload();
 }
 
-// ══ 보상 분석 탭 ══════════════════════════════════════════════
+// ══ 예상 환급금 조회 탭 ══════════════════════════════════════════════
 
 function setStep(n) {
   for (let i = 1; i <= 5; i++) {
@@ -837,7 +865,15 @@ function setStep(n) {
 
 function onDragOver(e) { e.preventDefault(); document.getElementById('dropZone').classList.add('drag-over'); }
 function onDragLeave()  { document.getElementById('dropZone').classList.remove('drag-over'); }
-function onDrop(e)      { e.preventDefault(); onDragLeave(); if (e.dataTransfer.files[0]) onFileSelected(e.dataTransfer.files[0]); }
+function onDrop(e)      { e.preventDefault(); onDragLeave(); if (e.dataTransfer.files[0] && requireConsent()) onFileSelected(e.dataTransfer.files[0]); }
+
+// 건강정보·국외 이전 동의 없이는 사진을 보내지 않음 (서버도 health_consent 없으면 400)
+function requireConsent() {
+  if (document.getElementById('healthConsent').checked) return true;
+  document.getElementById('consentBox').classList.add('need');
+  toast('건강정보 처리 및 국외 이전에 동의해야 조회할 수 있습니다.', 'error');
+  return false;
+}
 
 function onFileSelected(file) {
   if (!file) return;
@@ -855,7 +891,7 @@ async function runOCR(file) {
   document.getElementById('analysisResult').style.display = 'none';
 
   try {
-    const form = new FormData(); form.append('file', file);
+    const form = new FormData(); form.append('file', file); form.append('health_consent', 'true');
     const headers = authToken ? { Authorization: `Bearer ${authToken}` } : {};
     const res  = await fetch(`${API}/upload/`, { method: 'POST', headers, body: form });
     const data = await res.json();
@@ -906,7 +942,7 @@ function renderOcrResult(parsed) {
     manualDiv.style.display = 'none';
     btn.disabled = false;
     btn.style.opacity = '';
-    btn.textContent = 'AI 보상 분석 시작';
+    btn.textContent = '예상 환급금 계산';
   }
 }
 
@@ -925,7 +961,7 @@ function onManualInput() {
     }
     btn.disabled = false;
     btn.style.opacity = '';
-    btn.textContent = 'AI 보상 분석 시작';
+    btn.textContent = '예상 환급금 계산';
   } else {
     btn.disabled = true;
     btn.style.opacity = '.45';
@@ -973,6 +1009,14 @@ async function runAnalysis() {
 // 산정 근거 고지 + 실제 결과와 차이 날 때 안내 (웹·대시보드·카카오 공통 문구)
 function payoutNoticeHtml() {
   return `
+    <details class="payout-guide" open>
+      <summary>청구하는 방법</summary>
+      <ul>
+        <li><b>실손24 앱</b>(보험개발원) 또는 <b>가입한 보험사 앱</b>에서 청구합니다. 실손24에 연계된 병원·약국이면 서류 없이 청구할 수 있습니다.</li>
+        <li>사진 청구 시 필요 서류: <b>진료비 영수증</b>, 약국 <b>약제비 영수증</b>. 비급여가 있거나 금액이 크면 <b>진료비 세부내역서</b>, 보험사에 따라 처방전(질병분류코드)을 요구할 수 있습니다.</li>
+        <li>청구 기한은 진료일로부터 <b>3년</b>입니다. InsurRX는 청구를 대신하지 않습니다.</li>
+      </ul>
+    </details>
     <div class="payout-notice">
       ⚠️ 이 금액은 현행 실손의료보험 <b>표준약관</b>(2026.5.6. 개정)과 영수증을 바탕으로 AI가 계산한 <b>추정치</b>입니다.
       최종 지급 여부와 금액은 <b>보험사 심사</b>로 결정됩니다.
@@ -1061,7 +1105,7 @@ function resetAnalyze() {
     document.getElementById(id).value = '';
   });
   const btn = document.getElementById('runAnalysisBtn');
-  btn.disabled = false; btn.style.opacity = ''; btn.textContent = 'AI 보상 분석 시작';
+  btn.disabled = false; btn.style.opacity = ''; btn.textContent = '예상 환급금 계산';
 }
 
 // ══ 분석 히스토리 ════════════════════════════════════════
@@ -1082,7 +1126,7 @@ async function loadHistory() {
 function renderHistory(list) {
   const tb = document.getElementById('historyBody');
   if (!list.length) {
-    tb.innerHTML = `<tr class="empty-row"><td colspan="6">분석 기록이 없습니다. 보상 분석 탭에서 시작해 보세요.</td></tr>`;
+    tb.innerHTML = `<tr class="empty-row"><td colspan="6">분석 기록이 없습니다. 예상 환급금 조회 탭에서 시작해 보세요.</td></tr>`;
     return;
   }
   let html = '';
@@ -1275,6 +1319,29 @@ async function doChangePassword() {
     setMsg('pwMsg', '✅ 비밀번호가 변경되었습니다.', true);
     toast('비밀번호가 변경되었습니다.', 'success');
   } catch(e) { setMsg('pwMsg', e.message, false); }
+}
+
+async function deleteAccount() {
+  const pw = document.getElementById('deletePw').value;
+  if (!pw) { setMsg('deleteMsg', '비밀번호를 입력하세요.', false); return; }
+  if (!confirm('계정과 분석 이력이 모두 삭제됩니다. 탈퇴할까요?')) return;
+  try {
+    const res = await apiFetch(`${API}/auth/me`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pw }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.detail || '탈퇴 실패');
+    }
+    authToken = null; currentUser = null; refreshToken = null;
+    localStorage.removeItem('insurrx_token');
+    localStorage.removeItem('insurrx_user');
+    localStorage.removeItem('insurrx_refresh_token');
+    alert('탈퇴가 완료되었습니다. 이용해 주셔서 감사합니다.');
+    location.href = 'index.html';
+  } catch(e) { setMsg('deleteMsg', e.message, false); }
 }
 
 function setMsg(id, msg, ok) {

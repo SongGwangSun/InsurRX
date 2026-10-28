@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from openai import APIConnectionError, APITimeoutError
 from openai import APIError as OpenAIAPIError
 
@@ -20,8 +20,21 @@ ALLOWED_TYPES = {
 
 
 @router.post("/", response_model=UploadResponse)
-async def upload_document(file: UploadFile = File(...)):
-    """처방전/영수증 이미지 업로드 → GPT-4o Vision OCR → 파싱 결과 반환."""
+async def upload_document(
+    file: UploadFile = File(...),
+    health_consent: bool = Form(False),
+):
+    """처방전/영수증 이미지 업로드 → GPT-4o Vision OCR → 파싱 결과 반환.
+
+    영수증·처방전은 건강에 관한 민감정보(개인정보 보호법 제23조)이고 OCR을 위해 OpenAI(미국)로
+    전송되므로, 화면에서 별도 동의를 받은 요청만 처리합니다.
+    """
+    if not health_consent:
+        raise HTTPException(
+            status_code=400,
+            detail="건강정보 처리와 국외 이전(OpenAI)에 동의해야 사진을 분석할 수 있습니다.",
+        )
+
     content_type = (file.content_type or "image/jpeg").lower()
 
     # content_type이 없거나 octet-stream이면 확장자로 추정

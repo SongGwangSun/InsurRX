@@ -98,7 +98,7 @@ async def test_run_rag_pipeline_records_trace():
 
 @pytest.mark.asyncio
 async def test_retriever_searches_standard_terms_namespace(monkeypatch):
-    """보험사 약관(policy_id 필터) 없이 표준약관 네임스페이스 + 개인 네임스페이스만 검색한다."""
+    """표준약관 네임스페이스는 실손 약관으로만 거르고, 개인 네임스페이스는 거르지 않고 검색한다."""
     from types import SimpleNamespace
     from unittest.mock import MagicMock
 
@@ -117,7 +117,8 @@ async def test_retriever_searches_standard_terms_namespace(monkeypatch):
 
     calls = index.query.call_args_list
     assert calls[0].kwargs["namespace"] == settings.STANDARD_TERMS_NAMESPACE
-    assert "filter" not in calls[0].kwargs
+    assert calls[0].kwargs["filter"] == {"policy_id": {"$in": retriever.SILSON_POLICY_IDS}}
+    assert "filter" not in calls[1].kwargs
     assert calls[1].kwargs["namespace"] == "user-1-abcd"
     assert results[0]["policy_id"] == "std-silson-basic"
     assert results[1]["policy_name"] == "내 보험증권"

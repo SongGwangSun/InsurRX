@@ -9,6 +9,9 @@ STANDARD_CANDIDATES = 15 # 조항별 개수 제한 전에 가져올 후보 수
 PER_ARTICLE_LIMIT = 2    # 같은 조항의 조각이 결과를 독차지하지 않도록 제한
 USER_TOP_K = 3           # 개인 업로드 문서(네임스페이스)별 조각 수
 
+# 실손의료보험만 조회 대상 (질병·상해 표준약관은 검색하지 않음)
+SILSON_POLICY_IDS = ["std-silson-basic", "std-silson-rider1", "std-silson-rider2"]
+
 
 async def retrieve_relevant_clauses(
     embedding: list[float],
@@ -16,7 +19,7 @@ async def retrieve_relevant_clauses(
 ) -> list[dict]:
     """Vector DB에서 관련 약관 조항을 검색합니다.
 
-    - 표준약관(별표15) 네임스페이스는 항상 검색합니다. 보험사별 상품 약관은 쓰지 않습니다.
+    - 실손의료보험 표준약관(별표15, 기본형·특약1·2)만 검색합니다. 보험사별 상품 약관은 쓰지 않습니다.
     - user_namespaces: 사용자 업로드 문서 네임스페이스 (user-{id}-xxxx)
     """
     if settings.VECTOR_DB_TYPE == "pinecone":
@@ -30,11 +33,12 @@ async def _query_pinecone(embedding: list[float], user_namespaces: list[str]) ->
     pc = Pinecone(api_key=settings.PINECONE_API_KEY)
     index = pc.Index(settings.PINECONE_INDEX)
 
-    # 1. 표준약관
+    # 1. 실손 표준약관
     standard = index.query(
         vector=embedding,
         top_k=STANDARD_CANDIDATES,
         namespace=settings.STANDARD_TERMS_NAMESPACE,
+        filter={"policy_id": {"$in": SILSON_POLICY_IDS}},
         include_metadata=True,
     )
     results = _diversify([m.metadata for m in standard.matches])

@@ -48,6 +48,10 @@ class PasswordChange(BaseModel):
     new_password: str
 
 
+class AccountDelete(BaseModel):
+    password: str
+
+
 class ForgotPasswordRequest(BaseModel):
     """재설정 메일 발송 요청 (1단계)."""
     email: EmailStr

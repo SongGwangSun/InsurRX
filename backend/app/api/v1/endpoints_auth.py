@@ -1,7 +1,9 @@
 
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy import desc, select
+from sqlalchemy import delete, desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.endpoints_kakao import require_kakao_enabled
@@ -20,9 +22,17 @@ from app.core.security import (
     verify_password,
 )
 from app.database import get_db
+from app.models.analysis_result import AnalysisResult
+from app.models.kakao_link_code import KakaoLinkCode
+from app.models.kakao_session import KakaoSession
 from app.models.login_history import LoginHistory
+from app.models.mydata_policy import UserMydataPolicy
+from app.models.password_reset_token import PasswordResetToken
+from app.models.refresh_token import RefreshToken
 from app.models.user import User
+from app.models.user_policy import UserPolicy
 from app.schemas.user import (
+    AccountDelete,
     ForgotPasswordRequest,
     LoginHistoryResponse,
     LogoutRequest,
@@ -37,6 +47,7 @@ from app.schemas.user import (
 from app.services.email import build_reset_email, send_email
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 def _client_ip(request: Request) -> str:
@@ -130,6 +141,39 @@ async def update_me(
     await db.commit()
     await db.refresh(current_user)
     return UserResponse.model_validate(current_user)
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_me(
+    body: AccountDelete,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """회원 탈퇴 — 분석 이력·보험증권(벡터 포함)·로그인 이력 등 회원 관련 데이터를 모두 지웁니다."""
+    if not verify_password(body.password, current_user.password_hash):
+        raise HTTPException(status_code=400, detail="비밀번호가 올바르지 않습니다.")
+    uid = current_user.id
+
+    namespaces = (await db.execute(
+        select(UserPolicy.vector_namespace).where(UserPolicy.user_id == uid)
+    )).scalars().all()
+    from app.services.user_policy_service import is_user_namespace
+    namespaces = [ns for ns in namespaces if is_user_namespace(ns)]
+    if namespaces and settings.PINECONE_API_KEY:
+        try:
+            from pinecone import Pinecone
+            index = Pinecone(api_key=settings.PINECONE_API_KEY).Index(settings.PINECONE_INDEX)
+            for ns in namespaces:
+                index.delete(delete_all=True, namespace=ns)
+        except Exception as e:  # 벡터 삭제 실패로 탈퇴를 막지 않음 — 로그로 남겨 수동 정리
+            logger.warning("탈퇴 회원 %s Pinecone 네임스페이스 삭제 실패 %s: %s", uid, namespaces, e)
+
+    # ondelete=SET NULL인 테이블(분석 결과·카카오 세션)은 익명으로 남지 않도록 직접 삭제
+    for model in (AnalysisResult, KakaoSession, UserPolicy, UserMydataPolicy, LoginHistory,
+                  RefreshToken, PasswordResetToken, KakaoLinkCode):
+        await db.execute(delete(model).where(model.user_id == uid))
+    await db.delete(current_user)
+    await db.commit()
 
 
 @router.post("/me/change-password", status_code=200)
