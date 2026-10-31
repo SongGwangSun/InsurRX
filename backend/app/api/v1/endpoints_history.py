@@ -17,7 +17,11 @@ async def list_my_analyses(
     db: AsyncSession = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    """로그인 사용자의 과거 분석 결과 목록 (최신순)."""
+    """로그인 사용자의 과거 분석 결과 목록 (최신순).
+
+    웹 조회 결과는 이제 기기에만 저장한다. 이 목록은 전환 전에 서버에 남은 결과(카카오 포함)를
+    대시보드가 기기로 옮긴 뒤 DELETE로 지우는 데 쓴다.
+    """
     result = await db.execute(
         select(AnalysisResult)
         .where(AnalysisResult.user_id == current_user.id)

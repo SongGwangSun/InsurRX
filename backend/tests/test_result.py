@@ -1,17 +1,20 @@
 """
-GET /api/v1/result/{session_id} 테스트
+분석 결과 저장 위치 테스트
 
-- 분석 후 session_id로 결과 재조회
+- POST /analyze 결과는 서버 DB에 저장하지 않는다 (조회 이력은 사용자 기기에 저장)
+- GET /result/{session_id}는 서버에 남아 있는 결과(카카오·전환 전 웹)만 조회
 - 없는 session_id → 404
-- 저장된 created_at 포함 확인
 """
 import uuid
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy import func, select
 
+from app.database import get_db
 from app.main import app
+from app.models.analysis_result import AnalysisResult
 from app.schemas.analysis import AnalyzeResponse, CoverageItem
 
 MOCK_RESPONSE = AnalyzeResponse(
@@ -21,9 +24,9 @@ MOCK_RESPONSE = AnalyzeResponse(
     breakdown={"본인부담금": 28500, "공제액": -10000},
     coverage_items=[
         CoverageItem(
-            clause_id="hyundai-silson-3-2",
-            policy_name="현대해상 실손의료비",
-            article="제3조 ②항",
+            clause_id="std-silson-basic-3",
+            policy_name="실손의료보험 표준약관",
+            article="제3조",
             is_covered=True,
             reason="통원 의원급 해당",
             citation="통원의료비는 1회당 의원 1만원을 공제한 금액을 보상한다.",
@@ -40,96 +43,87 @@ ANALYZE_PAYLOAD = {
         "total_amount": 28500,
         "drugs": [],
     },
-    "policy_ids": ["hyundai-silson-v4"],
 }
 
 
+async def _insert(resp: AnalyzeResponse, channel: str = "kakao") -> None:
+    gen = app.dependency_overrides[get_db]()
+    db = await gen.__anext__()
+    db.add(AnalysisResult(
+        session_id=resp.session_id,
+        is_claimable=resp.is_claimable,
+        estimated_payout=resp.estimated_payout,
+        breakdown=resp.breakdown,
+        coverage_items=[item.model_dump() for item in resp.coverage_items],
+        confidence=resp.confidence,
+        llm_summary=resp.llm_summary,
+        llm_model=resp.llm_model,
+        prompt_version=resp.prompt_version,
+        latency_ms=resp.latency_ms,
+        channel=channel,
+    ))
+    await db.commit()
+    await gen.aclose()
+
+
 @pytest.mark.asyncio
-async def test_result_after_analyze():
-    """analyze → 저장된 session_id로 result 조회 성공."""
+async def test_analyze_does_not_store_result():
+    """웹 분석 결과는 응답으로만 돌려주고 DB에 남기지 않는다."""
+    resp = MOCK_RESPONSE.model_copy(update={"session_id": str(uuid.uuid4())})
     with patch(
         "app.api.v1.endpoints_analyze.run_rag_pipeline",
         new_callable=AsyncMock,
-        return_value=MOCK_RESPONSE,
+        return_value=resp,
     ):
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            # 1. 분석 실행
             analyze_resp = await client.post("/api/v1/analyze/", json=ANALYZE_PAYLOAD)
             assert analyze_resp.status_code == 200
-            session_id = analyze_resp.json()["session_id"]
+            assert analyze_resp.json()["estimated_payout"] == 18500
 
-            # 2. 결과 조회
-            result_resp = await client.get(f"/api/v1/result/{session_id}")
+            result_resp = await client.get(f"/api/v1/result/{resp.session_id}")
+            assert result_resp.status_code == 404
 
-    assert result_resp.status_code == 200
-    data = result_resp.json()
-    assert data["session_id"] == session_id
-    assert data["is_claimable"] is True
-    assert data["estimated_payout"] == 18500
-    assert data["confidence"] == 0.92
-    assert "created_at" in data
-    assert data["created_at"] is not None
-    assert len(data["coverage_items"]) == 1
+    gen = app.dependency_overrides[get_db]()
+    db = await gen.__anext__()
+    count = (await db.execute(
+        select(func.count()).select_from(AnalysisResult).where(AnalysisResult.session_id == resp.session_id)
+    )).scalar()
+    await gen.aclose()
+    assert count == 0
 
 
 @pytest.mark.asyncio
 async def test_result_not_found():
-    """존재하지 않는 session_id → 404 반환."""
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as client:
+    """존재하지 않는 session_id → 404."""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         resp = await client.get("/api/v1/result/nonexistent-session-xyz")
-
     assert resp.status_code == 404
-    assert "nonexistent-session-xyz" in resp.json()["detail"]
 
 
 @pytest.mark.asyncio
-async def test_result_coverage_items_structure():
-    """coverage_items 내 각 항목 필드가 올바른지 확인."""
-    with patch(
-        "app.api.v1.endpoints_analyze.run_rag_pipeline",
-        new_callable=AsyncMock,
-        return_value=MOCK_RESPONSE,
-    ):
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
-            analyze_resp = await client.post("/api/v1/analyze/", json=ANALYZE_PAYLOAD)
-            session_id = analyze_resp.json()["session_id"]
-            result_resp = await client.get(f"/api/v1/result/{session_id}")
-
-    item = result_resp.json()["coverage_items"][0]
-    assert "clause_id" in item
-    assert "policy_name" in item
-    assert "is_covered" in item
-    assert "reason" in item
-    assert "citation" in item
-
-
-@pytest.mark.asyncio
-async def test_result_keeps_trace_fields():
-    """분석 결과에 모델명·프롬프트 버전·처리 시간이 저장되고 조회된다."""
-    traced = MOCK_RESPONSE.model_copy(update={
+async def test_result_returns_stored_row():
+    """서버에 남아 있는 결과(카카오)는 coverage_items 구조와 추적 정보를 포함해 조회된다."""
+    stored = MOCK_RESPONSE.model_copy(update={
         "session_id": str(uuid.uuid4()),
         "llm_model": "gpt-4o",
         "prompt_version": "abc123def456",
         "latency_ms": 2100,
     })
-    with patch(
-        "app.api.v1.endpoints_analyze.run_rag_pipeline",
-        new_callable=AsyncMock,
-        return_value=traced,
-    ):
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
-            await client.post("/api/v1/analyze/", json=ANALYZE_PAYLOAD)
-            result_resp = await client.get(f"/api/v1/result/{traced.session_id}")
+    await _insert(stored)
 
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        result_resp = await client.get(f"/api/v1/result/{stored.session_id}")
+
+    assert result_resp.status_code == 200
     data = result_resp.json()
+    assert data["session_id"] == stored.session_id
+    assert data["estimated_payout"] == 18500
+    assert "created_at" in data
+    item = data["coverage_items"][0]
+    for key in ("clause_id", "policy_name", "is_covered", "reason", "citation"):
+        assert key in item
     assert data["llm_model"] == "gpt-4o"
     assert data["prompt_version"] == "abc123def456"
     assert data["latency_ms"] == 2100

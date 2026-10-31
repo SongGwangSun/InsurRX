@@ -184,6 +184,8 @@
     .hist-detail-label { font-size:.78rem;color:var(--gray-500);font-weight:600;min-width:80px; }
     .hist-detail-value { font-size:.88rem;font-weight:700;color:var(--gray-900);text-align:right;flex:1; }
     .hist-result-icon { font-size:2rem;text-align:center;margin-bottom:.5rem; }
+    .device-note { font-size:.8rem;color:var(--gray-500);background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;padding:.6rem .85rem;margin:0 0 1rem;line-height:1.6; }
+    .hist-thumb { display:block;max-width:100%;max-height:220px;margin:0 auto 1rem;border-radius:8px;border:1px solid var(--gray-200); }
     .hist-summary-box { background:var(--gray-50);border-radius:8px;padding:.75rem 1rem;font-size:.83rem;color:var(--gray-700);line-height:1.65;margin:1rem 0; }
 
     /* SPINNER */
@@ -338,6 +340,7 @@
 <div class="overlay hidden" id="histDetailOverlay" onclick="closeHistDetail(event)">
   <div class="modal" style="max-width:400px;padding:2rem 1.75rem" onclick="event.stopPropagation()">
     <div class="hist-result-icon" id="hdIcon"></div>
+    <img class="hist-thumb" id="hdThumb" alt="영수증 사진" style="display:none" />
     <div id="hdRows"></div>
     <div class="hist-summary-box" id="hdSummary" style="display:none"></div>
     <div id="hdNotice"></div>
@@ -385,7 +388,7 @@
         <input type="checkbox" id="healthConsent" onchange="this.parentElement.classList.remove('need')" />
         <span><b>[필수] 건강정보 처리 및 국외 이전 동의</b><br>
         사진 속 진료·처방 정보(건강에 관한 민감정보)를 예상 환급금 계산에 쓰고, 이를 위해 OpenAI(미국)로 전송하는 데 동의합니다.
-        사진 파일은 저장하지 않으며, 분석 결과는 내 계정에만 저장되어 직접 삭제하거나 탈퇴하면 지워집니다. 동의하지 않으면 조회할 수 없습니다.
+        서버에는 사진과 분석 결과를 저장하지 않으며, 조회 기록과 사진 축소본은 이 기기(브라우저)에만 저장됩니다. 동의하지 않으면 조회할 수 없습니다.
         <a href="privacy.html" target="_blank" rel="noopener">자세히 보기</a></span>
       </label>
       <div class="analyze-drop" id="dropZone"
@@ -483,8 +486,13 @@
 
     <div class="section-header" style="margin-bottom:1rem">
       <h2>과거 분석 결과</h2>
-      <button class="btn-sm btn-outline" onclick="loadHistory()">새로고침</button>
+      <div style="display:flex;gap:.5rem">
+        <button class="btn-sm btn-outline" onclick="loadHistory()">새로고침</button>
+        <button class="btn-sm btn-outline" style="color:var(--red)" onclick="clearDeviceHistory()">이 기기 기록 모두 삭제</button>
+      </div>
     </div>
+    <p class="device-note">📱 조회 기록과 영수증 사진(축소본)은 <b>이 기기의 브라우저에만</b> 저장되고 서버에는 남지 않습니다.
+      다른 기기에서는 보이지 않으며, 브라우저 데이터를 지우면 함께 삭제됩니다. 여러 사람이 쓰는 기기라면 사용 후 기록을 삭제하세요.</p>
     <div class="policies-wrap">
       <table>
         <thead>
@@ -572,7 +580,7 @@
       <!-- 회원 탈퇴 -->
       <div class="card">
         <h3>회원 탈퇴</h3>
-        <p>탈퇴하면 계정과 분석 이력, 로그인 이력이 모두 삭제되며 되돌릴 수 없습니다.</p>
+        <p>탈퇴하면 계정, 로그인 이력, 이 기기에 저장된 조회 기록이 모두 삭제되며 되돌릴 수 없습니다.</p>
         <div class="form-group">
           <label>비밀번호 확인</label>
           <input type="password" id="deletePw" placeholder="현재 비밀번호 입력" />
@@ -602,6 +610,7 @@ let authToken    = localStorage.getItem('insurrx_token');
 let refreshToken = localStorage.getItem('insurrx_refresh_token');
 let currentUser  = JSON.parse(localStorage.getItem('insurrx_user') || 'null');
 let _parsedDoc   = null;   // OCR 결과 임시 저장
+let _thumbPromise = null;   // 기기 이력에 함께 저장할 사진 축소본 (data URL)
 
 // ── 초기화 ────────────────────────────────────────────
 window.onload = async () => {
@@ -884,6 +893,7 @@ function onFileSelected(file) {
 }
 
 async function runOCR(file) {
+  _thumbPromise = makeThumbnail(file);
   setStep(2);
   document.getElementById('analyzeZone').style.display = 'none';
   document.getElementById('ocrLoading').style.display = '';
@@ -992,6 +1002,7 @@ async function runAnalysis() {
 
     clearInterval(timer); bar.style.width = '100%';
     setStep(5);
+    saveToDevice(data, _parsedDoc);
     setTimeout(() => {
       document.getElementById('analysisLoading').style.display = 'none';
       renderAnalysisResult(data);
@@ -1108,18 +1119,101 @@ function resetAnalyze() {
   btn.disabled = false; btn.style.opacity = ''; btn.textContent = '예상 환급금 계산';
 }
 
-// ══ 분석 히스토리 ════════════════════════════════════════
+// ══ 분석 히스토리 (기기 저장) ════════════════════════════
+// 진료 정보가 담긴 조회 결과는 서버에 두지 않고 이 브라우저의 IndexedDB에만 저장한다.
+// 회원별로 owner를 나눠 같은 기기의 다른 계정 기록은 보이지 않게 한다.
+const HIST_DB = 'insurrx', HIST_STORE = 'history';
 let _historyList = [];
+
+function histDb() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(HIST_DB, 1);
+    req.onupgradeneeded = () => {
+      const store = req.result.createObjectStore(HIST_STORE, { keyPath: 'session_id' });
+      store.createIndex('owner', 'owner');
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror   = () => reject(req.error);
+  });
+}
+
+async function histTx(mode, fn) {
+  const db = await histDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(HIST_STORE, mode);
+    const out = fn(tx.objectStore(HIST_STORE));
+    tx.oncomplete = () => { db.close(); resolve(out && 'result' in out ? out.result : undefined); };
+    tx.onerror    = () => { db.close(); reject(tx.error); };
+  });
+}
+
+function histOwner() { return currentUser ? String(currentUser.id) : 'guest'; }
+
+function makeThumbnail(file, maxSide = 640) {
+  if (!file || !file.type.startsWith('image/')) return Promise.resolve(null);
+  return new Promise(resolve => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      resolve(c.toDataURL('image/jpeg', 0.7));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+    img.src = url;
+  });
+}
+
+async function saveToDevice(data, parsed) {
+  try {
+    const thumb = _thumbPromise ? await _thumbPromise : null;
+    await histTx('readwrite', st => st.put({
+      ...data,
+      owner: histOwner(),
+      created_at: new Date().toISOString(),
+      doc: parsed ? {
+        hospital: parsed.hospital, diagnosis: parsed.diagnosis,
+        prescription_date: parsed.prescription_date, total_amount: parsed.total_amount,
+      } : null,
+      thumb,
+    }));
+  } catch { toast('이 기기에 조회 기록을 저장하지 못했습니다.', 'error'); }
+}
+
+async function readDeviceHistory() {
+  const rows = await histTx('readonly', st => st.index('owner').getAll(histOwner()));
+  return (rows || []).sort((x, y) => (y.created_at || '').localeCompare(x.created_at || ''));
+}
+
+// 기기 저장 전환 전에 서버에 남은 결과를 이 기기로 옮기고 서버에서 지운다 (계정당 1회)
+async function migrateServerHistory() {
+  const flag = `insurrx_hist_migrated_${histOwner()}`;
+  try { if (localStorage.getItem(flag)) return; } catch { /* 저장소 차단 시 매번 확인 */ }
+  const res = await apiFetch(`${API}/my/analyses/?limit=200`);
+  if (!res.ok) return;
+  const rows = await res.json();
+  let failed = 0;
+  for (const r of rows) {
+    await histTx('readwrite', st => st.put({ ...r, owner: histOwner(), doc: null, thumb: null }));
+    const del = await apiFetch(`${API}/my/analyses/${r.session_id}`, { method: 'DELETE' });
+    if (!del.ok && del.status !== 204) failed++;
+  }
+  if (rows.length) toast(`서버에 있던 조회 기록 ${rows.length}건을 이 기기로 옮겼습니다.`, 'success');
+  if (!failed) { try { localStorage.setItem(flag, '1'); } catch { /* ignore */ } }
+}
 
 async function loadHistory() {
   document.getElementById('historyBody').innerHTML = `<tr class="empty-row"><td colspan="6">로딩 중...</td></tr>`;
   try {
-    const res  = await apiFetch(`${API}/my/analyses/`);
-    _historyList = await res.json();
+    try { await migrateServerHistory(); } catch { /* 서버 연결 실패 시 기기 기록만 표시 */ }
+    _historyList = await readDeviceHistory();
     renderHistory(_historyList);
   } catch {
     document.getElementById('historyBody').innerHTML =
-      `<tr class="empty-row"><td colspan="6">불러오기 실패</td></tr>`;
+      `<tr class="empty-row"><td colspan="6">이 브라우저에서는 기기 저장을 사용할 수 없습니다.</td></tr>`;
   }
 }
 
@@ -1162,7 +1256,16 @@ function showHistDetail(sessionId) {
   if (!h) return;
   const icon = h.is_claimable ? '✅' : '❌';
   document.getElementById('hdIcon').textContent = icon;
-  document.getElementById('hdRows').innerHTML = `
+  const thumbEl = document.getElementById('hdThumb');
+  if (h.thumb) { thumbEl.src = h.thumb; thumbEl.style.display = ''; }
+  else { thumbEl.removeAttribute('src'); thumbEl.style.display = 'none'; }
+  const doc = h.doc || {};
+  const docRows = [['병원', doc.hospital], ['진료일', doc.prescription_date],
+                   ['진료비', doc.total_amount ? '₩' + Number(doc.total_amount).toLocaleString() : null]]
+    .filter(([, v]) => v)
+    .map(([k, v]) => `<div class="hist-detail-row"><span class="hist-detail-label">${k}</span><span class="hist-detail-value">${esc(v)}</span></div>`)
+    .join('');
+  document.getElementById('hdRows').innerHTML = docRows + `
     <div class="hist-detail-row">
       <span class="hist-detail-label">분석일</span>
       <span class="hist-detail-value">${fmtDate(h.created_at)}</span>
@@ -1202,11 +1305,19 @@ function closeHistDetail(e) {
 async function deleteHistory(sessionId) {
   if (!confirm('이 분석 기록을 삭제할까요?')) return;
   try {
-    const res = await apiFetch(`${API}/my/analyses/${sessionId}`, { method: 'DELETE' });
-    if (!res.ok && res.status !== 204) throw new Error('삭제 실패');
+    await histTx('readwrite', st => st.delete(sessionId));
     toast('삭제 완료', 'success');
     await loadHistory();
-  } catch(e) { toast(e.message, 'error'); }
+  } catch { toast('삭제하지 못했습니다.', 'error'); }
+}
+
+async function clearDeviceHistory(silent = false) {
+  if (!silent && !confirm('이 기기에 저장된 내 조회 기록과 사진을 모두 삭제할까요?')) return;
+  try {
+    const rows = await readDeviceHistory();
+    await histTx('readwrite', st => rows.forEach(r => st.delete(r.session_id)));
+    if (!silent) { toast('이 기기의 기록을 삭제했습니다.', 'success'); await loadHistory(); }
+  } catch { if (!silent) toast('삭제하지 못했습니다.', 'error'); }
 }
 
 // ══ 계정 설정 탭 ══════════════════════════════════════════
@@ -1335,6 +1446,7 @@ async function deleteAccount() {
       const data = await res.json().catch(() => ({}));
       throw new Error(data.detail || '탈퇴 실패');
     }
+    await clearDeviceHistory(true);
     authToken = null; currentUser = null; refreshToken = null;
     localStorage.removeItem('insurrx_token');
     localStorage.removeItem('insurrx_user');

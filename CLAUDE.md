@@ -29,7 +29,7 @@ OCR + RAG로 **3초 이내** 실손/정액 보상 여부 및 예상 지급액 �
 
 ### 백엔드 API
 - [x] `POST /api/v1/upload/` — 이미지 업로드 → GPT-4o Vision OCR → 파싱 결과 반환 ✅
-- [x] `POST /api/v1/analyze/` — 파싱 문서 → 표준약관 RAG → 보상 분석
+- [x] `POST /api/v1/analyze/` — 파싱 문서 → 표준약관 RAG → 보상 분석. **결과를 DB에 저장하지 않음** (2026-10-31, 처리 지표만 로그)
   - JWT 선택 인증: 비로그인·로그인 모두 표준약관 기준 (로그인 시 업로드 증권이 있으면 함께 검색)
   - `policy_ids` 선택사항으로 변경 (기본값 빈 배열)
 - [x] `POST /api/v1/waitlist/` — Waitlist 이메일 저장 (중복 방지 포함)
@@ -92,7 +92,14 @@ OCR + RAG로 **3초 이내** 실손/정액 보상 여부 및 예상 지급액 �
 - [x] `privacy.html` 개인정보 처리방침 (위탁·국외 이전 표, 보유 기간, 보호책임자), 회원가입 시 동의 체크
 - [x] `DELETE /auth/me` 회원 탈퇴 (비밀번호 확인) — 분석 결과·카카오 세션·보험증권(Pinecone 네임스페이스)·로그인 이력·토큰 삭제, 대시보드 계정 탭에 버튼
 - [x] `app/services/retention.py` — 비회원 분석 결과 24시간(`GUEST_RESULT_RETENTION_HOURS`), 로그인 이력 1년(`LOGIN_HISTORY_RETENTION_DAYS`) 지나면 삭제. 앱 시작 시와 6시간마다 실행
-- [ ] 회원 분석 결과의 진단명·병원명 원문 저장 최소화, 토큰 사용량(건당 원가) 기록
+- [ ] 토큰 사용량(건당 원가) 기록
+
+### 조회 이력 기기 저장 ✅ (2026-10-31, 2회차 멘토링)
+- [x] 웹 `/analyze/` 결과는 서버 DB에 저장하지 않음 → 대시보드가 브라우저 IndexedDB(`insurrx`/`history`, 계정별 `owner`)에 결과·병원/진료일/진료비·사진 축소본(640px JPEG) 저장
+- [x] 전환 전 서버에 남은 회원 결과는 대시보드 히스토리 탭을 열 때 기기로 옮기고 `DELETE /my/analyses/{id}`로 서버에서 삭제 (계정당 1회, `insurrx_hist_migrated_<id>` 플래그)
+- [x] 히스토리 탭 "이 기기 기록 모두 삭제", 탈퇴 시 기기 기록 삭제, `privacy.html` 개정(시행일 2026-10-31)
+- ⚠ 카카오 경로(`endpoints_kakao.py`)는 여전히 `AnalysisResult`에 저장 — 카카오 연동을 다시 켜면 같은 방식으로 바꿔야 함
+- ⚠ 관리자 통계의 분석 건수는 이제 늘지 않음 (웹 결과 미저장)
 
 ### 카카오톡 챗봇 연동 ✅ (2026-06-08)
 > ⏸ **2026-10-26 임시 제외** — `KAKAO_ENABLED=false`(기본값)면 `/kakao/*`·`/auth/kakao-link*` 404, 랜딩·대시보드 카카오 UI 숨김. 다시 켜려면 Railway env `KAKAO_ENABLED=true` + `dashboard.html`의 `KAKAO_ENABLED` 상수 + `index.html` 히어로 주석 복원.
